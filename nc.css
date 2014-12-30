@@ -44,6 +44,7 @@ p {
 
 .image {
     border: 10px solid transparent;
+    /*padding: 50px 50px;*/
 }  
 
 .caption {
