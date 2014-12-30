@@ -1,0 +1,1 @@
+document.write('<div class="quote">Everyone agreed that Clevinger was certain to go far in the academic world. In short, Clevinger was one of those people with lots of intelligence and no brains, and everyone knew it except those who soon found it out. In short, he was a dope.</div> Joseph Heller in <em>Catch-22</em>.');

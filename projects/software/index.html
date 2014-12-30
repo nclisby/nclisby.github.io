@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>software</title>
+    <link rel="stylesheet" type="text/css" href="/nc.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" href="/favicon-192x192.png" sizes="192x192">
+    <link rel="icon" type="image/png" href="/favicon-160x160.png" sizes="160x160">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <meta name="msapplication-TileColor" content="#603cba">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+        <meta name="description" content="Videos and images of
+        self-avoiding walks generated via an efficient implementation of
+        the pivot algorithm.">
+    </head>
+    <body>
+    <div id="topwrapper">
+    <div id="topbar">
+        <!--Can assume that tnav elements 2x width of bnav-->
+        <div class="tnav">
+            <ul>
+                <li><a href="/">home</a></li>
+                <li><a href="/research/">research</a></li>
+                <li><a class="current" href="/projects/">projects</a></li>
+            </ul>
+        </div> <!-- tnav -->
+        <div class="bnav w3">
+            <ul>
+                <li><a href="/projects/">(main)</a></li>
+                <li><a href="/projects/saw_videos/">(SAW videos)</a></li>
+                <li><a class="current" 
+                    href="/projects/software/">(software)</a></li>
+            </ul>
+        </div> <!-- bnav -->
+        <div class="bnav w3">
+            <ul>
+                <li><a href="/projects/sm_simulator/">(simulator)</a></li>
+                <li><a href="/projects/backtracker/">(backtracker)</a></li>
+                <li><a
+                    href="/projects/hamiltonian_path/">(Hamiltonian paths)</a></li>
+            </ul>
+        </div> <!-- bnav -->
+    </div> <!-- topbar -->
+    <div id="contentblock">
+        <div id="content">
+        <h1>Software for sampling self-avoiding walks</h1>
+        <p>Future home of an open source library for the rapid Monte Carlo
+simulation of polymers. The data structure and algorithms are described
+in the following papers:
+<em>Efficient implementation of the pivot algorithm for
+    self&#150;avoiding walks,</em> <a
+    href="http://www.arxiv.org/abs/1005.1444">arXiv:1005.1444</a>, <a
+    href="http://dx.doi.org/10.1007/s10955-010-9994-8">J. Stat.
+    Phys.</a> <b>140</b>:349&#150;392 (2010), and 
+<em>Accurate estimate of the critical exponent &#957; for
+self&#150;avoiding walks via a fast implementation of the pivot
+algorithm,</em> <a
+    href="http://www.arxiv.org/abs/1002.0494">arXiv:1002.0494</a>, <a
+    href="http://dx.doi.org/10.1103/PhysRevLett.104.055702">Phys. Rev.
+    Lett.</a><b>104</b>, 055702 (2010).
+</p>
+<p>
+At the moment I have a working, efficient implementation of the
+algorithm described in the above papers (<em>version 1</em>). I've used it for a number of
+computer experiments, and I'm confident that it's correct, but the code
+is inflexible and difficult to adapt to different problems. In
+particular, it is quite specialised to self-avoiding walks.
+It is also rather poorly documented!
+But, with
+some effort it will
+be possible to extend it to interacting self-avoiding walks and the
+Domb-Joyce model, and likely some other problems such as quasi-prudent
+walks too. 
+</p>
+<p>
+In addition, I have an initial version of a far more flexible software
+library (<em>version 2</em>). I've tested it a little and it seems to be correct (using it
+for simulations of the hydrogen peroxide lattice), and it can be
+extended to a wide range of models on any lattice or in the continuum.
+But, it is
+significantly slower than my original code, and still clunkier than I
+would like. This will take a significant amount of work to improve, and
+I'm still not sure if the best approach might be to just throw it away and
+start again.
+</p>
+<p>
+To break the log-jam, I'll tidy up and document
+<em>version 1</em>, and release the code by April 30, 2014 (I'm nominating a date as a form of
+hard commitment, even though no-one will read this!).
+I'll then consider how to proceed. It may be the case that I
+progressively upgrade this version to add new features, and make it more
+useable, or I look at working on and then releasing <em>version 2</em>.
+</p>
+<p>
+Over the next year or two I will have at least one more software library
+to release.
+</p>
+ 
+
+        </div> <!-- content -->
+    </div> <!-- contentblock -->
+    <div id="push"></div>
+    </div> <!-- topwrapper -->
+    <div id="bottombar">
+            <div id="footer">
+               <div id="footquote">
+                    <script src="/includesnippet.js"></script>
+                </div>
+            </div> <!-- footer -->
+    </div> <!-- bottombar -->
+    </body>
+</html>
+
+        <!--<p>Statistical mechanics simulator due to <a href="http://lattice.complex.unimelb.edu.au/home/">Nathan Clisby</a>, 2013.</p>-->
+            <div class="image"  style =
+                "float:right;max-width:370px;width:40%min-width:200px;">
+                <img src="sawsmall.gif"
+                alt="Animation of self-avoiding walk of 1048575 steps on
+                the simple cubic lattice." style="width:90%" />
+                <br/>
+                <p class="caption">Animation of
+                    self-avoiding walk of 1048576 steps on the simple
+                    cubic lattice <a
+                href="https://drive.google.com/folderview?id=0B99otwie9pb8REdJY1llVVZwek0&usp=sharing">(higher
+                res)</a>.
+                    </p>
+            </div> 
+            <br/>
+            <div class="image"  style =
+                "clear:right;float:right;width:30%;height:30%;min-width:200px;">
+            <img src="saw1000_318shq_alpha.png" alt="SAW of 5000 steps on Z^3" height="90%" width="90%" style="float:center;">
+                <br/>
+                <p class="caption">SAW of 5000 steps on the simple cubic lattice.</p>
+            </div> 
+        <p>
+            I've made some high resolution videos on YouTube of self-avoiding walks with 100 million
+            steps on the <a
+                href="http://www.youtube.com/watch?v=WPUH8Rs-oig">square
+                lattice</a> and <a
+                href="http://www.youtube.com/watch?v=GHzfadEuk1U">simple cubic
+                lattice</a>. Both videos look much better in HD, so choose the
+            highest resolution your screen and internet connection will support.
+            </p>
+            <div class="image"  style =
+                "float:left;width:25%;height:25%;min-width:200px;">
+                <!--<img src="d2saw25.png" alt="SAW of 2^25 steps on Z^2">-->
+            <img src="d2saw25.png" alt="SAW of 2^25 steps on Z^2" height="90%" width="90%" style="float:center;">
+                <br/>
+                <p class="caption">SAW of 2<sup>25</sup> steps on
+                the square lattice.</p>
+            </div> 
+            <p>
+            Here are some high resolution 2560x1440 anaglyph (red-blue) 3d videos of walks
+            with 200 million steps: <a
+                href="https://docs.google.com/file/d/0B99otwie9pb8ZjRtUFJuLTVaUk0/edit?usp=sharing">square
+                lattice</a> (100MB) and <a
+                href="https://docs.google.com/file/d/0B99otwie9pb8UWZVTm9tcjllYW8/edit?usp=sharing">simple
+                cubic lattice</a> (403MB). To enjoy them you will need
+            to wear red-blue anaglyph glasses, which can be purchased
+            from ebay for a dollar or two. Through the magic of Google
+            Drive these videos can be viewed in your browser as well as
+            downloaded.
+            </p>
+            <p>
+            Various images of self-avoiding walks available in a Google
+            Drive collection
+            <a
+                href="https://drive.google.com/folderview?id=0B99otwie9pb8REdJY1llVVZwek0&usp=sharing">here</a>.
+            I have a few other images floating around.
+            </p>
+            <p>
+            Zoomable high resolution images of self-avoiding walks
+            in 2, 3, and 4 dimensions available in my Gigapan <a
+                href="http://gigapan.com/galleries/9173/gigapans">self-avoiding
+                walk gallery</a>. The 2d walks are very sparse which
+            makes them hard to see. One future project I have in mind is
+            to create a javascript or Processing tool for viewing fractal images which
+            overcomes this problem.
+            </p>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>

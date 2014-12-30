@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>simulator</title>
+    <link rel="stylesheet" type="text/css" href="/nc.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" href="/favicon-192x192.png" sizes="192x192">
+    <link rel="icon" type="image/png" href="/favicon-160x160.png" sizes="160x160">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <meta name="msapplication-TileColor" content="#603cba">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+        <!--<title>Statistical Mechanics Simulator</title>-->
+        <script src="processing-1.4.1.min.js"></script>
+        <!--<canvas width="1024" height="768" data-processing-sources="sm_simulator/smSimulator.pde" style="padding-left:0;padding-right:0;margin-left:auto;margin-right:auto;display:block"></canvas>-->
+<script>
+    //resizing canvas if width < 600/0.9 = 666.6666
+    function writeCanvas()
+    {
+        var w, h;
+        if ((window.innerWidth >= 800) && (window.innerHeight >= 800))
+        {
+            w = 800;
+            h = 800;
+        }
+        else if ((window.innerWidth >= 800) && (window.innerHeight >= 600))
+        {
+            w = 800;
+            h = 600;
+        }
+        else if ((window.innerWidth >= 600) && (window.innerHeight >= 600))
+        {
+            w = 600;
+            h = 600;
+        }
+        else if ((window.innerWidth >= 500) && (window.innerHeight >= 500))
+        {
+            w = 500;
+            h = 500;
+        }
+        else if ((window.innerWidth >= 400) && (window.innerHeight >= 400))
+        {
+            w = 400;
+            h = 400;
+        }
+        else
+        {
+            w = 300;
+            h = 300;
+        }
+        document.write('<canvas width="'+w+'" height="'+h+'" data-processing-sources="smSimulator'+w+'x'+h+'.pde" style="padding-left:0;padding-right:0;margin-left:auto;margin-right:auto;display:block"></canvas>');
+    }
+
+</script>
+        <meta name="description" content="Simulator for visualisation of the pivot algorithm and other approaches for self-avoiding walks and models in statistical mechanics.">
+    </head>
+    <body>
+    <div id="topwrapper">
+    <div id="topbar">
+        <!--Can assume that tnav elements 2x width of bnav-->
+        <div class="tnav">
+            <ul>
+                <li><a href="/">home</a></li>
+                <li><a href="/research/">research</a></li>
+                <li><a class="current" href="/projects/">projects</a></li>
+            </ul>
+        </div> <!-- tnav -->
+        <div class="bnav w3">
+            <ul>
+                <li><a href="/projects/">(main)</a></li>
+                <li><a href="/projects/saw_videos/">(SAW videos)</a></li>
+                <li><a href="/projects/software/">(software)</a></li>
+            </ul>
+        </div> <!-- bnav -->
+        <div class="bnav w3">
+            <ul>
+                <li><a class="current" href="/projects/sm_simulator/">(simulator)</a></li>
+                <li><a href="/projects/backtracker/">(backtracker)</a></li>
+                <li><a
+                    href="/projects/hamiltonian_path/">(Hamiltonian paths)</a></li>
+            </ul>
+        </div> <!-- bnav -->
+    </div> <!-- topbar -->
+    <div id="contentblock">
+        <div id="content">
+        <h1><a id="intro">Statistical mechanics simulator</a></h1>
+        <!--<p>Statistical mechanics simulator due to <a href="http://lattice.complex.unimelb.edu.au/home/">Nathan Clisby</a>, 2013.</p>-->
+        <p>
+        <b>Author:</b> Nathan Clisby, 2013
+        (<a href="http://clisby.net/">homepage</a>, <a
+            href="mailto:clisby@gmail.com">clisby@gmail.com</a>).
+        </p>
+        <p>The statistical mechanics simulator provides a platform for
+        the visualisation of various algorithms for studying statistical mechanical
+        systems.
+        For the moment the only
+        simulation is of the pivot algorithm for self-avoiding walks,
+        but more will be added in
+        future.
+        (There's also a simple implementation of the calculation of the area of a
+        circle via Monte Carlo which you are welcome to play around
+        with, but I won't discuss that more here.) 
+        </p>
+        <p>The code is written in <a href="http://www.processing.org">Processing</a> and released under the 
+        <a href="http://www.gnu.org/licenses/gpl.html">GPL</a>. </p>
+        <p>Quick links: <a href="#simulator">simulator</a>, 
+        <a href="#instructions">instructions</a>,
+        &ldquo;<a href="#howto">How to</a>&rdquo;, 
+        <a href="#download">download</a>,
+        <a href="#pivot">pivot algorithm</a>,
+        <a href="#future">future simulations</a>,
+        <a href="#technical">technical details</a>, 
+        <a href="#acknowledgments">acknowledgments</a>.
+        </p>
+
+        <p><b>The <a id="simulator">statistical mechanics simulator</a>
+            should be visible immediately below the instructions for
+            compatible browsers.</b> 
+        If there is a blank space, please visit the &ldquo;<a
+            href="#howto">How to</a>&rdquo; section further below for
+        information on how to either enable WebGL for your browser, or <a
+            href="#download">download</a>
+        the application and run it on your computer via the Java Virtual Machine.</p>
+        <p><b><a id="instructions">Brief instructions</a></b>: click on
+        &ldquo;Pivot algorithm&rdquo; on the initial screen to take you
+        to the options menu. Clicking on menu items will change the
+        corresponding value, and the simulation is run by clicking
+        &ldquo;START&rdquo;. 
+        Selecting the exit button in the
+        top right corner will return you to the parent menu, or
+        terminate the application if you are at the root menu screen.
+        <b>New:</b> Holding down the up and down
+        arrow keys during the animation
+        allows you to zoom in and out of the walk (this takes some getting used to,
+        as there is some lag so that the change occurs smoothly).
+        <b>New:</b> Pressing the left arrow once selects the next
+        slowest animation speed, and pressing the right arrow once
+        selects the next fastest. <b>New:</b> Pressing &ldquo;i&rdquo; will toggle
+        the display of auxiliary information. From the top this displays 
+        t, the number of pivot attempts (Markov chain time), f, the
+        fraction of pivot attempts which are successful, R, the square
+        root of the mean square end-to-end distance, and z, the zoom
+        factor relative to the default value.
+        </p>
+        <br/>
+        <script>writeCanvas();</script>
+        <!--<canvas width="1024" height="768" data-processing-sources="sm_simulator/smSimulator.pde" style="padding-left:0;padding-right:0;margin-left:auto;margin-right:auto;display:block"></canvas>-->
+        <br/>
+
+        <h2><a id ="howto">How to run the simulator</a></h2>
+        <p>Browser compatibility: needs WebGL enabled, and thus works with
+        recent versions of Chrome, Firefox and Safari, but <em>not</em> Internet
+        Explorer (Internet Explorer will have support from version 11 which will
+        be released soon). For Safari, I had to enable WebGL by clicking on
+        Safari &#8594; Preferences &#8594; Advanced &#8594; &ldquo;Show Develop
+        in menu bar&rdquo;, and then selecting Develop &#8594; &ldquo;Enable WebGL&rdquo;. If your browser does not work, and you are sufficiently keen to view this simulation, I recommend installing Chrome.</p>
+        <p><b><a id="download">Download</a></b>:
+        The simulation runs significantly faster and better on your computer as an application. The simulator is written in <a href="http://www.processing.org">Processing</a>, which is based on Java and runs in the Java Virtual Machine or JVM.
+        Download files: 
+        <a href="download/source.zip">source.zip</a> (1 MB, to run in the <a
+            href="http://www.processing.org">Processing</a> interpreter), <a
+            href="download/application.linux32.zip">Linux 32 bit</a> (6.4 MB),
+        <a href="download/application.linux64.zip">Linux 64 bit</a> (6.4 MB),
+        <a href="download/application.macosx.zip">MacOS X</a> (6.7 MB), <a
+            href="download/application.windows32.zip">Windows 32 bit</a> (6.4
+        MB), and <a href="download/application.windows64.zip">Windows 64
+            bit</a> (6.4 MB).</p>
+        <p>If you have trouble running the application, you may be interested in
+        seeing this demo video to get an idea of what the simulation looks like:
+        <a
+            href="https://docs.google.com/file/d/0B99otwie9pb8T3kyYnBZUmFsMmc/edit?usp=sharing">simulatorDemo.mp4</a> (25 MB). This demo is not intended to teach you how to use the simulator, as it is not possible to follow what options are selected.</p>
+        <!--<p>Please let me know of your failures and successes when using this software! -->
+        <!--Any feedback welcome, including positive comments, criticisms,-->
+        <!--bugs found or requests for features.-->
+        <!--Here are my <a href="http://lattice.complex.unimelb.edu.au/home/contact">contact</a> details.-->
+        <!--</p>-->
+
+        <h2><a id="pivot">The pivot algorithm</a></h2>
+        <p>The pivot algorithm is the most efficient known method for sampling
+        self-avoiding walks of fixed length, or equivalently sampling polymer
+        configurations for a polymer in a good solvent.</p>
+        <p>The simulator shows how the pivot algorithm works when applied to self-avoiding walks on the square and simple cubic lattices.
+        All possible lattice symmetries are used; only successful pivot moves
+        are shown. The colours used in the walk have no particular meaning,
+        their primary purpose is to allow one's eye to follow the motion of the
+        walk in three dimensions.</p>
+        <p>Simulation options:
+        <ul>
+            <li>Lattice: square or simple cubic.</li>
+            <li>Animation speed: very slow, slow, medium, fast, very fast.</li>
+            <li>Length: 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000.</li>
+            <li>Initialisation.
+            <ul>
+                <li>Equilibrium option reads from a file a given seed self-avoiding walk which
+                was sampled uniformly
+                at random using the SAW-tree implementation of the pivot algorithm.</li>
+                <li>Straight rod is the most commonly
+                used initial configuration, but it is not very useful if you wish to
+                see a typical self-avoiding walks of 10000 steps. Note how the
+                walk diminishes in size as it evolves from typical dimension
+                <i>O(N)</i> to <i>O(N<sup>&#957;</sup>)</i>.</li>
+                <li>Random walk option corresponds to seeding the algorithm with a
+                simple random walk with no immediate reversals. The pivot algorithm as
+                implemented here then evolves by only allowing updates when the new
+                walk generated by a pivot move has no more self-intersections than
+                the current walk. I am not aware of this seed state being used in
+                the literature, but it could
+                be regarded as a variant of the Domb-Joyce / weakly avoiding walk
+                model, where we start at infinitely
+                high temperature but suddenly cool the system down to the self-avoiding
+                walk temperature, T=0.
+                Note how the
+                walk increases in size as it evolves from typical dimension
+                <i>O(N<sup>1/2</sup>)</i> to <i>O(N<sup>&#957;</sup>)</i>.</li>
+            </ul>
+            </li>
+        </ul>
+
+        </p>
+        <p>Here are links to some important papers on the topic. This list is
+        not exhaustive by any means!
+        <ul>
+            <li><a href="http://dx.doi.org/10.1080/00268976900100781">Lal
+                (1969)</a> invented the pivot algorithm.</li>
+            <li><a href="http://dx.doi.org/10.1007/BF01022990">Madras and Sokal
+                (1988)</a> studied
+            the pivot algorithm in depth, and showed for the first time how
+            powerful it is. Their implementation of the pivot algorithm utilised
+            a hash table and for an N-step walk takes CPU time <i>O(N)</i> per
+            successful pivot. They applied the pivot algorithm to the calculation of
+            the critical exponent &#957; for two- and three-dimensional self-avoiding
+            walks. This is the most important paper on the topic, and
+            also serves as an excellent introduction.</li>
+            <li><a href="http://dx.doi.org/10.1007/BF01020290">Madras, Orlitsky, and 
+                Shepp (1990)</a> and <a
+                href="http://dx.doi.org/10.1088/0305-4470/23/9/021">Janse van Rensburg,
+                Whittington, and Madras (1990)</a> showed that a variant of the
+            pivot algorithm could be used to sample self-avoiding walks with
+            fixed endpoints, and in particular self-avoiding polygons.</li>
+            <li><a href="http://dx.doi.org/10.1007/BF02178552">Li, Madras, and Sokal (1995)</a>
+            accurately calculated &#957; for two- and three-dimensional self-avoiding
+            walks as well as various amplitude ratios. </li>
+            <li><a href="http://dx.doi.org/10.1007/BF01049027">Caracciolo, Pelissetto, and Sokal
+                (1992)</a> and <a
+                href="http://dx.doi.org/10.1103/PhysRevE.57.R1215">Caracciolo,
+                Causo, and Pelissetto (1998)</a>
+            developed the Join-and-Cut algorithm which utilises pivot moves, and
+            applied it to the estimation of the critical exponent &#947; for
+            self-avoiding walks.</li>
+            <li><a href="http://dx.doi.org/10.1023/A:1013750203191">Kennedy
+                (2002)</a> showed that the
+            pivot algorithm can be implemented in CPU time <i>o(N)</i> for N-step walks.</li>
+            <li><a href="http://dx.doi.org/10.1007/s10955-010-9994-8">Clisby
+                (2010a)</a> and <a
+                href="http://dx.doi.org/10.1103/PhysRevLett.104.055702">Clisby
+                (2010b)</a> introduced the SAW-tree 
+            implementation which takes CPU time <i>O(log N)</i> per pivot
+            attempt and used it to estimate the critical exponent &#957; for
+            self-avoiding walks. </li>
+            <li><a href="http://dx.doi.org/10.1088/1751-8113/46/24/245001">Clisby (2013)</a> accurately
+            calculated the connective constant &#956; for self-avoiding walks
+            using the pivot algorithm.</li>
+        </ul>
+        </p>
+        <p>This section on the pivot algorithm will be incrementally expanded in future to
+        provide a guide to the literature which I hope will prove useful to
+        newcomers to the field.</p>
+
+        <h2><a id="future">Future simulations</a></h2>
+        <p>This is a list of simulations which I'm interested in adding in the
+        future. If you have any suggestions please let me know.</p>
+        <p>Please note that my time is quite limited and so there may not be much
+        progress in the immediate future (as of June 2013). Each of the proposed
+        applications will take in the range of 1 day - 1 week of work to pull
+        something together which will do a decent job.</p>
+        <p>Walks and
+        polymers:
+        <ul>
+            <li>Brute force generation of self-avoiding walks.</li>
+            <li>Animation of the SAW-tree intersection testing
+            algorithm, showing how the intersection tests are performed
+            via bounding boxes for successively shorter pieces of the
+            walk.</li>
+            <li>New variant of the finite lattice method (<a
+                href="http://dx.doi.org/10.1088/1751-8113/45/11/115202">link</a>)
+            as applied to the enumeration of self-avoiding polygons on the
+            square lattice.</li>
+            <li>BFACF algorithm for sampling self-avoiding polygons.</li>
+            <li>Animation of Hamiltonian path generation algorithm. For a
+            pure javascript version
+            see <a
+                href="../hamiltonian_path/">this</a>).
+            <li>Brute force generation of endless self-avoiding walks (see <a
+                href="http://dx.doi.org/10.1088/1751-8113/46/23/235001">this</a>).
+            </li>
+            </p>
+        </ul>
+        <p>
+        Statistical mechanics:
+        <ul>
+            <li><a href="http://dx.doi.org/10.1103/PhysRevLett.62.361">Wolff algorithm</a> for the Ising
+            model on square and simple cubic lattices. (I think this would look
+            beautiful on a 3d lattice if done well.)</li>
+            <li><a href="http://dx.doi.org/10.1103/PhysRevLett.99.110601">Worm
+                algorithm</a>.</li>
+            <li><a href="http://dx.doi.org/10.1103/PhysRevB.27.4445">Sweeny
+                algorithm</a>.</li>
+            <li>Hard discs and spheres - various Monte Carlo algorithms
+            including standard Metropolis and the <a
+                href="http://dx.doi.org/10.1103/PhysRevE.87.042134">event chain</a>
+            algorithm.</li>
+        </ul>
+        </p>
+        </ul>
+
+        <h2><a id="technical">Technical details</a></h2>
+        <p>The simulator is written in <a
+            href="http://www.processing.org">Processing</a> which is a beautiful
+        language for this purpose. For scientific visualisation it is a remarkably
+        powerful tool.</p>
+        <p>The statistical mechanics simulator is written in such a manner that it is fully
+        compatible with <a href="http://www.processingjs.org">Processing.js</a>,
+        which is a javascript interpreter of Processing. This allows for
+        Processing animations to be viewed directly in html5 compliant browsers,
+        with the only (slight) downside that one can no longer leverage the full
+        power of Java. This is because although Processing.js can interpret the
+        full Processing language, it cannot interpret Java, and so Java
+        libraries must be re-written if they are to be used. For the
+        statistical mechanics simulator this means that I have developed my own rudimentary menu
+        system, rather than relying on the much better libraries which others
+        have created. It would be possible to have a &ldquo;pretty&rdquo; application
+        version and &ldquo;ugly&rdquo; web version, but I do not have time to maintain two
+        separate versions. Another minor downside from maintaining compatibility
+        is that all files (including data files) need to be kept in the source
+        directory.
+        </p>
+        <p>The programming style in this simulator is not the best, as it
+        has been rapidly developed and should be regarded as a prototype. If you
+        have sufficient time and interest to re-factor the code please go ahead!
+        </p><p>
+        My goal is to redesign the architecture so that individual
+        &ldquo;apps&rdquo; or &ldquo;sims&rdquo; can be written
+        completely independently of each other. The apps would just have to
+        supply an appropriate menu item, and then they could be combined
+        straightforwardly by insert function to insert an app into a
+        given menu.
+        </p>
+        <p>If you are interested in contributing to this project either by
+        improving existing code or by adding additional simulations then I
+        strongly encourage you to so. I would really like to hear from you if
+        you're considering this.
+        <!--(my <a-->
+            <!--href="http://lattice.complex.unimelb.edu.au/home/contact">contact</a>-->
+        <!--details).-->
+        </p>
+
+        <!--<h2><a id="updates">Updates</a></h2>-->
+        <!--I'm an inveterate tinkerer, so there will be various tweaks and-->
+        <!--improvements while I'm actively working on this.-->
+        <!--<ul>-->
+            <!--<li>June 28, 2013: Added ability to see ratio of successful-->
+            <!--pivots to total pivot attempts via pressing 'i'.</li>-->
+            <!--<li>June 28, 2013: Added ability to change the speed of the-->
+            <!--pivot animation via left and right arrows.</li>-->
+            <!--<li>June 28, 2013: Added ability to zoom in and out of the-->
+            <!--pivot animation via up and down arrows.</li>-->
+            <!--<li>June 27, 2013: I had trouble following pivot moves for short 3d-->
+            <!--walks, and so thickened lines for short walks and moved the camera-->
+            <!--a little further away from the walk. Thicker lines should also improve-->
+            <!--visibility of walks on poor screens e.g. for seminars and lectures.</li>-->
+            <!--<li>June 27, 2013: Changed menu defaults for pivot algorithm to 5000-->
+            <!--step walks on the square lattice.</li>-->
+        <!--</ul>-->
+        <h2><a id="acknowledgments">Acknowledgments</a></h2>
+        <p>Thanks to Mireille Bousquet-M&#233;lou for her initial inquiry as to
+        whether I knew of any nice pivot algorithm videos, which led to me
+        developing the simulator after discovering what a great tool Processing
+        is.</p>
+        <p>Thanks to the Australian Research Council for funding my work
+        through the <a href="http://www.complex.org.au/">ARC Centre of
+            Excellence for Mathematics and Statistics of Complex Systems
+            (MASCOS)</a>, and more recently via a future fellowship.
+        </p>
+        <p>Thanks to the developers of <a
+            href="http://www.processing.org">Processing</a> and <a
+            href="http://www.processingjs.org">Processing.js</a> for creating
+        such marvellous tools, and then making them freely available.</p>
+        <!--<p><a href="http://lattice.complex.unimelb.edu.au/home/">My-->
+            <!--homepage</a>.</p>-->
+        </div> <!-- content -->
+    </div> <!-- contentblock -->
+    <div id="push"></div>
+    </div> <!-- topwrapper -->
+    <div id="bottombar">
+            <div id="footer">
+               <div id="footquote">
+                    <script src="/includesnippet.js"></script>
+                </div>
+            </div> <!-- footer -->
+    </div> <!-- bottombar -->
+    </body>
+</html>

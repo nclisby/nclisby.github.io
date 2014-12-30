@@ -1,0 +1,297 @@
+/*
+ * #FFC80A dark orange
+ * #FFD852 intermediate orange
+ * #FFECA9 light orange
+ * #FFF7DA lighter orange
+ * #0F002C very dark purple
+ * #1E0059 darker purple
+ * #5500FF dark purple
+ * #A070FF lighter purple
+ * #6849FF blue-purple, for sub-menu
+ * #4832FF blue-purple, for sub-menu
+ * #AA6484 half dark orange (bar), half darker purple
+ */
+
+html {
+    font-family: "Georgia", serif;
+    height: 100%;
+    /*font-family: "Verdana", sans-serif;*/
+    /*font-family: Arial, Helvetica, sans-serif;*/
+}
+
+body {
+    background-color: #FFF7DA;
+    height: 100%;
+    color: #0F002C;
+    margin: 0em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #2F008C;
+}
+
+button {
+    background-color: #FFD852;
+}
+
+.spacer {
+    height: 1em;
+}
+
+p {
+    margin: 0.5em 0em;
+}
+
+.image {
+    border: 10px solid transparent;
+}  
+
+.caption {
+    align:center;
+    font-size: 0.8em;
+    margin: 1em;
+}
+
+a:link,
+a:visited,
+a:hover,
+a:active
+{
+    color: #5500FF;
+    text-decoration: none;
+}
+
+#topwrapper {
+    /*sticky footer based on: http://ryanfait.com/sticky-footer/*/
+    /* the bottom margin is the negative value of the footer's height */
+    min-height: 100%;
+    /*margin: 0 auto -6em; */
+    margin: 0 0 -6em; 
+}
+
+#contentblock {
+    color: #0F002C;
+    text-align: center;
+    padding-left: 4%;
+    padding-right: 4%;
+    /*this is a hack, using more padding than necessary to help*/
+    /*this look a bit better on mobile devices*/
+    /*padding-bottom: 4.5em;*/
+    /*padding-bottom: 6em;*/
+}
+
+#content {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+}
+
+blockquote {
+    display: block;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 3em;
+    margin-right: 3em;
+    font-style: italic;
+}
+
+.quote {
+    display: inline;
+    font-style: italic;
+}
+
+#topbar {
+    margin: auto;
+    display: block;
+    width: 100%;
+    height: 6em;
+    /*color: #2F008C;*/
+    background: -webkit-linear-gradient(#FFC80A, #FFF7DA); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#FFC80A, #FFF7DA); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#FFC80A, #FFF7DA); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#FFC80A, #FFF7DA); /* Standard syntax */
+}
+
+.tnav {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    max-width: 800px;
+    height: 2em;
+    padding-left: 4%;
+    padding-right: 4%;
+}
+
+.tnav a:link,
+.tnav a:visited,
+.tnav a:hover,
+.tnav a:active
+{
+    display:block;
+    width: 100%;
+    /*font-size: 1.5em;*/
+    font-size: 1.4em;
+    color: #1E0059;
+    text-decoration: none;
+    border-radius: 0.4em;
+    /*height: 1.6em;*/
+}
+
+.tnav a:hover
+{
+    background-color: #FFECA9;
+}
+
+.tnav ul {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    height: 2em;
+}
+
+.tnav li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    float: left;
+    width: 33.333333%;
+    height: 2em;
+    line-height: 2em;
+}
+
+.tnav a.current:link,
+.tnav a.current:visited,
+.tnav a.current:hover,
+.tnav a.current:active
+{
+    color: #5500FF;
+    font-size: 1.6em;
+}
+
+.bnav {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    max-width: 800px;
+    height: 1.5em;
+    padding-left: 4%;
+    padding-right: 4%;
+}
+
+
+.bnav a:link,
+.bnav a:visited,
+.bnav a:hover,
+.bnav a:active
+{
+    display:block;
+    width: 100%;
+    font-size: 0.9em;
+    color: #5500FF;
+    /*color: #A070FF;*/
+    text-decoration: none;
+    border-radius: 0.4em;
+}
+
+.bnav a:hover
+{
+    background-color: #FFF7DA;
+}
+
+.bnav ul {
+    display: table;
+    /*display: table-row;*/
+    /*vertical-align: middle;*/
+    width: 100%;
+    table-layout: fixed;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    height: 1.5em;
+}
+
+.bnav li {
+    overflow: hidden;
+    display: block;
+    width: 16.666666%;
+    float: left;
+    height: 1.5em;
+    line-height: 1.5em;
+}
+
+.w3 li {
+    width: 33.333333%;
+}
+
+.w5 li {
+    width: 20%;
+}
+
+.bnav a.current:link,
+.bnav a.current:visited,
+.bnav a.current:hover,
+.bnav a.current:active
+{
+    color: #A070FF;
+    font-size: 1.2em;
+}
+
+#push {
+    /*height: 4.5em; [> #push must be the same height as #footer <]*/
+    /*Adding an extra 1.5em, due to issue with display of long quotes*/
+    /*on mobile devices.*/
+    /*Perhaps no longer need to do that.*/
+    /*No extra space - 6em, adding 1 em.*/
+    height: 7em; /* #push must be the same height as #footer */
+}
+
+#bottombar {
+    /*position: fixed;*/
+    /*bottom: 0;*/
+    /*z-index: -10;*/
+    /*margin: auto;*/
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+    display: block;
+    width: 100%;
+    height: 6em;
+    /*height: 6em;*/
+    /*color: #2F008C;*/
+    background: -webkit-linear-gradient(#FFF7DA, #FFC80A); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#FFF7DA, #FFC80A); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#FFF7DA, #FFC80A); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#FFF7DA, #FFC80A); /* Standard syntax */
+}
+
+
+#footer {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    bottom: 0.0em;
+    max-width: 800px;
+    height: 5.5em;
+    /*hacky, making this a bit bigger than bottombar*/
+    /*to help with display on mobile devices.*/
+    /*this is the footer height*/
+    /*height: 6em;*/
+    display: block;
+    color: #2F008C;
+}
+
+#footquote {
+    font-size: 0.8em;
+    position: absolute;
+    bottom: 0;
+    padding: 0;
+    margin: 0em;
+    padding-left: 4%;
+    padding-right: 4%;
+}

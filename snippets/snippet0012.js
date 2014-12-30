@@ -1,0 +1,1 @@
+document.write('<div class="quote">Derbes\' Law: Most of our pleasures come from filling or emptying cavities, and vice versa.</div> Dr. Vincent J. Derbes, <a href="http://www.futilitycloset.com/2013/11/12/derbes-law/">source</a>.');

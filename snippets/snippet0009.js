@@ -1,0 +1,1 @@
+document.write('<div class="quote">The modern conservative is engaged in one of man\'s oldest exercises in moral philosophy; that is, the search for a superior moral justification for selfishness.</div> John Kenneth Galbraith, <a href="http://en.wikiquote.org/wiki/John_Kenneth_Galbraith">source</a>.');
