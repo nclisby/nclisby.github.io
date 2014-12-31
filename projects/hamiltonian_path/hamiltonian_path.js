@@ -596,49 +596,39 @@ window.addEventListener("keydown", function(e) {
     }
 }, false);
 
-document.addEventListener('keydown', function(event) {
-    if (event.keyCode == 84)
+function move_r()
+{
+    switch (Math.floor(Math.random()*4))
     {
-        //t: toggle active end
-        <!--alert('s was pressed');-->
-        left_end = !left_end;
-        draw_path(n,path);
+        case 0:
+            step = [1,0];
+            break;
+        case 1:
+            step = [-1,0];
+            break;
+        case 2:
+            step = [0,1];
+            break;
+        case 3:
+            step = [0,-1];
+            break;
     }
-    else if (event.keyCode == 82)
+    if (left_end)
     {
-        if (event.shiftKey)
-        {
-            //R: 100 random steps
-            for (var i=0; i<100; i++)
-            {
-                switch (Math.floor(Math.random()*4))
-                {
-                    case 0:
-                        step = [1,0];
-                        break;
-                    case 1:
-                        step = [-1,0];
-                        break;
-                    case 2:
-                        step = [0,1];
-                        break;
-                    case 3:
-                        step = [0,-1];
-                        break;
-                }
-                if (left_end)
-                {
-                   n = backbite_left(step,n,path);
-                }
-                else
-                {
-                   n = backbite_right(step,n,path);
-                }
-            }
-        }
-        else
-        {
-            //r: random step
+        n = backbite_left(step,n,path);
+    }
+    else
+    {
+        n = backbite_right(step,n,path);
+    }
+    draw_path(n,path);
+    return;
+}
+
+function move_R()
+{
+    for (var i=0; i<100; i++)
+    {
         switch (Math.floor(Math.random()*4))
         {
             case 0:
@@ -656,85 +646,133 @@ document.addEventListener('keydown', function(event) {
         }
         if (left_end)
         {
-           n = backbite_left(step,n,path);
+            n = backbite_left(step,n,path);
         }
         else
         {
-           n = backbite_right(step,n,path);
+            n = backbite_right(step,n,path);
         }
+    }
+    draw_path(n,path);
+    return;
+}
+
+
+
+function move_e()
+{
+    //e: random step, chooses either end at random
+    switch (Math.floor(Math.random()*4))
+    {
+        case 0:
+            step = [1,0];
+            break;
+        case 1:
+            step = [-1,0];
+            break;
+        case 2:
+            step = [0,1];
+            break;
+        case 3:
+            step = [0,-1];
+            break;
+    }
+    if (Math.random() < 0.5)
+    {
+        left_end = !left_end;
+    }
+
+    if (left_end)
+    {
+        n = backbite_left(step,n,path);
+    }
+    else
+    {
+        n = backbite_right(step,n,path);
+    }
+    draw_path(n,path);
+    return;
+}
+
+
+function move_E()
+{
+    //E: 100 random steps, chooses either end at random
+    for (var i=0; i<100; i++)
+    {
+        switch (Math.floor(Math.random()*4))
+        {
+            case 0:
+                step = [1,0];
+                break;
+            case 1:
+                step = [-1,0];
+                break;
+            case 2:
+                step = [0,1];
+                break;
+            case 3:
+                step = [0,-1];
+                break;
         }
+        if (Math.random() < 0.5)
+        {
+            left_end = !left_end;
+        }
+
+        if (left_end)
+        {
+            n = backbite_left(step,n,path);
+        }
+        else
+        {
+            n = backbite_right(step,n,path);
+        }
+    }
+    draw_path(n,path);
+    return;
+}
+
+function toggle()
+{
+    left_end = !left_end;
+    draw_path(n,path);
+    return;
+}
+
+document.addEventListener('keydown', function(event) {
+    if (event.keyCode == 84)
+    {
+        //t: toggle active end
+        <!--alert('s was pressed');-->
+        left_end = !left_end;
         draw_path(n,path);
+    }
+    else if (event.keyCode == 82)
+    {
+        if (event.shiftKey)
+        {
+            //R: 100 random steps
+            move_R();
+        }
+        else
+        {
+            //r: random step
+            move_r();
+        }
     }
     else if (event.keyCode == 69)
     {
         if (event.shiftKey)
         {
             //E: 100 random steps, chooses either end at random
-            for (var i=0; i<100; i++)
-            {
-            switch (Math.floor(Math.random()*4))
-            {
-                case 0:
-                    step = [1,0];
-                    break;
-                case 1:
-                    step = [-1,0];
-                    break;
-                case 2:
-                    step = [0,1];
-                    break;
-                case 3:
-                    step = [0,-1];
-                    break;
-            }
-            if (Math.random() < 0.5)
-            {
-                left_end = !left_end;
-            }
-
-            if (left_end)
-            {
-               n = backbite_left(step,n,path);
-            }
-            else
-            {
-               n = backbite_right(step,n,path);
-            }
-            }
+            move_E();
         }
         else
         {
             //e: random step, chooses either end at random
-            switch (Math.floor(Math.random()*4))
-            {
-                case 0:
-                    step = [1,0];
-                    break;
-                case 1:
-                    step = [-1,0];
-                    break;
-                case 2:
-                    step = [0,1];
-                    break;
-                case 3:
-                    step = [0,-1];
-                    break;
-            }
-            if (Math.random() < 0.5)
-            {
-                left_end = !left_end;
-            }
-
-            if (left_end)
-            {
-               n = backbite_left(step,n,path);
-            }
-            else
-            {
-               n = backbite_right(step,n,path);
-            }
+            move_e();
         }
-        draw_path(n,path);
     }
     else if (event.keyCode == 37)
     {

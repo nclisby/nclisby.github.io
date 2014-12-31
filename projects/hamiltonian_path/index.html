@@ -132,15 +132,14 @@ direction keys. Can you make a spiral, starting from a random
 configuration? 
 </p>
 <p>
-<b>See effect of random backbite moves:</b> &ldquo;r&rdquo; makes a random move for the active end (hold down to
+<b>See effect of random backbite moves, enter either via keyboard or
+    clicking appropriate button:</b> &ldquo;r&rdquo; makes a random move for the active end (hold down to
 repeat), &ldquo;shift+r&rdquo; makes 100 random moves, &ldquo;e&rdquo; makes a
 random move for either end (hold down to repeat), &ldquo;shift+e&rdquo; makes 100
 random moves.
 </p>
 <div class="spacer"></div>
 <p>
-<center><button onclick="refresh_path()"><h2>Generate Hamiltonian
-            path<h2></button></center><br/><br/>
 <center>
 <form name="path_parameters">
 Rows: <input type="text" name="y" id="y" size="4" value="10"/>
@@ -155,6 +154,27 @@ Circuits only: <input type="checkbox" name="is_circuit" id="is_circuit" value="i
 </form><br/>
 </center>
 <center>
+    <button onclick="refresh_path()"><h3>Generate Hamiltonian
+            path<h3></button><br/><br/>
+    <!--<div style="whitespace:no-wrap;">-->
+    <button onclick="toggle()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;t&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="move_r()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;r&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="move_R()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;R&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="move_e()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;e&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="move_E()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;E&nbsp;&nbsp;</h3>
+    </button>
+<!--</div>-->
+        </center><br/>
+<center>
     <script> 
     //writeCanvas writes the opening canvas tag
     writeCanvas(); 
@@ -162,7 +182,9 @@ Circuits only: <input type="checkbox" name="is_circuit" id="is_circuit" value="i
     <!--<canvas>-->
     <p>Canvas element not supported in your browser.</p>
     </canvas>
-</center>
+</center><br/>
+<center>
+        </center><br/>
 </p>
 <p>
 <div class="spacer"></div>
