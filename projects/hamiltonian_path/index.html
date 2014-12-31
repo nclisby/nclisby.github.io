@@ -98,44 +98,50 @@
 <b>Author:</b> Nathan Clisby, November 2014
 (<a href="http://clisby.net/">homepage</a>, <a
 href="mailto:clisby@gmail.com">clisby@gmail.com</a>).
-Link to an <a href="hamiltonian_path_v1.html">earlier version</a>.
-<br/>
+Link to an <a href="hamiltonian_path_v1.html">earlier version</a>. Note:
+both the implementation of the algorithm and the appearance have been
+changed.
+</p>
+<p>
+<b>About:</b> This javascript program generates a Hamiltonian path on an n &times; n grid
+using the backbiting move described in the paper &ldquo;Secondary structures
+in long compact polymers&rdquo; by Richard Oberdorf, Allison Ferguson, Jesper
+L. Jacobsen and Jan&eacute; Kondev, Phys. Rev. E 74, 051801 (2006).
+Paper available via the <a
+href="http://dx.doi.org/10.1103/PhysRevE.74.051801">APS</a>
+(subscription required) or as a pre-print on the <a
+href="http://arxiv.org/abs/cond-mat/0508094">arXiv</a>. The resulting
+path is displayed below both as an image and as a sequence of grid
+points. (Further <a href="#details">technical details</a> at the bottom of the page.)
+</p>
+<p>
 <b>Initialisation:</b> Specify desired grid size and choose &ldquo;quality factor&rdquo; which
-determines how &ldquo;random&rdquo; the path will be, then click &ldquo;Generate
+determines how &ldquo;random&rdquo; the path will be (QF=1 is a good
+default choice), then click &ldquo;Generate
 Hamiltonian path&rdquo;. Check &ldquo;Circuits only&rdquo; if you wish to
 only generate Hamiltonian circuits. The default option is for the starting configuration to visit
 every site, but if you unselect &ldquo;Must fill&rdquo; it's possible that not every site will be
 visited. In particular, if you set quality factor to 0, and unselect &ldquo;Must fill&rdquo; then
 the starting configuration will be a single point starting at a randomly selected site.
-<br/>
+</p>
+<p>
 <b>Play game:</b>
 Toggle the active end by
 pressing &ldquo;t&rdquo;, and make backbite moves by moving the active end using the
 direction keys. Can you make a spiral, starting from a random
 configuration? 
-<br/>
+</p>
+<p>
 <b>See effect of random backbite moves:</b> &ldquo;r&rdquo; makes a random move for the active end (hold down to
 repeat), &ldquo;shift+r&rdquo; makes 100 random moves, &ldquo;e&rdquo; makes a
 random move for either end (hold down to repeat), &ldquo;shift+e&rdquo; makes 100
 random moves.
-<!--(read <a href="#details">technical-->
-<!--details</a> at bottom of page to see why circuits are not-->
-<!--selected uniformly at random).<br/>-->
-<!--Quality factor of 1.0 should be fine for most-->
-<!--purposes; for large grids it may be worth trying 0.5 or even-->
-<!--0.1.<br/>-->
-<!--Tested on firefox and chrome browsers. N.B.: for large grids (say 100-->
-<!--&times; 100 or larger) you may be prompted to stop the script due to the-->
-<!--long running time. For chrome, I found that if I did nothing the script-->
-<!--would keep running in the background, whereas for firefox I would have-->
-<!--to click "continue" for the script to complete.-->
 </p>
-<br/>
-<!--</div>-->
-<!--<button-->
-<!--style="font-size:150%;color:#07c;background-color:#ccc;padding:5px"-->
-<!--onclick="refresh_path()">Generate Hamiltonian path</button><br/><br/>-->
-<center><button onclick="refresh_path()"><h2>Generate Hamiltonian path<h2></button><center><br/><br/>
+<div class="spacer"></div>
+<p>
+<center><button onclick="refresh_path()"><h2>Generate Hamiltonian
+            path<h2></button></center><br/><br/>
+<center>
 <form name="path_parameters">
 Rows: <input type="text" name="y" id="y" size="4" value="10"/>
 &nbsp; &nbsp; &nbsp; 
@@ -149,85 +155,123 @@ Circuits only: <input type="checkbox" name="is_circuit" id="is_circuit" value="i
 </form><br/>
 </center>
 <center>
-<!--<canvas id="path_canvas" width="2000" height="2000"><p>Canvas element not-->
-<!--supported in your browser.</p></canvas><br/>-->
-<!--for prize ceremony cover, 14x20-->
-<!--<canvas id="path_canvas" width="2100" height="3000"><p>Canvas element not-->
-<!--supported in your browser.</p></canvas><br/>-->
-<!--for decoration in , 30x2-->
-<!--<div class="canvas_container">-->
-    <!--<canvas id="path_canvas" width="600" height="600">-->
-    <script> writeCanvas(); </script> <p>Canvas element not supported in your browser.</p></canvas>
+    <script> 
+    //writeCanvas writes the opening canvas tag
+    writeCanvas(); 
+    </script> 
+    <!--<canvas>-->
+    <p>Canvas element not supported in your browser.</p>
+    </canvas>
+</center>
+</p>
+<p>
+<div class="spacer"></div>
 <!--</div>-->
-<br/>
-<br/>
-<!--<canvas id="path_canvas" width="2000" height="2000"><p>Canvas element not-->
-<!--supported in your browser.</p></canvas><br/>-->
-<!--<textarea id="path_text" rows="40" cols="80" style="font-size:75%"></textarea><br/>-->
-<!--<div style="text-align:left;width:800px">-->
-<!--<p>-->
-<!--<b><a name="details">Technical details:</a></b><br/>-->
-<!--<ul>-->
-<!--<li>Running time(n &times; n grid) = (Quality factor) &times; 20 &times;-->
-<!--n<sup>2</sup>-->
-<!--log<sup>2</sup>n &times; Pr(success of backbite move)-->
-<!--&times; (Expected CPU time for backbite move)</li>-->
-<!--<li>The `quality factor' is an arbitrary constant, while the factor of 20-->
-<!--seems to ensure that Hamiltonian path with good randomness is achieved-->
-<!--when quality factor is 1.</li>-->
-<!--<li>The cover time for the simple random walk on an n-->
-<!--&times; n grid is n<sup>2</sup> log<sup>2</sup>n (I've found this stated-->
-<!--in a number of places, but if anyone could give me the original-->
-<!--reference I would appreciate it). The Hamiltonian path endpoints perform-->
-<!--something like a random walk on the grid, and so we use this as an-->
-<!--approximation for the cover time. (It may be a tight bound, but I'm not-->
-<!--an expert on this problem and can only say that it seems plausible that-->
-<!--the bound is in fact tight.)</li>-->
-<!--<li>The probability of success of the backbite-->
-<!--move approaches 1 as n becomes large.</li>-->
-<!--<li>I have not performed any testing-->
-<!--to determine the mean CPU time for a backbite move, but it must be-->
-<!--O(n<sup>2</sup>), and it is reasonable to suppose that in fact it is a relatively-->
-<!--small power of n. A more sophisticated implementation would allow the-->
-<!--backbite move to be performed in time O(log n).</li>-->
-<!--<li>The Markov chain resulting from repeated application of the-->
-<!--backbiting move has not (yet) been-->
-<!--proved to be ergodic. This is an interesting open problem. The Markov-->
-<!--chain is ergodic-->
-<!--for small grid sizes, and my intuition is that -->
-<!--the algorithm is extremely likely to be ergodic-->
-<!--for arbitrary two-dimensional-->
-<!--grids (it seems to me that if the set of Hamiltonian paths were to be-->
-       <!--disconnected this would be more likely to occur for smaller grids-->
-       <!--for which the grid boundary has greater influence).-->
-<!--For three dimensions and-->
-<!--higher I don't have any intuition because here large grids are intrinsically-->
-<!--different to small grids due to the existence of knots.-->
-<!--</li>-->
-<!--<li>-->
-<!--Hamiltonian circuit generator just generates a path, and continues-->
-<!--iterating the backbiting move until a circuit is generated. This method-->
-<!--<it>cannot</it> select a circuit uniformly at random because circuit-->
-<!--selection probability is weighted by the (expected) space between-->
-<!--samples. I think this can be best explained by an example: suppose we-->
-<!--have a Markov chain to uniformly select elements 1 and 2 from a list of-->
-<!--N elements. For each time step we can move up or down one element on the-->
-<!--list with uniform probability; if this reaches 0 or N+1 the move is-->
-<!--rejected. This Markov chain selects 1 and 2 with uniform probability,-->
-    <!--but if we look at the behaviour of the full chain the probability-->
-    <!--that we will sample 1 before 2 given an arbitrary starting time vanishes with-->
-    <!--increasing N as 1/N. This is because at the starting time we are-->
-    <!--almost surely in the interval [3,N], and in this case the next-->
-    <!--element must be a 2. This is-->
-    <!--an extreme example, and the Hamiltonian circuits generated here are-->
-    <!--likely to be statistically extremely similar to circuits generated-->
-    <!--from the uniform distribution, but the method used in this-->
-    <!--Hamiltonian circuit generator should most definitely not-->
-    <!--be used for serious numerical work.-->
-<!--</li>-->
-<!--</ul>-->
-<!--</p>-->
-<!--</div>-->
+<b>History:</b> The impetus to create this generator came from <a
+href="http://danielcrooks.com/">Daniel Crooks</a>, an artist based in Melbourne, who needed a
+tool for generating long Hamiltonian paths.
+In his words: 
+<div class="blockquote">My original
+interest in the Hamiltonian paths was for a portraiture project. I've
+developed a process for taking large format photographs using a video
+camera and a robotic pan/tilt head to 'scan' the image of the sitter
+over time. As part of the research I became interested in Hamiltonian
+paths, firstly as a motion path for the camera and then subsequently the
+aesthetic and conceptual possibilities inherent in the paths
+themselves.</div>
+</p>
+<p>
+I had previously come
+across the aforementioned paper on sampling Hamiltonian paths,
+and took the
+opportunity to learn some javascript and create this generator.
+I hope to apply the expertise gained in this enterprise to other
+visualisation projects in combinatorics and statistical mechanics.
+</p>
+<p>
+<b>Usage:</b> Specify desired grid size and choose &ldquo;quality
+factor&rdquo; which
+determines how &ldquo;random&rdquo; the path will be, then click "Generate
+Hamiltonian path" or reload page. Check &ldquo;Circuits only&rdquo; if you wish to
+only generate Hamiltonian circuits (read <a href="#details">technical
+details</a> below to see why circuits are not
+selected uniformly at random).
+</p>
+<p>
+Quality factor of 1.0 should be fine for most
+purposes; for large grids it may be worth trying 0.5 or even
+0.1.
+</p>
+<p>
+Tested on firefox and chrome browsers. N.B.: for large grids (say 100
+&times; 100 or larger) you may be prompted to stop the script due to the
+long running time. For chrome, I found that if I did nothing the script
+would keep running in the background, whereas for firefox I would have
+to click "continue" for the script to complete.
+</p>
+<p>
+<b><a name="details">Technical details:</a></b><br/>
+<ul>
+<li>Running time(n &times; n grid) = (Quality factor) &times; 20 &times;
+n<sup>2</sup>
+log<sup>2</sup>n &times; Pr(success of backbite move)
+&times; (Expected CPU time for backbite move)</li>
+<li>The `quality factor' is an arbitrary constant, while the factor of 20
+seems to ensure that Hamiltonian path with good randomness is achieved
+when quality factor is 1.</li>
+<li>The cover time for the simple random walk on an n
+&times; n grid is n<sup>2</sup> log<sup>2</sup>n (I've found this stated
+in a number of places, but if anyone could give me the original
+reference I would appreciate it). The Hamiltonian path endpoints perform
+something like a random walk on the grid, and so we use this as an
+approximation for the cover time. (It may be a tight bound, but I'm not
+an expert on this problem and can only say that it seems plausible that
+the bound is in fact tight.)</li>
+<li>The probability of success of the backbite
+move approaches 1 as n becomes large.</li>
+<li>I have not performed any testing
+to determine the mean CPU time for a backbite move, but it must be
+O(n<sup>2</sup>), and it is reasonable to suppose that in fact it is a relatively
+small power of n. A more sophisticated implementation would allow the
+backbite move to be performed in time O(log n).</li>
+<li>The Markov chain resulting from repeated application of the
+backbiting move has not (yet) been
+proved to be ergodic. This is an interesting open problem. The Markov
+chain is ergodic
+for small grid sizes, and my intuition is that
+the algorithm is extremely likely to be ergodic
+for arbitrary two-dimensional
+grids (it seems to me that if the set of Hamiltonian paths were to be
+       disconnected this would be more likely to occur for smaller grids
+       for which the grid boundary has greater influence).
+For three dimensions and
+higher I don't have any intuition because here large grids are intrinsically
+different to small grids due to the existence of knots.
+</li>
+<li>
+Hamiltonian circuit generator just generates a path, and continues
+iterating the backbiting move until a circuit is generated. This method
+<it>cannot</it> select a circuit uniformly at random because circuit
+selection probability is weighted by the (expected) space between
+samples. I think this can be best explained by an example: suppose we
+have a Markov chain to uniformly select elements 1 and 2 from a list of
+N elements. For each time step we can move up or down one element on the
+list with uniform probability; if this reaches 0 or N+1 the move is
+rejected. This Markov chain selects 1 and 2 with uniform probability,
+    but if we look at the behaviour of the full chain the probability
+    that we will sample 1 before 2 given an arbitrary starting time vanishes with
+    increasing N as 1/N. This is because at the starting time we are
+    almost surely in the interval [3,N], and in this case the next
+    element must be a 2. This is
+    an extreme example, and the Hamiltonian circuits generated here are
+    likely to be statistically extremely similar to circuits generated
+    from the uniform distribution, but the method used in this
+    Hamiltonian circuit generator should most definitely not
+    be used for serious numerical work.
+</li>
+</ul>
+</p>
+</div>
 <!--</center>-->
         </div> <!-- content -->
     </div> <!-- contentblock -->
