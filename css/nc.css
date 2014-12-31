@@ -287,7 +287,21 @@ a:active
 .bnav a.current:active
 {
     color: #A070FF;
-    font-size: 1.2em;
+    /*same size as other times - changed mind about styling, for the
+     * moment*/
+    /*font-size: 1.2em;*/
+    font-size: 0.9em;
+}
+
+@media (max-width: 400px) {
+    .bnav a.current:link,
+    .bnav a.current:visited,
+    .bnav a.current:hover,
+    .bnav a.current:active
+    {
+        /*same size as other times*/
+        font-size: 0.9em;
+    }
 }
 
 #push {
