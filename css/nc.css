@@ -120,7 +120,8 @@ a:active
     margin-right: auto;
     display: block;
     max-width: 800px;
-    height: 2em;
+    /*height: 2em;*/
+    height: 2.6em;
     padding-left: 4%;
     padding-right: 4%;
 }
@@ -133,7 +134,8 @@ a:active
     display:block;
     width: 100%;
     /*font-size: 1.5em;*/
-    font-size: 1.4em;
+    /*font-size: 1.4em;*/
+    font-size: 2em;
     color: #1E0059;
     text-decoration: none;
     border-radius: 0.4em;
@@ -152,7 +154,8 @@ a:active
     list-style-type: none;
     margin: 0;
     padding: 0;
-    height: 2em;
+    /*height: 2em;*/
+    height: 2.6em;
 }
 
 .tnav li {
@@ -161,8 +164,10 @@ a:active
     display: block;
     float: left;
     width: 33.333333%;
-    height: 2em;
-    line-height: 2em;
+    /*height: 2em;*/
+    height: 2.6em;
+    /*line-height: 2em;*/
+    line-height: 2.6em;
 }
 
 .tnav a.current:link,
@@ -171,7 +176,8 @@ a:active
 .tnav a.current:active
 {
     color: #5500FF;
-    font-size: 1.6em;
+    /*font-size: 1.6em;*/
+    font-size: 2.3em;
 }
 
 .bnav {
