@@ -131,6 +131,13 @@ a:active
     padding-right: 4%;
 }
 
+h1 img
+{
+    height: 1em;
+    vertical-align: bottom;
+    width: auto;
+}
+
 .tnav a:link,
 .tnav a:visited,
 .tnav a:hover,
