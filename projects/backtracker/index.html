@@ -83,7 +83,11 @@
             their own heuristics (intuition).
             </p>
             <p>
-            So far we have a prototype version working for
+            A prototype version can be played <a href="app/">here</a>
+            for now; it will likely move to a different url in future.
+            </p>
+            <p>
+            This prototype works for the 
             decomposition of a putative Gram matrix with the goal of
             finding maximal determinant matrices (the original
             inspiration), and two toy problems: open 
@@ -95,21 +99,112 @@
                 queens</a> problem.
             </p>
             <p>
-            There is much still to do! The remaining stages will involve
-            elements of game design, javascript programming, server side
-            scripting, and research into the specific applications.
+            What's the largest board for which you can find an open
+            knight's tour? (Hints: <a
+                href="http://en.wikipedia.org/wiki/Knight%27s_tour#Warnsdorff.27s_rule">Warnsdorf's
+                rule</a> is an effective heuristic, and mind the corners
+            of the board.)
             </p>
             <p>
-            The prototype version should be web visible (and playable)
-            soon.
+            There is much still to do! The remaining stages will involve
+            elements of game design, javascript programming, server side
+            scripting, and research into the specific applications. We
+            want the app to be both more attractive and
+            &ldquo;playable&rdquo;, as well as useful for research
+            through clever design of the computer search algorithm and
+            use of parallel threads carrying out searches in the
+            background.
             </p>
-            <!--<p>-->
-            <!--You can play with the app here (not live yet).-->
-            <!--</p>-->
-            <!--<p>-->
-            <!--Brief instructions:-->
-            <!--</p>-->
-
+            <p>
+            The computer search runs client side, leveraging the great
+            leaps in efficiency of javascript interpreters in recent
+            years.
+            </p>
+            <p>
+            Note that it is only suitable for playing on a computer for
+            the moment, i.e. it is not at all mobile friendly. This is because
+            different kinds of mouse clicks are required to interact
+            with the backtracking tree.
+            </p>
+            <h3>Brief instructions</h3>
+            <p>
+            Your goal is to search for a solution to the combinatorial
+            search problem, e.g. a valid matrix decomposition, or a
+            knight's tour, and a complete N queens configuration.
+            </p>
+            <p>
+            First you must access the left-most menu to choose which
+            application to use (Gram matrix decomposition, knight's
+            tour, N queens), then choose the problem case for the
+            application (e.g. board dimension for knight's tour).
+            </p>
+            <p>
+            Now, press the &ldquo;Start&rdquo; button to start the app.
+            </p>
+            <p>
+            The remaining menu specifies the &ldquo;search depth&rdquo;. A
+            good default option is three, but one needs to be careful
+            that this depth is not too great. If the branching ratio of
+            the backtracking tree is too large then the search will not
+            terminate in a reasonable time frame, and likely the memory
+            allocated to the browser will be exhausted causing your web
+            browser to crash. This is not a problem for the knight's
+            tour and N queens applications where the branching ratio is
+            bounded, but is a significant issue for the Gram matrix
+            decomposition, especially the larger cases.
+            </p>
+            <p>
+            Solutions are dark green, while dead ends are
+            red. These are, by necessity, leaves of the
+            backtracking tree. Internal nodes may have one of three
+            possible states, uncertain (amber), leads to solution (light
+            green), and leads to only dead ends (pink).
+            </p>
+            <p>
+            To interact with the search tree you have three basic
+            operations.
+            <table>
+                <tr>
+                    <th>Inspect:</th>
+                    <td>Show the combinatorial object
+                        corresponding to a particular node in the
+                        tree.</td>
+                    <td>Left click on the node.</td>
+                </tr>
+                <tr>
+                    <th>Search:</th>
+                    <td>Search the backtracking tree starting from a
+                        particular node.
+                    </td>
+                    <td>Ctrl-click, Command-click, or Windows
+                        key-click.</td>
+                </tr>
+                <tr>
+                    <th>Shift:</th>
+                    <td>
+                        Change the focus of the part of the tree that is
+                        shown. If you click on the root it will move the
+                        tree down one level, otherwise clicking on any
+                        other node will bring it to the root.
+                    </td>
+                    <td>Shift-click.
+                    </td>
+                </tr>
+            </table>
+            There are 3 additional graphical buttons in the tree canvas
+            area. The &ldquo;+&rdquo; and &ldquo;-&rdquo; keys zoom in
+            and out respectively, while the up arrow jumps up to the
+            root of the whole tree instantaneously (useful when you have
+            dived deep into a tree and want to start over).
+            </p>
+            <p>
+            Finally, a limited amount of feedback is provided above the
+            tree, keeping track of the number of search operations
+            (moves), nodes searched, and solutions found.
+            </p>
+            <p>
+            Have fun! Any feedback would be gratefully received.
+            </p>
         </div> <!-- content -->
     </div> <!-- contentblock -->
     <div id="push"></div>

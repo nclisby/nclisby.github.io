@@ -42,6 +42,11 @@ p {
     margin: 0.5em 0em;
 }
 
+table th, table th *, table td, table td * {
+    padding: 0.3em;
+    vertical-align: top;
+}
+
 .image {
     border: 10px solid transparent;
     /*padding: 50px 50px;*/
