@@ -1,8 +1,8 @@
-var n = 16;
+var n = 17;
 var rand=Math.random();
 var i = Math.floor(n*rand);
 var filename; 
-//i = 12;
+//i = 16;
 if (i < 10)
 {
 filename = "/snippets/snippet000"+i.toString(10)+".js";

@@ -1,0 +1,1 @@
+document.write('<div class="quote">... error bounds are generally referred to as (subjective) confidence limits, and as such frequently measure the enthusiasm of the author rather than the quality of the data.</div> Tony Guttmann referring to estimates derived from series analysis, in Asymptotic Analysis of Power-Series Expansions.');
