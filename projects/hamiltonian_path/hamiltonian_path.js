@@ -699,6 +699,7 @@ function move_R()
 function move_e()
 {
     //e: random step, chooses either end at random
+    var old_left_end = left_end;
     switch (Math.floor(Math.random()*4))
     {
         case 0:
@@ -727,6 +728,7 @@ function move_e()
     {
         n = backbite_right(step,n,path);
     }
+    left_end = old_left_end;
     draw_path(n,path);
     return;
 }
@@ -735,6 +737,7 @@ function move_e()
 function move_E()
 {
     //E: 100 random steps, chooses either end at random
+    var old_left_end = left_end;
     for (var i=0; i<100; i++)
     {
         switch (Math.floor(Math.random()*4))
@@ -766,6 +769,7 @@ function move_E()
             n = backbite_right(step,n,path);
         }
     }
+    left_end = old_left_end;
     draw_path(n,path);
     return;
 }
