@@ -133,7 +133,8 @@ the starting configuration will be a single point starting at a randomly selecte
 <p>
 <b>Play game:</b>
 Toggle the active end by
-pressing &ldquo;t&rdquo;, and make backbite moves by moving the active end using the
+pressing &ldquo;t&rdquo;, toggle the display of arrows indicating the
+path direction by pressing &ldquo;a&rdquo;, and make backbite moves by moving the active end using the
 direction keys. Can you make a spiral, starting from a random
 configuration? 
 </p>
@@ -163,8 +164,11 @@ Circuits only: <input type="checkbox" name="is_circuit" id="is_circuit" value="i
     <button onclick="refresh_path()"><h3>Generate Hamiltonian
             path<h3></button><br/><br/>
     <!--<div style="whitespace:no-wrap;">-->
-    <button onclick="toggle()" style="margin:0;padding:0;line-height:0.8em;">
+    <button onclick="toggle_end()" style="margin:0;padding:0;line-height:0.8em;">
         <h3>&nbsp;&nbsp;t&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="toggle_arrow()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;a&nbsp;&nbsp;</h3>
     </button>
     &nbsp;&nbsp;<button onclick="move_r()" style="margin:0;padding:0;line-height:0.8em;">
         <h3>&nbsp;&nbsp;r&nbsp;&nbsp;</h3>
