@@ -47,6 +47,11 @@ table th, table th *, table td, table td * {
     vertical-align: top;
 }
 
+html b, i {
+    margin: 0em;
+    padding: 0em;
+}
+
 .image {
     border: 10px solid transparent;
     /*padding: 50px 50px;*/
