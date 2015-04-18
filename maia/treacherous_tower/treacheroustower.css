@@ -1,0 +1,47 @@
+html {
+    font-size: 1.4em;
+    min-width: 1000px;
+}
+
+body {
+    width: 1000px;
+    background-color: #000000;
+    color: white;
+    /* required to get content centered */
+    text-align: center;
+}
+
+#content {
+    width: 800px;
+    margin: auto;
+    text-align: left;
+}
+
+blockquote {
+    display: block;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 40px;
+    margin-right: 40px;
+    color: gold;
+    font-style: italic;
+}
+
+.choice {
+    display: block;
+    color: lightyellow;
+    /*margin-top: 1em;*/
+    /*margin-bottom: 1em;*/
+    /*margin-left: 40px;*/
+    /*margin-right: 40px;*/
+    font-style: italic;
+}
+
+a {
+    color: yellow;
+}
+
+h1 {
+    font-size: 3em;
+    color: palevioletred;
+}
