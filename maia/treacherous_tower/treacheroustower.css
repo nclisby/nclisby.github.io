@@ -1,19 +1,27 @@
 html {
-    font-size: 1.4em;
-    min-width: 1000px;
+    font-family: "Georgia", serif;
+    height: 100%;
+    /*font-size: 1.4em;*/
+    /*min-width: 1000px;*/
 }
 
 body {
-    width: 1000px;
+    /*width: 1000px;*/
     background-color: #000000;
     color: white;
+    height: 100%;
+    margin: 0em;
+    font-size: 1.3em;
     /* required to get content centered */
     text-align: center;
 }
 
 #content {
-    width: 800px;
-    margin: auto;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 4%;
+    padding-right: 4%;
     text-align: left;
 }
 

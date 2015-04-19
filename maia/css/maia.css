@@ -1,24 +1,10 @@
-/*
- * #FFC80A dark orange
- * #FFD852 intermediate orange
- * #FFECA9 light orange
- * #FFF7DA lighter orange
- * #0F002C very dark purple
- * #1E0059 darker purple
- * #5500FF dark purple
- * #A070FF lighter purple
- * #6849FF blue-purple, for sub-menu
- * #4832FF blue-purple, for sub-menu
- * #AA6484 half dark orange (bar), half darker purple
- */
-
 html {
     font-family: "Georgia", serif;
     height: 100%;
     /*font-family: "Verdana", sans-serif;*/
     /*font-family: Arial, Helvetica, sans-serif;*/
 }
-/*#66FFCC*/
+
 body {
     background-color: #E0FFF5;
     height: 100%;
