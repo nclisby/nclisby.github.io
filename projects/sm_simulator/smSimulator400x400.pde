@@ -332,6 +332,20 @@ void drawMenu(int [] ioptions, String [][] options)
   drawExitButton();
   //place box of background colour around the menu boxes
   fill(menuBackgroundColour[0], menuBackgroundColour[1], menuBackgroundColour[2]);
+  //Bug report from Gordon Slade - background is overwriting the text.
+  //So, will insert pauses by hand, as a hack, to ensure order of
+  //drawing commands is as given here. Likely just an issue with Firefox
+  //implementation of WebGL, but will be no great harm here, as we do
+  //not need menus to be overly responsive.
+  int pauseTime = 5;
+  int startTime;
+  int dummy;
+  startTime = millis();
+  dummy = 0;
+  do {
+      dummy = 3*dummy-31;
+  } 
+  while (millis()-startTime <= pauseTime);
   for (int i=0; i<nMenu; i++)
   {
     rect(0.0*width, float(i)*dh, 1.0*width, 0.1*dh);
@@ -339,6 +353,13 @@ void drawMenu(int [] ioptions, String [][] options)
     rect(0.9*width, float(i)*dh, 0.1*width, 1.0*dh);
     rect(0.0*width, float(i)*dh+0.9*dh, 1.0*width, 0.1*dh);
   }
+
+  startTime = millis();
+  dummy = 0;
+  do {
+      dummy = 3*dummy-31;
+  } 
+  while (millis()-startTime <= pauseTime);
 
   //write text to boxes
   //fill(menuTextColour[0], menuTextColour[1], menuTextColour[2]);
@@ -1209,6 +1230,7 @@ void drawPiMCMC()
   rect(0, 0, 0.5*minSize, 0.5*minSize);
   rectMode(CORNER);
   //popMatrix();
+  //fill(191, 0, 0);
   fill(128, 0, 0);
   ellipse(0, 0, minSize, minSize);
   fill(0, 0, 255);
@@ -1304,7 +1326,6 @@ void setup()
 {
   //Can't set size dynamically in javascript
   //size(displayWidth, displayHeight, OPENGL);
-  //size(1024, 768, OPENGL);
   size(400, 400, OPENGL);
   minSize = min(width, height);
   //processing.js requires textSize to allocate the correct
