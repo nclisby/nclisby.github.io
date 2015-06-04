@@ -36,6 +36,19 @@ var n = (xmax+1)*(ymax+1);
 var left_end = true;
 var must_fill = true;
 var draw_arrow = false;
+//Modes for showing trace of ends. (clumsy name, but can't use trace or
+//path)
+//either:
+//0 - do nothing - neither record nor draw
+//1 - record and draw (initialise if just turned on)
+//2 - draw but no longer record
+var showTraceMode = 0;
+var nShowTraceModes = 3;
+var leftTrace = [];
+var nLeftTrace = 0;
+var rightTrace = [];
+var nRightTrace = 0;
+
 
 //var xmax = 21;
 //var ymax = 41;
@@ -251,6 +264,14 @@ function backbite_left(step,n,path)
             path[n-1] = neighbour;
         }
     }
+    if (showTraceMode == 1)
+    //add new site to the trace for left end
+    //not keeping tracking of intermediate site - have the feeling that
+    //this will be more clear.
+    {
+        leftTrace[nLeftTrace] = path[0]
+        nLeftTrace++;
+    }
     return n;
 }
 
@@ -282,6 +303,14 @@ function backbite_right(step,n,path)
             n++;
             path[n-1] = neighbour;
         }
+    }
+    if (showTraceMode == 1)
+    //add new edge to the trace for right end
+    //not keeping tracking of intermediate site - have the feeling that
+    //this will be more clear.
+    {
+        rightTrace[nRightTrace] = path[n-1]
+        nRightTrace++;
     }
     return n;
 }
@@ -589,6 +618,28 @@ function draw_path(n,path)
         }
         ctx.closePath();
         ctx.fill();
+        if ((showTraceMode == 1) || (showTraceMode == 2))
+        //draw trace - won't have a separate function for this for the
+        //moment
+        {
+            ctx.beginPath();
+            ctx.strokeStyle = "rgba(0,200,255,0.5)"
+            ctx.moveTo((pad+leftTrace[0][0])*sw,(pad+leftTrace[0][1])*sh);
+            for (i=1; i<nLeftTrace; i++)
+            {
+                //ctx.strokeStyle = "rgb(0,125,255)"
+                ctx.lineTo((pad+leftTrace[i][0])*sw,(pad+leftTrace[i][1])*sh);
+            }
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.strokeStyle = "rgba(0,255,125,0.5)"
+            ctx.moveTo((pad+rightTrace[0][0])*sw,(pad+rightTrace[0][1])*sh);
+            for (i=1; i<nRightTrace; i++)
+            {
+                ctx.lineTo((pad+rightTrace[i][0])*sw,(pad+rightTrace[i][1])*sh);
+            }
+            ctx.stroke();
+        }
 
     }
     return;
@@ -887,5 +938,26 @@ document.addEventListener('keydown', function(event) {
         //alert('a was pressed');
         draw_arrow = !draw_arrow;
         draw_path(n,path);
+    }
+    else if (event.keyCode == 83)
+    {
+        //s: toggle mode for showing trace of ends
+        //call it: trace? path? track?
+        //sticking with "path" - so toggle path mode
+        showTraceMode = (showTraceMode + 1) % nShowTraceModes;
+        if (showTraceMode == 1)
+        //reset the trace lengths - start new traces
+        {
+            leftTrace[0] = path[0]
+            nLeftTrace = 1;
+            rightTrace[0] = path[n-1]
+            nRightTrace = 1;
+        }
+        if (showTraceMode == 0)
+        //redraw the path to eliminate trace
+        {
+            draw_path(n,path);
+        }
+
     }
 });
