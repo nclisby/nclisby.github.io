@@ -1,0 +1,1 @@
+document.write(' <div class="quote">No one can be said to understand a paper unless he is able to generalize the paper. Corollary: No author can be said to understand his most recent paper.</div> Barry McCoy, <a href="http://www.smft2007.ms.unimelb.edu.au/images/McCoy.pdf">The meaning of &ldquo;understanding&rdquo;</a>.');
