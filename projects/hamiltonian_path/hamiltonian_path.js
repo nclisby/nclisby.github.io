@@ -49,6 +49,8 @@ var nLeftTrace = 0;
 var rightTrace = [];
 var nRightTrace = 0;
 
+//useful for showing vector field only
+var showWalk = true;
 
 //var xmax = 21;
 //var ymax = 41;
@@ -535,19 +537,30 @@ function draw_path(n,path)
         //first so that the corners don't have gaps
         for (i=1; i<n; i++)
         {
-            //ctx.strokeStyle = 'green';
-            ctx.beginPath();
-            ctx.strokeStyle = rgbColour((n-1-i)/(n-1),rgbLeft,rgbRight);
-            ctx.moveTo((pad+path[i-1][0])*sw,(pad+path[i-1][1])*sh);
-            ctx.lineTo((pad+path[i][0])*sw,(pad+path[i][1])*sh);
-            if (i < n-1)
+            if (showWalk)
             {
-                ctx.lineTo((pad+path[i+1][0])*sw,(pad+path[i+1][1])*sh);
+                //ctx.strokeStyle = 'green';
+                ctx.beginPath();
+                ctx.strokeStyle = rgbColour((n-1-i)/(n-1),rgbLeft,rgbRight);
+                ctx.moveTo((pad+path[i-1][0])*sw,(pad+path[i-1][1])*sh);
+                ctx.lineTo((pad+path[i][0])*sw,(pad+path[i][1])*sh);
+                if (i < n-1)
+                {
+                    ctx.lineTo((pad+path[i+1][0])*sw,(pad+path[i+1][1])*sh);
+                }
+                ctx.stroke();
             }
-            ctx.stroke();
             //draw arrows to indicate direction, if draw_arrow is true
             if (draw_arrow)
             {
+                if (showWalk)
+                {
+                    arrow_width = 0.35;
+                }
+                else
+                {
+                    arrow_width = 0.15;
+                }
                 if (left_end)
                 {
                     x1 = pad+path[i][0];
@@ -562,24 +575,48 @@ function draw_path(n,path)
                     y1 = pad+path[i-1][1];
                     y2 = pad+path[i][1];
                 }
-                ctx.beginPath();
-                ctx.fillStyle = rgbColour((n-1-i)/(n-1),rgbLeft,rgbRight);
-                if (path[i-1][0] == path[i][0])
-                //step is in y direction
+                if (showWalk)
                 {
-                    ctx.moveTo((x1-0.35)*sw,(0.50*y1+0.50*y2)*sh);
-                    ctx.lineTo((x1+0.35)*sw,(0.50*y1+0.50*y2)*sh);
-                    ctx.lineTo(x1*sw,(0.00*y1+1.00*y2)*sh);
+                    ctx.beginPath();
+                    ctx.fillStyle = rgbColour((n-1-i)/(n-1),rgbLeft,rgbRight);
+                    if (path[i-1][0] == path[i][0])
+                        //step is in y direction
+                    {
+                        ctx.moveTo((x1-arrow_width)*sw,(0.50*y1+0.50*y2)*sh);
+                        ctx.lineTo((x1+arrow_width)*sw,(0.50*y1+0.50*y2)*sh);
+                        ctx.lineTo(x1*sw,(0.00*y1+1.00*y2)*sh);
+                    }
+                    else
+                        //step is in x direction
+                    {
+                        ctx.moveTo((0.50*x1+0.50*x2)*sw,(y1-arrow_width)*sh);
+                        ctx.lineTo((0.50*x1+0.50*x2)*sw,(y1+arrow_width)*sh);
+                        ctx.lineTo((0.00*x1+1.00*x2)*sw,y1*sh);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
                 }
                 else
-                //step is in x direction
                 {
-                    ctx.moveTo((0.50*x1+0.50*x2)*sw,(y1-0.35)*sh);
-                    ctx.lineTo((0.50*x1+0.50*x2)*sw,(y1+0.35)*sh);
-                    ctx.lineTo((0.00*x1+1.00*x2)*sw,y1*sh);
+                    ctx.beginPath();
+                    ctx.fillStyle = rgbColour(1.0,rgbLeft,rgbRight);
+                    if (path[i-1][0] == path[i][0])
+                        //step is in y direction
+                    {
+                        ctx.moveTo((x1-arrow_width)*sw,(1.20*y1-0.20*y2)*sh);
+                        ctx.lineTo((x1+arrow_width)*sw,(1.20*y1-0.20*y2)*sh);
+                        ctx.lineTo(x1*sw,(0.50*y1+0.50*y2)*sh);
+                    }
+                    else
+                        //step is in x direction
+                    {
+                        ctx.moveTo((1.20*x1-0.20*x2)*sw,(y1-arrow_width)*sh);
+                        ctx.lineTo((1.20*x1-0.20*x2)*sw,(y1+arrow_width)*sh);
+                        ctx.lineTo((0.50*x1+0.50*x2)*sw,y1*sh);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
                 }
-                ctx.closePath();
-                ctx.fill();
             }
         }
         //Draw endpoints as discs. The discs are chosen to be quite
@@ -958,6 +995,22 @@ document.addEventListener('keydown', function(event) {
         {
             draw_path(n,path);
         }
+
+    }
+    else if (event.keyCode == 86)
+    {
+        //v: toggle mode for showing walk 'vector mode' - show arrows
+        //only.
+        showWalk = !showWalk;
+        if (!showWalk)
+        {
+            draw_arrow = true;
+        }
+        //if (showTraceMode == 0)
+        ////redraw the path to eliminate trace
+        //{
+            draw_path(n,path);
+        //}
 
     }
 });
