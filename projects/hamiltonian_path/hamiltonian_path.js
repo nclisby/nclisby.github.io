@@ -559,7 +559,7 @@ function draw_path(n,path)
                 }
                 else
                 {
-                    arrow_width = 0.15;
+                    arrow_width = 0.2;
                 }
                 if (left_end)
                 {
@@ -598,6 +598,9 @@ function draw_path(n,path)
                 }
                 else
                 {
+                    //if ((i % 2 == 1) && (i < n-2))
+                    if (i % 2 == 1) 
+                    {
                     ctx.beginPath();
                     ctx.fillStyle = rgbColour(1.0,rgbLeft,rgbRight);
                     if (path[i-1][0] == path[i][0])
@@ -605,17 +608,18 @@ function draw_path(n,path)
                     {
                         ctx.moveTo((x1-arrow_width)*sw,(1.20*y1-0.20*y2)*sh);
                         ctx.lineTo((x1+arrow_width)*sw,(1.20*y1-0.20*y2)*sh);
-                        ctx.lineTo(x1*sw,(0.50*y1+0.50*y2)*sh);
+                        ctx.lineTo(x1*sw,(0.40*y1+0.60*y2)*sh);
                     }
                     else
                         //step is in x direction
                     {
                         ctx.moveTo((1.20*x1-0.20*x2)*sw,(y1-arrow_width)*sh);
                         ctx.lineTo((1.20*x1-0.20*x2)*sw,(y1+arrow_width)*sh);
-                        ctx.lineTo((0.50*x1+0.50*x2)*sw,y1*sh);
+                        ctx.lineTo((0.40*x1+0.60*x2)*sw,y1*sh);
                     }
                     ctx.closePath();
                     ctx.fill();
+                    }
                 }
             }
         }

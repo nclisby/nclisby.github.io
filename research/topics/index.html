@@ -63,54 +63,259 @@
                 </div>
                 </h1>
             <p>
-            12/1/14: Empty for now, I will be progressively adding
-            material here over the next few weeks under the following
-            topics:
-            <a href="#mcmc">
-                Efficient algorithms for Markov chain Monte
-                Carlo simulaton</a>,
-            <a href="#virial">
-                Virial series</a>,
-            <a href="#enumeration">
-                Enumeration of self-avoiding walks and related objects</a>,
-            <a href="#endless">
-                Endless walk models</a>,
-            <a href="#climate">
-                Multi-gas modelling for climate change</a>,
-            <a href="#polymer">
-                Polymer physics</a>,
-            <a href="#visualisation">
-                Mathematical visualisation</a>,
-            <a href="#gpu">
-                Backtracking algorithms implemented on GPUs
-            </a>.
-            <!--
+            <!--<a href="#mcmc">-->
+                <!--Efficient algorithms for Markov chain Monte-->
+                <!--Carlo simulaton</a>,-->
+            <!--<a href="#virial">-->
+                <!--Virial series</a>,-->
+            <!--<a href="#enumeration">-->
+                <!--Enumeration of self-avoiding walks and related objects</a>,-->
+            <!--<a href="#endless">-->
+                <!--Endless walk models</a>,-->
+            <!--<a href="#climate">-->
+                <!--Multi-gas modelling for climate change</a>,-->
+            <!--<a href="#polymer">-->
+                <!--Polymer physics</a>,-->
+            <!--<a href="#visualisation">-->
+                <!--Mathematical visualisation</a>,-->
+            <!--<a href="#gpu">-->
+                <!--Backtracking algorithms implemented on GPUs-->
+            <!--</a>.-->
+            
+        Below I give a brief synopsis of my research interests in the
+        topics below. No citations are given for the moment - sorry! -
+        as I've only got time to write down some broad brushstrokes.
+        I&rsquo;ve highlighted a few potential projects,
+        but there are many more possibilities.
             <h2 id="mcmc">Efficient algorithms for Markov chain Monte Carlo
                 simulation
             </h2>
+            <p>
+In 2010 I developed a new implementation of the pivot algorithm for
+self-avoiding walks which used a binary tree representation, building on
+earlier work of Tom Kennedy, Neal Madras and Alan Sokal. This radically
+efficient implementation allows for global changes to be made to the
+system in logarithmic time, and so opens up the possibility of studying
+truly large polymer systems with millions or even billions of monomers.
+
+            </p>
+            <p>
+The underlying principle can be applied to any system for which simple
+sampling is the state of the art.
+I am pursuing applications to percolation models and quantitative
+finance, but there must be many more possibilities.
+            </p>
+
             <h2 id="virial">
                 Virial series for hard spheres and related models
             </h2>
+            <p>
+The virial expansion is an old technique for understanding the low
+density behaviour of classical and quantum systems, which comes down to
+the evaluation of certain integrals that can be represented graphically.
+For the hard sphere model, also known as the billiard ball model of the
+gas, this leads to interesting research questions around the evaluation
+of graph polynomials, geometry of packings/sphere overlaps, high
+performance computing, and series analysis. The resulting series are
+interesting in and of themselves, but the key question is: can
+coefficients of the virial series be evaluated to sufficiently high
+order, and high accuracy, so that the series can tell us something about
+the fluid-solid phase transition?
+            </p>
+            <p>
+
+The answer is completely unclear! However, it is possible to make a
+great stride forward in this area by performing a high powered computer
+experiment in combination with advanced algorithms.
+
+            </p>
+            <p>
+Other related problems which are interesting, and possibly more
+tractable than hard spheres, are lattice hard cubes (amenable to lattice
+enumeration methods) and parallel hard
+squares and cubes (for which the integrals become rational numbers).
+
+            </p>
+            <p>
+There are lots of fun, open problems in this area.
+
+            </p>
             <h2 id="enumeration">
                 Enumeration of self-avoiding walks and related objects
             </h2>
+            <p>
+Lattice enumeration is a powerful method for the study of lattice models
+in statistical mechanics. 
+I recently developed, in collaboration with Iwan Jensen, an improved
+variant of the finite lattice method for
+enumeration of self-avoiding walks and polygons, which opens up the
+study of these models in three-dimensions. The improved method can also
+be applied to various 2d models, but there the relative gain is more
+modest.
+
+            </p>
+            <p>
+The length-doubling algorithm developed by Schram, Barkema and Bisseling
+is another fascinating recent development in the enumeration of 3d
+self-avoiding walks.
+
+            </p>
             <h2 id="endless">
                 Endless walk models
             </h2>
+            <p>
+            Recently, I introduced a variant of self-avoiding walks with
+            no ends, which are roughly equivalent to necklaces in the
+            field of combinatorics.
+            </p>
+            <p>
+
+            This simple idea can be applied to any walk model, and so
+            opens up a whole host of fun problems, e.g. the derivation
+            of exact results for endless variants of partially directed
+            walks.
+            </p>
+
             <h2 id="climate">
                 Multi-gas modelling for better policy decisions
                 regarding climate change
             </h2>
+            <p>
+Over the course of the coming century it is absolutely essential that
+humanity completely eliminate its dependence on fossil fuels, as
+long-lived greenhouse gases would otherwise cause sufficient amounts of
+warming and climate change that civilisation as we know could no longer
+function.
+            </p>
+            <p>
+
+There is much science still to be done in this field, but equally
+important are questions of economics, so that the transition to a
+low-carbon economy can occur along the pathway of least cost. One key
+issue here is the trade-off between mitigating the most significant
+anthropogenic greenhouse gases, namely carbon dioxide and methane. Often
+you&rsquo;ll see it stated that methane is 20 or 100 times as potent as
+carbon dioxide, but such statements usually gloss over a key point: the
+relative importance, as measured by the Global Warming Potential (GWP)
+metric, is determined by the time frame considered. Methane is
+relatively short-lived in the atmosphere, of the order of a decade,
+while atmospheric carbon dioxide has a number of different time scales,
+but a key point is that of the order of 5-10% of the carbon dioxide
+emitted now will remain in the atmosphere for centuries or even
+millenia.
+            </p>
+            <p>
+
+A key consequence of this, which is not widely understood, is that net
+emission of carbon dioxide from fossil fuels must go to zero, while
+methane emissions from anthropogenic but non-fossil fuel sources (think
+emissions from ruminants in agriculture, i.e. farting cows) can continue
+forever. (They make a steady-state contribution to the increase in
+radiative forcing which results in global warming.)
+
+            </p>
+            <p>
+There is an important space here for rigorous economic modelling
+combined with scientific understanding of the underlying processes. It
+is possible to approximately decouple the economics from the mix of
+greenhouse gases by introducing notions of equivalence which do a (much)
+better job than GWP on a wide variety of timescales, from a decade or
+two to multi-century.
+
+            </p>
+
+
             <h2 id="polymer">
                 Polymer physics
             </h2>
+            <p>
+Monte Carlo algorithms which utilise so-called connectivity
+changing moves may be very effective for simulation of dense polymer
+systems, such as confined / crystallised polymers which can be represented by
+Hamiltonian paths, or polymer melts.
+
+            </p>
+            <p>
+These moves can be performed extremely efficiently by using data
+structures like the SAW-tree.
+
+            </p>
+            <p>
+
+It may also be possible to extend variants of the efficient Monte Carlo
+algorithms for self-avoiding walks (i.e. similar to the pivot move)
+to other polymer systems, such as
+confined polymers and the polymer theta transition (the collapse transition for polymers
+as they go from a good solvent to a poor solvent), and semi-dilute
+polymer systems.
+
+            </p>
+            <p>
+It is also possible to efficiently calculate virial coefficients for
+polymers (the second virial coefficient corresponds to the so-called
+interpenetration ratio) via a combination of the SAW-tree data structure
+and scale-free moves which allow for a radically effective form of
+importance sampling.
+
+            </p>
+
+
+
             <h2 id="visualisation">
                 Mathematical visualisation
             </h2>
-            <h2 id="gpu">
-                Backtracking algorithms implemented on GPUs
-            </h2>
-            -->
+            <p>
+Simulations and visualisations can be fantastic tools for both research,
+and for education, as they allow us to gain intuition into mathematical
+objects which is very hard to arrive at through pure thought (for me at
+least!).
+            </p>
+            <p>
+
+Visualisations can be made in Processing and javascript (of course many
+other tools exist, but these are powerful, and work well with the web
+which is where you want to be).
+
+            </p>
+            <p>
+Videos, especially in 3D, may be very powerful for mathematical objects.
+
+            </p>
+            <p>
+Other fun tools which will allow for completely new experiences in the
+future are virtual reality, and 3d printing to create tangible
+realisations of mathematical objects.
+
+            </p>
+            <p>
+I have a number of ideas for mathematically inspired games which arise
+out of algorithms for walks.
+
+            </p>
+            <p>
+Please visit the <a href="/projects/">projects</a> page
+if you are interested in seeing visualisations of my work.
+
+            </p>
+<h2 id="gpu">
+    Backtracking algorithms implemented on GPUs
+</h2>
+            <p>
+
+GPUs are extremely powerful for some applications - namely those which
+are easily parallelisable, especially so-called embarrassingly parallel
+applications - but are not a general purpose replacement for CPUs.
+            </p>
+            <p>
+
+One class of problems for which it is not obvious that efficient
+algorithms exist, are backtracking problems which are ubiquitous in
+combinatorial search and graph algorithms. These can in fact be cast in
+a form that is appropriate for GPUs, and this leads to a fun and
+challenging field of problems in algorithms in computer science,
+especially given that the technology is changing so quickly.
+            </p>
+
         </div> <!-- content -->
     </div> <!-- contentblock -->
     <div id="push"></div>
