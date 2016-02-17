@@ -74,74 +74,45 @@
                 <div style="display:block;float:left;margin-right:1.5em;vertical-align:top;">
                 <a href="/" ><img src="/img/nc_full_logo.png"></img></a></div>
                 <div style="display:block;float:left;clear:right;vertical-align:top;">
-                3d Printed Snake Puzzle
+                Pebble smartwatch app which implements backbite moves
                 </div>
                 </h1>
                 <p>
-                A common puzzle consists of a chain of wooden cubes held
-                together by string, which can be folded up into a 3x3x3
-                cube. It occurred to me that the backbite sampling
-                algorithm for Hamiltonian paths could be used to
-                generate such puzzles, even for large cubes, which could
-                be then created using a 3d printer. The idea is that
-                after the design has been worked out, then it would be
-                possible to print an essentially unbounded number of
-                unique puzzles - people could buy or print their own
-                unique puzzle.
+                The <a href="https://www.pebble.com/">Pebble
+                    smartwatch</a> is an early generation smartwatch
+                which has two fantastic features: a long battery life
+                (of the order of 5-7 days), and an SDK which makes it
+                easy to develop and share your own apps written in C or
+                javascript.
 </p>
 <p>
-                
-                There are a few
-                issues here: 3d printing is expensive and so one needs
-                to minimize the volume of the puzzle, interlocking
-                parts are necessary to get it to work which
-                means that the technique used by home 3d printers -
-                fused deposition - is ineffective and one must use a
-                commercial laser sintering method (n.b., parts could be
-                printed separately and then assembled, but I think it is
-                nice to avoid this, and anyway by making the puzzle a
-                single piece then it cannot be altered and hence will
-                remain unique).
+For fun, I've implemented an animation of the sampling of Hamiltonian
+paths on a 6x6 square grid as performed by the backbite algorithm, as
+described on my <a href="/projects/hamiltonian_path/">Hamiltonian
+    path</a> page.
+</p>
+<p>
             <div class="image"  style =
                 "float:right;max-width:370px;width:50%;min-width:200px;">
-                <img src="prototype_unsolved.jpg"
-                alt="Unsolved version of Hamiltonian path puzzle." style="width:90%;max-width:350px" />
+                <img src="HP_app_animated.gif"
+                alt="Animation of the Pebble smartwatch app of the backbite algorithm." style="width:90%;max-width:350px" />
                 <br/>
-                <p class="caption">4x4x4 Hamiltonian
-                path puzzle in the process of being solved.
+                <p class="caption">Animation of the Pebble smartwatch
+                app which implements the backbite algorithm on a 6x6
+                square grid.
                     </p>
             </div> 
+
+This implementation makes an update every two seconds, alternating between the two ends and
+showing the intermediate step being added.
 </p>
 <p>
 
-                I've recently designed my first prototype, using
-                blender+python to produce the stl file for printing, and
-                then had it printed by Shapeways. It is a 4x4x4 cube,
-                which worked and looks pretty good, but it is too fiddly
-                and difficult to solve due to the extreme flexibility of
-                the chain to be a satisfying puzzle.
-</p>
-<p>
-
-                Prototype 2, which involves an internal snap-lock
-                mechanism to create some stiffness is almost ready for
-                printing.
-</p>
-<p>
-
-                If this is of interest to you, please let me know! I'd
-                be rapt to be able to share ideas. If you're interested
-                in a printed puzzle that would be great too.
-
-            <div class="image"  style =
-                "float:right;max-width:370px;width:50%;min-width:200px;">
-                <img src="prototype_solved.jpg"
-                alt="Solved version of Hamiltonian path puzzle." style="width:90%;max-width:350px" />
-                <br/>
-                <p class="caption">Solved version of 4x4x4 Hamiltonian
-                path puzzle. It's about 2.8cm per side.
-                    </p>
-            </div> 
+If you have a Pebble smartwatch, you can install the app by downloading
+this recently compiled (February,
+2016) version of the <a href="HP_-_sec.pbw">app</a>. One of these days
+I'll make it available on the Pebble app store, if anyone seems to
+like it!
                 </p>
 
         </div> <!-- content -->
