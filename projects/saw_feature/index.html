@@ -76,7 +76,7 @@
             <ul>
                 <li><a href="/projects/snake_puzzle/">(3d printed puzzle)</a></li>
                 <li><a href="/projects/pebble_app/">(pebble app)</a></li>
-                <li></li>
+                <li><a href="/projects/saw_feature/">(saw feature)</a></li>
             </ul>
         </div> <!-- bnav -->
     </div> <!-- topbar -->
@@ -117,7 +117,7 @@ First proposed by Orr in 1947, the mathematical notion of a
 `self-avoiding walk' (SAW) is simple to define, yet incredibly useful to
 the understanding of particular types of physical phenomena. For
 example, under certain conditions, SAWs can exactly model some
-properties of polymers --- long chains of fundamental units (monomers)
+properties of polymers — long chains of fundamental units (monomers)
 held together by chemical bonds. SAWs are not only a useful modelling
 tool; over decades their study has stimulated theoretical developments
 in areas including mathematics, physics and computer science. 
@@ -142,7 +142,15 @@ as knotting in polymers.
 <p>We begin our overview of the contributions made by Nathan’s research to the study of self-avoiding walks (SAWs) with a summary of their properties.</p>
 <br />
 <h2 id="an-introduction-to-saws">An introduction to SAWs</h2>
-<p>A SAW occurs on a ‘regular lattice’ of some fixed dimension <span class="math inline"><em>d</em></span> in which points are spaced evenly according to some rule. Figure ] shows one regular lattice in each of two dimensions (<span class="math inline"><em>d</em> = 2</span>) and three dimensions (<span class="math inline"><em>d</em> = 3</span>). Other regular lattices for <span class="math inline"><em>d</em> = 2</span> are comprised of repeating shapes such as triangles or hexagons, and extensions exist for higher dimensions.</p>
+<p>A SAW occurs on a ‘regular lattice’ of some fixed dimension <span
+    class="math inline"><em>d</em></span> in which points are spaced
+evenly according to some rule. Figure 1 shows one regular lattice in
+each of two dimensions (<span class="math inline"><em>d</em> = 2</span>)
+and three dimensions (<span class="math inline"><em>d</em> = 3</span>).
+Other regular lattices for <span class="math
+    inline"><em>d</em> = 2</span> are comprised of repeating shapes such
+as triangles or hexagons, and extensions exist for higher
+dimensions.</p>
             <div class="image"  style =
                 "float:left;width:60%;height:25%;min-width:400px;">
                 <!--<img src="d2saw25.png" alt="SAW of 2^25 steps on Z^2">-->
@@ -228,8 +236,22 @@ established, the existence of <span class="math
     class="math inline">2 ≤ <em>d</em> ≤ 4</span>.</p>
 <p>By knowing each of the <span class="math inline"><em>c</em><sub><em>n</em></sub></span> conformations of <span class="math inline"><em>n</em></span>-step SAWs, we can calculate some property (‘observable’) of this set. One example is the ‘mean square size’ of SAWs (average square end-to-end distance) represented by <span class="math inline">$\langle {\rm R^{2}_{e}} \rangle_n$</span>. This is obtained by determining the distance of the <span class="math inline"><em>n</em></span>-th monomer from the origin for each conformation, squaring this value, and averaging the set of values. It is believed that as <span class="math inline"><em>n</em></span> tends to infinity we have the asymptotic relationship <br /><span class="math display">$$\begin{aligned}
 \langle {\rm R^{2}_{e}} \rangle_n \sim D n^{2\nu},
-\label{eq:mean_length}\end{aligned}$$</span><br /> where <span class="math inline"><em>ν</em></span> is a universal constant for a given <span class="math inline"><em>d</em></span> and is regarded as another critical exponent. The constant <span class="math inline"><em>D</em></span> depends on the lattice type. The strong conviction that relationships and are correct has led to much research aimed at determining the critical exponents <span class="math inline"><em>γ</em></span> and <span class="math inline"><em>ν</em></span>. This requires values (or at least good estimates) of <span class="math inline"><em>c</em><sub><em>n</em></sub></span> and <span class="math inline">$\langle {\rm
-R^{2}_{e}} \rangle_n $</span> for large <span class="math inline"><em>n</em></span> as inputs to the estimation process. We must overcome some very difficult problems in order to obtain this information.</p>
+\label{eq:mean_length}\end{aligned}$$</span><br /> where <span
+class="math inline"><em>ν</em></span> is a universal constant for a
+given <span class="math inline"><em>d</em></span> and is regarded as
+another critical exponent. The constant <span class="math
+    inline"><em>D</em></span> depends on the lattice type. The strong
+conviction that the above asymptotic relationships are correct has led to much research
+aimed at determining the critical exponents <span class="math
+    inline"><em>γ</em></span> and <span class="math
+    inline"><em>ν</em></span>. This requires values (or at least good
+estimates) of <span class="math
+    inline"><em>c</em><sub><em>n</em></sub></span> and <span class="math
+    inline">$\langle {\rm
+R^{2}_{e}} \rangle_n $</span> for large <span class="math
+inline"><em>n</em></span> as inputs to the estimation process. We must
+overcome some very difficult problems in order to obtain this
+information.</p>
 <p>To gain some appreciation for such problems and the means of addressing them, we give an overview of polymers, an early application of SAWs proposed by Flory in 1949.</p>
 <br />
 <h2 id="an-introduction-to-features-of-polymers">An introduction to features of polymers</h2>
@@ -279,7 +301,7 @@ large <span class="math inline"><em>n</em></span>, mean square size
 grows with a factor of <span class="math
     inline"><em>n</em><sup>2<em>ν</em></sup></span>, as was proposed for
 mean square size of <span class="math inline"><em>n</em></span>-step
-SAWs in . The experimentally-derived estimate of <span class="math
+SAWs. The experimentally-derived estimate of <span class="math
     inline"><em>ν</em></span> is limited to two decimal place accuracy.
 However, it is in agreement with the estimate of <span class="math
     inline"><em>ν</em></span> to five decimal places calculated using
@@ -373,8 +395,8 @@ position of one monomer. An example is shown in Figure 4.</p>
 Figure 4: An example of a `bead flip' local move. The left image shows a
 fragment of the original conformation of a SAW, as determined by certain
 lattice points (filled circles). On changing one of these points to a
-new point (unfilled circle), a new conformation --- not necessarily a
-SAW ---  is produced (right). Dashed lines show new features of the
+new point (unfilled circle), a new conformation — not necessarily a
+SAW —  is produced (right). Dashed lines show new features of the
 conformation resulting from the move.
                 </p>
             </div> 
@@ -556,7 +578,7 @@ benefits for the study of SAWs. One concerns <span class="math
     class="math inline"><em>n</em></span>. Researchers can revisit these
 to obtain more precise estimates of observables more quickly than
 before. Also, it is now possible to access a new regime in SAW
-simulation. We can routinely obtain good estimates of the properties of
+simulation. One can routinely obtain good estimates of the properties of
 SAWs having hundreds of millions of monomers.<a href="#fn10"
     class="footnoteRef" id="fnref10"><sup>10</sup></a> This will enable
 a comparison of the prevalence of knots in large <span class="math
