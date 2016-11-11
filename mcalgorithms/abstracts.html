@@ -1,0 +1,830 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+  
+<!-- Mirrored from lattice.complex.unimelb.edu.au/mcalgorithms/abstracts by HTTrack Website Copier/3.x [XR&CO'2014], Fri, 11 Nov 2016 03:51:34 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
+<head>
+    <title>Monte Carlo Algorithms in Statistical Physics</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<link rel="alternate" type="application/rss+xml" title="Front page feed" href="rss.xml" />
+
+<link rel="shortcut icon" href="misc/favicon.ico" type="image/x-icon" />
+    <link type="text/css" rel="stylesheet" media="all" href="modules/drutex/drutex44c2.css?P" />
+<link type="text/css" rel="stylesheet" media="all" href="modules/gallery_assist/css/gallery_assist44c2.css?P" />
+<link type="text/css" rel="stylesheet" media="all" href="modules/node/node44c2.css?P" />
+<link type="text/css" rel="stylesheet" media="all" href="modules/system/defaults44c2.css?P" />
+<link type="text/css" rel="stylesheet" media="all" href="modules/system/system44c2.css?P" />
+<link type="text/css" rel="stylesheet" media="all" href="modules/system/system-menus44c2.css?P" />
+<link type="text/css" rel="stylesheet" media="all" href="modules/user/user44c2.css?P" />
+<link type="text/css" rel="stylesheet" media="all" href="sites/default/files/color/garland-eeb09ab8/style44c2.css?P" />
+<link type="text/css" rel="stylesheet" media="print" href="themes/garland/print44c2.css?P" />
+    <script type="text/javascript" src="misc/jquery44c2.js?P"></script>
+<script type="text/javascript" src="misc/drupal44c2.js?P"></script>
+<script type="text/javascript" src="modules/views/js/base44c2.js?P"></script>
+<script type="text/javascript" src="modules/views/js/ajax_view44c2.js?P"></script>
+<script type="text/javascript">
+<!--//--><![CDATA[//><!--
+jQuery.extend(Drupal.settings, { "basePath": "/mcalgorithms/", "googleanalytics": { "trackOutgoing": 1, "trackMailto": 1, "trackDownload": 1, "trackDownloadExtensions": "7z|aac|avi|csv|doc|exe|flv|gif|gz|jpe?g|js|mp(3|4|e?g)|mov|pdf|phps|png|ppt|rar|sit|tar|torrent|txt|wma|wmv|xls|xml|zip" }, "views": { "ajax_path": "/mcalgorithms/views/ajax", "ajaxViews": [ { "view_name": "abstracts", "view_display_id": "page", "view_args": "", "view_path": "abstracts", "view_base_path": "abstracts", "view_dom_id": 1, "pager_element": 0 } ] } });
+//--><!]]>
+</script>
+    <!--[if lt IE 7]>
+      <link type="text/css" rel="stylesheet" media="all" href="/mcalgorithms/themes/garland/fix-ie.css" />    <![endif]-->
+  </head>
+  <body class="sidebar-left">
+
+<!-- Layout -->
+  <div id="header-region" class="clear-block"></div>
+
+    <div id="wrapper">
+    <div id="container" class="clear-block">
+
+      <div id="header">
+        <div id="logo-floater">
+        <h1><a href="index.html" title="Monte Carlo Algorithms in Statistical Physics"><img src="sites/default/files/mclogo110.png" alt="Monte Carlo Algorithms in Statistical Physics" id="logo" /><span>Monte Carlo Algorithms in Statistical Physics</span></a></h1>        </div>
+
+                  <ul class="links primary-links"><li class="menu-462 active-trail first active"><a href="abstracts.html" class="active">Abstracts</a></li>
+<li class="menu-374"><a href="contact.html" title="Contact">Contact</a></li>
+<li class="menu-149"><a href="details.html" title="Details">Details</a></li>
+<li class="menu-151"><a href="index.html" title="A satellite conference of Statphys 24.">Home</a></li>
+<li class="menu-146"><a href="links.html" title="Links">Links</a></li>
+<li class="menu-503"><a href="photos.html" title="Photos">Photos</a></li>
+<li class="menu-150"><a href="register.html" title="Register">Register</a></li>
+<li class="menu-148"><a href="schedule.html" title="Schedule">Schedule</a></li>
+<li class="menu-139"><a href="speakers.html" title="An accurate estimate of $\nu$ for three-dimensional self-avoiding   walks via the pivot algorithm">Speakers</a></li>
+<li class="menu-477"><a href="sponsors.html" title="Sponsors">Sponsors</a></li>
+<li class="menu-504 last"><a href="talks.html" title="Talks">Talks</a></li>
+</ul>                                  
+      </div> <!-- /header -->
+
+              <div id="sidebar-left" class="sidebar">
+                    <div id="block-menu-primary-links" class="clear-block block block-menu">
+
+
+  <div class="content"><ul class="menu"><li class="leaf first active-trail"><a href="abstracts.html" class="active">Abstracts</a></li>
+<li class="leaf"><a href="contact.html" title="Contact">Contact</a></li>
+<li class="leaf"><a href="details.html" title="Details">Details</a></li>
+<li class="leaf"><a href="index.html" title="A satellite conference of Statphys 24.">Home</a></li>
+<li class="leaf"><a href="links.html" title="Links">Links</a></li>
+<li class="leaf"><a href="photos.html" title="Photos">Photos</a></li>
+<li class="leaf"><a href="register.html" title="Register">Register</a></li>
+<li class="leaf"><a href="schedule.html" title="Schedule">Schedule</a></li>
+<li class="leaf"><a href="speakers.html" title="An accurate estimate of $\nu$ for three-dimensional self-avoiding   walks via the pivot algorithm">Speakers</a></li>
+<li class="leaf"><a href="sponsors.html" title="Sponsors">Sponsors</a></li>
+<li class="leaf last"><a href="talks.html" title="Talks">Talks</a></li>
+</ul></div>
+</div>
+        </div>
+      
+      <div id="center"><div id="squeeze"><div class="right-corner"><div class="left-corner">
+          <div class="breadcrumb"><a href="index.html">Home</a></div>                                                                                <div class="clear-block">
+            <div class="view view-abstracts view-id-abstracts view-display-id-page view-dom-id-1">
+        <div class="view-header">
+      The program is full and we are no longer accepting abstracts, although we will still be adding abstracts to this page by speakers whose talks have already been accepted.<br/><br/>
+
+If you wish to keep track of new abstracts there is an RSS feed for this page.<br/><br/>
+</br/></br/></br/></br/>    </div>
+  
+  
+  
+      <div class="view-content">
+        <div class="views-row-1 views-row-odd views-row-first">
+    <div id="node-41" class="node">
+
+
+  <h2><a href="node/41.html" title="Anders, Peter">Anders, Peter</a></h2>
+
+  
+  <div class="content clear-block">
+    Title:  Diagrammatic Monte Carlo method for bosonic impurity problems<br/>
+Authors:  Peter Anders<sup>1</sup>, Emanuel Gull<sup>2</sup>, Lode Pollet<sup>3</sup>, Matthias Troyer<sup>1</sup> and Philipp Werner<sup>1</sup><br/>
+Affiliation:<br/>
+1. Theoretische Physik, ETH Zurich, 8093 Z&#252rich, Switzerland<br/>
+2. Department of Physics, Columbia University, New York, NY 10027, USA<br/>
+3.</br/></br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/41.html" title="Read the rest of Anders, Peter.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-2 views-row-even">
+    <div id="node-36" class="node">
+
+
+  <h2><a href="node/36.html" title="Bachmann, Michael">Bachmann, Michael</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Hierarchical Subphase Transitions in Molecular First-Order Nucleation Processes<br/>
+Author: Michael Bachmann<br/>
+Affiliation: Soft Matter Systems Research Group, Institut fuer Festkoerperforschung (IFF-2), Germany<br/>
+Abstract:<br/>
+Thermodynamic transitions in nucleation processes of finite systems often exhibit an 
+interesting first-order-like signature, represented by a convex region of the microcanonical
+entropy.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/36.html" title="Read the rest of Bachmann, Michael.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-3 views-row-odd">
+    <div id="node-39" class="node">
+
+
+  <h2><a href="node/39.html" title="Biham, Ofer">Biham, Ofer</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Reaction networks with fluctuations: from inter-stellar chemistry to intra-cellular biology<br/>
+Author: Ofer Biham<br/>
+Affiliation: Racah Institute of Physics, Hebrew University, Jerusalem, Israel.<br/>
+Abstract:<br/>
+Complex reaction networks are common in physical, chemical
+and biological systems. In many cases, the reactive species are
+confined to a small volume, in which the copy number of each
+species is low.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/39.html" title="Read the rest of Biham, Ofer.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-4 views-row-even">
+    <div id="node-33" class="node">
+
+
+  <h2><a href="node/33.html" title="Bittner, Elmar">Bittner, Elmar</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Replica-Exchange Cluster Algorithm<br/>
+Author: Elmar Bittner and Wolfhard Janke<br/>
+Affiliation: Institut für Theoretische Physik and Centre for Theoretical Sciences (NTZ) – Universität Leipzig, Germany<br/>
+Abstract:<br/>
+In typical finite-size scaling analyses of Monte Carlo simulations of a model exhibiting a second-order phase transition, one often needs an extended temperature/energy range around the critical point.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/33.html" title="Read the rest of Bittner, Elmar.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-5 views-row-odd">
+    <div id="node-27" class="node">
+
+
+  <h2><a href="node/27.html" title="Blöte, Henk W.J.">Blöte, Henk W.J.</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Potts models with long-ranged interactions<br/>
+Author: Henk W.J. Blöte<br/>
+Affiliation: Lorentz Institute, Leiden University, Netherlands<br/>
+Abstract:<br/>
+Simulations of models with long-range interactions by means of cluster methods can, in many cases, be arranged such that the number of operations needed to update one particle becomes independent on the range of the interactions. This makes it possible to perform very efficient simulations of long-range Potts models.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/27.html" title="Read the rest of Blöte, Henk W.J..">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-6 views-row-even">
+    <div id="node-49" class="node">
+
+
+  <h2><a href="node/49.html" title="Foulaadvand, Ebrahim">Foulaadvand, Ebrahim</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Optimisation of quantum Monte Carlo wave function: steepest descent method<br/>
+Author: M. Ebrahim Foulaadvand<br/>
+Affiliation: Department of Physics, Zanjan University, P.O. Box 45196-313, Zanjan, Iran<br/>
+Abstract:<br/>
+We have employed the steepest descent method to optimise the
+variational ground state quantum Monte Carlo wave function for He,
+Li, Be, B and C atoms. We have used both the direct energy
+minimisation and the variance minimisation approaches.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/49.html" title="Read the rest of Foulaadvand, Ebrahim.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-7 views-row-odd">
+    <div id="node-50" class="node">
+
+
+  <h2><a href="node/50.html" title="Guo, Wenan">Guo, Wenan</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: A worm simulation of the loop model on the square lattice<br/>
+Author: Wenan Guo<br/>
+Affiliation: Physics Department, Beijing Normal University, Beijing
+100875, P. R. China<br/>
+Abstract:<br/>
+We develop a worm algorithm for the O(<em>n</em>) intersecting loop model on the 
+square lattice.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/50.html" title="Read the rest of Guo, Wenan.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-8 views-row-even">
+    <div id="node-31" class="node">
+
+
+  <h2><a href="node/31.html" title="Iba, Yukito">Iba, Yukito</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Rare Event Sampling using Multicanonical Monte Carlo<br/>
+Author: Yukito Iba<br/>
+Affiliation: The Institute of Statistical Mathematics, Japan<br/>
+Abstract:<br/>
+Here is a link to the full abstract: <a href="sites/default/files/mydocuments/IbaAbstract.pdf">pdf</a>.
+</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-9 views-row-odd">
+    <div id="node-42" class="node">
+
+
+  <h2><a href="node/42.html" title="Janke, Wolfhard">Janke, Wolfhard</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Error Estimation and Reduction with Cross Correlations<br/>
+Authors: Martin Weigel<sup>1</sup> and Wolfhard Janke<sup>2</sup><br/>
+Affiliation:<br/>
+1. University of Mainz, Germany<br/>
+2. University of Leipzig, Germany<br/>
+Abstract:<br/>
+Besides the well-known effect of autocorrelations in time series of Monte Carlo simulation data resulting from the underlying Markov process, using the same data pool for computing various estimates entails additional cross correlations.</br/></br/></br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/42.html" title="Read the rest of Janke, Wolfhard.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-10 views-row-even">
+    <div id="node-43" class="node">
+
+
+  <h2><a href="node/43.html" title="Kowalczyk, Piotr">Kowalczyk, Piotr</a></h2>
+
+  
+  <div class="content clear-block">
+    Title:  Microscopic model of carbonaceous nanoporous molecular sieves - anomalous transport in molecularly confined spaces<br/>
+Authors:  Piotr Kowalczyk<br/>
+Affiliation: Applied Physics, School of Applied Science, RMIT University, P.O. Box 2476V, 3001 Victoria, Australia<br/>
+Abstract:<br/>
+Here are links to the <a href="sites/default/files/mydocuments/PKowalczykAbstract.pdf">pdf</a> and <a href="sites/default/files/mydocuments/PKowalczykAbstract.doc">Microsoft word</a> versions.
+</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-11 views-row-odd">
+    <div id="node-44" class="node">
+
+
+  <h2><a href="node/44.html" title="Krauth, Werner">Krauth, Werner</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: The event-chain algorithm and the melting transition for two-dimensional hard spheres<br/>
+Author: Werner Krauth<br/>
+Affiliation: Laboratoire de Physique Statistique, Ecole Normale Superieure, Paris, France.<br/>
+Abstract:<br/>
+I discuss cluster Monte Carlo algorithms for hard-sphere systems, especially the event-chain algorithm, which moves long chains of particles without any rejection. This powerful method was used for large-scale simulations of two-dimensional hard disks.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/44.html" title="Read the rest of Krauth, Werner.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-12 views-row-even">
+    <div id="node-40" class="node">
+
+
+  <h2><a href="node/40.html" title="Machta, Jon">Machta, Jon</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Parallel Tempering and Population Annealing for Rough Free Energy Landscapes<br/>
+Author: Jon Machta<br/>
+Affiliation: University of Massachusetts Amherst and Santa Fe Institute, USA<br/>
+Abstract:<br/>
+I will describe parallel tempering (replica exchange Monte Carlo)
+and discuss its efficiency for various free energy landscapes.  For some
+simple model free energy landscapes, the performance of parallel tempering
+can be analyzed and the results highlight strengths and weaknesses of the
+method.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/40.html" title="Read the rest of Machta, Jon.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-13 views-row-odd">
+    <div id="node-25" class="node">
+
+
+  <h2><a href="node/25.html" title="Martín-Mayor, Víctor">Martín-Mayor, Víctor</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Monte Carlo simulations of (quasi) constrained ensembles<br/>
+Author: Víctor Martín-Mayor<br/>
+Affiliation: Universidad Complutense de Madrid, Spain<br/>
+Abstract:<br/>
+The standard Monte Carlo simulation of systems displaying metastability is very inefficient, (think of first-order phase transitions, spin glasses, structural glasses, lattice polymers, etc.). One may use constrained statistical ensembles in order to guide the simulation inside those rare but crucial regions where it does not want to get into.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/25.html" title="Read the rest of Martín-Mayor, Víctor.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-14 views-row-even">
+    <div id="node-21" class="node">
+
+
+  <h2><a href="node/21.html" title="Nukala, Phani">Nukala, Phani</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Low-rank updates in statistical physics applications<br/>
+Author: Phani Nukala<br/>
+Affiliation: Oak Ridge National Laboratory, USA<br/>
+Abstract:<br/>
+This paper presents efficient low-rank updating algorithms for a variety of materials science and statistical physics applications.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/21.html" title="Read the rest of Nukala, Phani.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-15 views-row-odd">
+    <div id="node-37" class="node">
+
+
+  <h2><a href="node/37.html" title="Opletal, George">Opletal, George</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Hybrid Reverse Monte Carlo Modelling of Disordered Materials<br/>
+Author: G. Opletal, S. Russo and I. Snook<br/>
+Affiliation: Applied Physics, School of Applied Science, RMIT University, Melbourne, Australia<br/>
+Abstract:<br/>
+In the construction of models of amorphous materials, the Reverse Monte Carlo modelling methodology, which traditionally only fits experimental diffraction data, suffers from a lack of uniqueness.  For a particular data set, many unphysical atomic configurations are possible.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/37.html" title="Read the rest of Opletal, George.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-16 views-row-even">
+    <div id="node-38" class="node">
+
+
+  <h2><a href="node/38.html" title="Per, Manolo">Per, Manolo</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Efficient calculation of unbiased estimates in diffusion quantum Monte Carlo<br/>
+Author: Manolo Per<br/>
+Affiliation: Applied Physics, School of Applied Science, RMIT University, Melbourne, Australia<br/>
+Abstract:<br/>
+The diffusion quantum Monte Carlo (DQMC) method is a powerful and relatively straightforward technique for calculating quantum mechanical properties of a wide variety of systems at zero temperature. However, expectation values of operators which do not commute with the Hamiltonian exhibit large variances and a systematic bias.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/38.html" title="Read the rest of Per, Manolo.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-17 views-row-odd">
+    <div id="node-35" class="node">
+
+
+  <h2><a href="node/35.html" title="Prellberg, Thomas">Prellberg, Thomas</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: PERM and all that - a comparison of growth algorithms<br/>
+Author: Thomas Prellberg<br/>
+Affiliation: Queen Mary, University of London<br/>
+Abstract:<br/>
+Over the last few years, there have been a variety of growth-like algorithms,
+such as PERM, IGW, GARM, and GAS. Some of these have been coupled with
+flat-histogram techniques, resulting in multicanonical PERM, flatPERM, flatIGW.<br/>
+
+In this talk we will describe these various algorithms, point out their differences,
+and discuss their respective strengths.</br/></br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-18 views-row-even">
+    <div id="node-32" class="node">
+
+
+  <h2><a href="node/32.html" title="Salas, Jesus">Salas, Jesus</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Dynamic critical behavior of the Wang-Swendsen-Kotecky algorithm for two-dimensional Potts antiferromagnets<br/>
+Author: Jesus Salas<br/>
+Affiliation: Universidad Carlos III de Madrid, Spain<br/>
+Abstract:<br/>
+The phase diagram of the antiferromagnetic q-state Potts model is not
+universal: it depends, in addition to the number of states q and the
+dimensionality of the lattice, on the lattice structure. Therefore, one has to
+study this model on a case-by-case basis.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/32.html" title="Read the rest of Salas, Jesus.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-19 views-row-odd">
+    <div id="node-24" class="node">
+
+
+  <h2><a href="node/24.html" title="Sasaki, Munetaka">Sasaki, Munetaka</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Stochastic Cutoff Method for Long-Range Interacting Systems<br/>
+Authors: Munetaka Sasaki and Kazuya Watanabe<br/>
+Affiliation: Tohoku University, Japan<br/>
+Abstract:<br/>
+In this work, we present an efficient Monte-Carlo (MC) method called stochastic cutoff method for long-range interacting systems. This method enables us to reduce the computational time per MC step from O(N<sup>2</sup>) to O(N) (or O(N log N)) without any approximation, where N is the number of elements. The efficiency of the method is demonstrated by applying it to magnetic dipolar systems.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/24.html" title="Read the rest of Sasaki, Munetaka.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-20 views-row-even">
+    <div id="node-47" class="node">
+
+
+  <h2><a href="node/47.html" title="Schroeder-Turk, Gerd">Schroeder-Turk, Gerd</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Hard Sphere Liquids in Complex Pores<br/>
+Author: G.E. Schroeder-Turk, S. Kuczera, R. Roth and K. Mecke<br/>
+Affiliation: Institut für Theoretische Physik I, Universität Erlangen-Nürnberg, Germany<br/>
+Abstract:<br/>
+The thermodynamic properties of fluids confined in topologically and
+geometrically complex pores depend on the shape of the confining
+geometry.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/47.html" title="Read the rest of Schroeder-Turk, Gerd.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-21 views-row-odd">
+    <div id="node-26" class="node">
+
+
+  <h2><a href="node/26.html" title="Seoane, Beatriz">Seoane, Beatriz</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Effective potential study of hard-spheres crystallization<br/>
+Author: Beatriz Seoane<br/>
+Affiliation: Universidad Complutense de Madrid, Spain<br/>
+Abstract:<br/>
+We use tethered Monte Carlo to study the fluid-solid phase transition in hard spheres at constant pressure. Tethered Monte Carlo features directly the effective potential by simulation of
+constrained statistical ensembles. In order to avoid metastabilities, we have found it crucial to constraint the values of two crystalline order parameters, namely Q_6 and C.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/26.html" title="Read the rest of Seoane, Beatriz.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-22 views-row-even">
+    <div id="node-23" class="node">
+
+
+  <h2><a href="node/23.html" title="Snook, Ian K.">Snook, Ian K.</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: The observation of formation and annihilation of solitons and standing strainwave superstructures in a two-dimensional colloidal crystal<br/>
+Authors: Ian K. Snook,<sup>1</sup> Yu-Hang Chui,<sup>2</sup> Surajit Sengupta,<sup>3,4</sup> and Kurt Binder<sup>2</sup><br/>
+Affiliation: <br/>
+1. Applied Physics, School of Applied Science, RMIT University, P.O. Box 2476V, 3001 Victoria, Australia<br/>
+2. Institute of Physics, Johannes-Gutenberg University, D-55099 Mainz, Staudinger Weg 7, Germany<br/>
+3.</br/></br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/23.html" title="Read the rest of Snook, Ian K..">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-23 views-row-odd">
+    <div id="node-48" class="node">
+
+
+  <h2><a href="node/48.html" title="Sokal, Alan">Sokal, Alan</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Overcoming critical slowing-down: Where do we stand 23 years after Swendsen and Wang?<br/>
+Author: Alan Sokal<br/>
+Affiliation: Department of Physics, NYU, USA<br/>
+Abstract:<br/>
+I begin by reviewing the Swendsen-Wang algorithm
+       for ferromagnetic <emph>q</emph>-state Potts models --
+       and its extension to noninteger <emph>q</emph> due to
+       Chayes and Machta -- and our current state of
+       knowledge about these algorithms' dynamic critical
+       behavior.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/48.html" title="Read the rest of Sokal, Alan.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-24 views-row-even">
+    <div id="node-34" class="node">
+
+
+  <h2><a href="node/34.html" title="Suwa, Hidemaro">Suwa, Hidemaro</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Markov Chain Monte Carlo without Detailed Balance and Bounce-free Worm Algorithm<br/>
+Author: Hidemaro Suwa<br/>
+Affiliation: Department of Applied Physics, the University of Tokyo, Japan<br/>
+Abstract:<br/>
+In the Markov chain Monte Carlo method, the detailed balance is usually
+imposed as a sufficient condition for the balance condition. If the
+Markov sequence goes beyond the detailed balance, however, rejection
+rates can get minimized.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/34.html" title="Read the rest of Suwa, Hidemaro.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-25 views-row-odd">
+    <div id="node-45" class="node">
+
+
+  <h2><a href="node/45.html" title="Weigel, Martin">Weigel, Martin</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Simulating spin models on GPU<br/>
+Authors: Martin Weigel<br/>
+Affiliation: Institut f&#252;r  Physik, KOMET 331, Johannes Gutenberg-Universit&#228;t Mainz, Germany<br/>
+Abstract:<br/>
+Here is a link to the <a href="sites/default/files/mydocuments/WeigelAbstract.pdf">pdf</a> version.
+</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-26 views-row-even">
+    <div id="node-30" class="node">
+
+
+  <h2><a href="node/30.html" title="Yllanes, David">Yllanes, David</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: The low-temperature phase of Ising spin glasses: parallel-tempering simulations with sample-dependent thermalisation on the Janus computer<br/>
+Author: David Yllanes<br/>
+Affiliation: Universidad Complutense de Madrid, Spain<br/>
+Abstract:<br/>
+We have performed a large-scale equilibrium simulation of the three-dimensional Ising spin glass at low temperatures, achieving thermalisation for lattices up to L=32 at temperatures as low as T=0.64Tc.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/30.html" title="Read the rest of Yllanes, David.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-27 views-row-odd">
+    <div id="node-22" class="node">
+
+
+  <h2><a href="node/22.html" title="Young, Peter">Young, Peter</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Monte Carlo Simulations of Heisenberg Spin Glasses<br/>
+Author: Peter Young<br/>
+Affiliation: University of California Santa Cruz, USA<br/>
+Abstract:<br/>
+Whereas most numerical studies on spin glasses have focussed on the Ising case, since this is the simplest, there are new features associated with vector spin glasses which need to be elucidated. Here I will discuss results of simulations on 3-component (Heisenberg) spin glasses.</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+          <div class="links"><ul class="links inline"><li class="node_read_more first last"><a href="node/22.html" title="Read the rest of Young, Peter.">Read more</a></li>
+</ul></div>
+      </div>
+
+</div>
+  </div>
+  <div class="views-row-28 views-row-even views-row-last">
+    <div id="node-29" class="node">
+
+
+  <h2><a href="node/29.html" title="Zoontjens, Peter">Zoontjens, Peter</a></h2>
+
+  
+  <div class="content clear-block">
+    Title: Kinetic Monte Carlo Modelling of Pt on Au (111) in Bimetallic Catalysis<br/>
+Authors: P. Zoontjens, G. Grochola, S. Russo and I. Snook<br/>
+Affiliation: Applied Physics, School of Applied Science, RMIT University, P.O. Box 2476V, 3001 Victoria, Australia<br/>
+Abstract:<br/>
+Here are links to the <a href="sites/default/files/mydocuments/PZoontjensAbstract.pdf">pdf</a> and <a href="sites/default/files/mydocuments/PZoontjensAbstract.doc">Microsoft word</a> versions.
+</br/></br/></br/></br/>  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+      </div>
+
+</div>
+  </div>
+    </div>
+  
+  
+  
+  
+  
+  
+</div>           </div>
+          <a href="rss.xml" class="feed-icon"><img src="misc/feed.png" alt="Syndicate content" title="Front page feed" width="16" height="16" /></a>          <div id="footer"><div id="block-block-1" class="clear-block block block-block">
+
+
+  <div class="content">26 &#150 28 July, 2010, Melbourne, Australia.</div>
+</div>
+</div>
+      </div></div></div></div> <!-- /.left-corner, /.right-corner, /#squeeze, /#center -->
+
+      
+    </div> <!-- /container -->
+  </div>
+<!-- /layout -->
+
+  <script type="text/javascript" src="modules/google_analytics/googleanalytics44c2.js?P"></script>
+<script type="text/javascript">
+<!--//--><![CDATA[//><!--
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+//--><!]]>
+</script>
+<script type="text/javascript">
+<!--//--><![CDATA[//><!--
+try{var pageTracker = _gat._getTracker("UA-12740372-2");pageTracker._trackPageview();} catch(err) {}
+//--><!]]>
+</script>
+  </body>
+
+<!-- Mirrored from lattice.complex.unimelb.edu.au/mcalgorithms/abstracts by HTTrack Website Copier/3.x [XR&CO'2014], Fri, 11 Nov 2016 03:52:13 GMT -->
+</html>

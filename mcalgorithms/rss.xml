@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8" ?><rss version="2.0" xml:base="http://lattice.complex.unimelb.edu.au/mcalgorithms/abstracts" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Monte Carlo Algorithms in Statistical Physics</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/abstracts</link>
+    <description></description>
+    <language>en</language>
+          <item>
+    <title>Anders, Peter</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/41</link>
+    <description>Title:  Diagrammatic Monte Carlo method for bosonic impurity problems&lt;br/&gt;
+Authors:  Peter Anders&lt;sup&gt;1&lt;/sup&gt;, Emanuel Gull&lt;sup&gt;2&lt;/sup&gt;, Lode Pollet&lt;sup&gt;3&lt;/sup&gt;, Matthias Troyer&lt;sup&gt;1&lt;/sup&gt; and Philipp Werner&lt;sup&gt;1&lt;/sup&gt;&lt;br/&gt;
+Affiliation:&lt;br/&gt;
+1. Theoretische Physik, ETH Zurich, 8093 Z&amp;#252rich, Switzerland&lt;br/&gt;
+2. Department of Physics, Columbia University, New York, NY 10027, USA&lt;br/&gt;
+3.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 16 Jun 2010 12:47:30 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">41 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Bachmann, Michael</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/36</link>
+    <description>Title: Hierarchical Subphase Transitions in Molecular First-Order Nucleation Processes&lt;br/&gt;
+Author: Michael Bachmann&lt;br/&gt;
+Affiliation: Soft Matter Systems Research Group, Institut fuer Festkoerperforschung (IFF-2), Germany&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Thermodynamic transitions in nucleation processes of finite systems often exhibit an 
+interesting first-order-like signature, represented by a convex region of the microcanonical
+entropy.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Fri, 07 May 2010 11:13:13 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">36 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Biham, Ofer</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/39</link>
+    <description>Title: Reaction networks with fluctuations: from inter-stellar chemistry to intra-cellular biology&lt;br/&gt;
+Author: Ofer Biham&lt;br/&gt;
+Affiliation: Racah Institute of Physics, Hebrew University, Jerusalem, Israel.&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Complex reaction networks are common in physical, chemical
+and biological systems. In many cases, the reactive species are
+confined to a small volume, in which the copy number of each
+species is low.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Fri, 28 May 2010 01:54:01 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">39 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Bittner, Elmar</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/33</link>
+    <description>Title: Replica-Exchange Cluster Algorithm&lt;br/&gt;
+Author: Elmar Bittner and Wolfhard Janke&lt;br/&gt;
+Affiliation: Institut für Theoretische Physik and Centre for Theoretical Sciences (NTZ) – Universität Leipzig, Germany&lt;br/&gt;
+Abstract:&lt;br/&gt;
+In typical finite-size scaling analyses of Monte Carlo simulations of a model exhibiting a second-order phase transition, one often needs an extended temperature/energy range around the critical point.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Thu, 06 May 2010 15:48:14 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">33 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Blöte, Henk W.J.</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/27</link>
+    <description>Title: Potts models with long-ranged interactions&lt;br/&gt;
+Author: Henk W.J. Blöte&lt;br/&gt;
+Affiliation: Lorentz Institute, Leiden University, Netherlands&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Simulations of models with long-range interactions by means of cluster methods can, in many cases, be arranged such that the number of operations needed to update one particle becomes independent on the range of the interactions. This makes it possible to perform very efficient simulations of long-range Potts models.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Tue, 27 Apr 2010 13:29:01 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">27 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Foulaadvand, Ebrahim</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/49</link>
+    <description>Title: Optimisation of quantum Monte Carlo wave function: steepest descent method&lt;br/&gt;
+Author: M. Ebrahim Foulaadvand&lt;br/&gt;
+Affiliation: Department of Physics, Zanjan University, P.O. Box 45196-313, Zanjan, Iran&lt;br/&gt;
+Abstract:&lt;br/&gt;
+We have employed the steepest descent method to optimise the
+variational ground state quantum Monte Carlo wave function for He,
+Li, Be, B and C atoms. We have used both the direct energy
+minimisation and the variance minimisation approaches.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 14 Jul 2010 12:17:21 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">49 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Guo, Wenan</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/50</link>
+    <description>Title: A worm simulation of the loop model on the square lattice&lt;br/&gt;
+Author: Wenan Guo&lt;br/&gt;
+Affiliation: Physics Department, Beijing Normal University, Beijing
+100875, P. R. China&lt;br/&gt;
+Abstract:&lt;br/&gt;
+We develop a worm algorithm for the O(&lt;em&gt;n&lt;/em&gt;) intersecting loop model on the 
+square lattice.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Thu, 15 Jul 2010 02:24:32 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">50 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Iba, Yukito</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/31</link>
+    <description>Title: Rare Event Sampling using Multicanonical Monte Carlo&lt;br/&gt;
+Author: Yukito Iba&lt;br/&gt;
+Affiliation: The Institute of Statistical Mathematics, Japan&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Here is a link to the full abstract: &lt;a href=&quot;http://lattice.complex.unimelb.edu.au/mcalgorithms/sites/default/files/mydocuments/IbaAbstract.pdf&quot;&gt;pdf&lt;/a&gt;.
+&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Fri, 30 Apr 2010 12:23:01 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">31 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Janke, Wolfhard</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/42</link>
+    <description>Title: Error Estimation and Reduction with Cross Correlations&lt;br/&gt;
+Authors: Martin Weigel&lt;sup&gt;1&lt;/sup&gt; and Wolfhard Janke&lt;sup&gt;2&lt;/sup&gt;&lt;br/&gt;
+Affiliation:&lt;br/&gt;
+1. University of Mainz, Germany&lt;br/&gt;
+2. University of Leipzig, Germany&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Besides the well-known effect of autocorrelations in time series of Monte Carlo simulation data resulting from the underlying Markov process, using the same data pool for computing various estimates entails additional cross correlations.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Sun, 20 Jun 2010 12:47:31 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">42 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Kowalczyk, Piotr</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/43</link>
+    <description>Title:  Microscopic model of carbonaceous nanoporous molecular sieves - anomalous transport in molecularly confined spaces&lt;br/&gt;
+Authors:  Piotr Kowalczyk&lt;br/&gt;
+Affiliation: Applied Physics, School of Applied Science, RMIT University, P.O. Box 2476V, 3001 Victoria, Australia&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Here are links to the &lt;a href=&quot;http://lattice.complex.unimelb.edu.au/mcalgorithms/sites/default/files/mydocuments/PKowalczykAbstract.pdf&quot;&gt;pdf&lt;/a&gt; and &lt;a href=&quot;http://lattice.complex.unimelb.edu.au/mcalgorithms/sites/default/files/mydocuments/PKowalczykAbstract.doc&quot;&gt;Microsoft word&lt;/a&gt; versions.
+&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 23 Jun 2010 04:51:03 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">43 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Krauth, Werner</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/44</link>
+    <description>Title: The event-chain algorithm and the melting transition for two-dimensional hard spheres&lt;br/&gt;
+Author: Werner Krauth&lt;br/&gt;
+Affiliation: Laboratoire de Physique Statistique, Ecole Normale Superieure, Paris, France.&lt;br/&gt;
+Abstract:&lt;br/&gt;
+I discuss cluster Monte Carlo algorithms for hard-sphere systems, especially the event-chain algorithm, which moves long chains of particles without any rejection. This powerful method was used for large-scale simulations of two-dimensional hard disks.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Mon, 28 Jun 2010 02:13:40 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">44 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Machta, Jon</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/40</link>
+    <description>Title: Parallel Tempering and Population Annealing for Rough Free Energy Landscapes&lt;br/&gt;
+Author: Jon Machta&lt;br/&gt;
+Affiliation: University of Massachusetts Amherst and Santa Fe Institute, USA&lt;br/&gt;
+Abstract:&lt;br/&gt;
+I will describe parallel tempering (replica exchange Monte Carlo)
+and discuss its efficiency for various free energy landscapes.  For some
+simple model free energy landscapes, the performance of parallel tempering
+can be analyzed and the results highlight strengths and weaknesses of the
+method.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Sun, 06 Jun 2010 13:32:16 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">40 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Martín-Mayor, Víctor</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/25</link>
+    <description>Title: Monte Carlo simulations of (quasi) constrained ensembles&lt;br/&gt;
+Author: Víctor Martín-Mayor&lt;br/&gt;
+Affiliation: Universidad Complutense de Madrid, Spain&lt;br/&gt;
+Abstract:&lt;br/&gt;
+The standard Monte Carlo simulation of systems displaying metastability is very inefficient, (think of first-order phase transitions, spin glasses, structural glasses, lattice polymers, etc.). One may use constrained statistical ensembles in order to guide the simulation inside those rare but crucial regions where it does not want to get into.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Tue, 20 Apr 2010 13:27:57 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">25 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Nukala, Phani</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/21</link>
+    <description>Title: Low-rank updates in statistical physics applications&lt;br/&gt;
+Author: Phani Nukala&lt;br/&gt;
+Affiliation: Oak Ridge National Laboratory, USA&lt;br/&gt;
+Abstract:&lt;br/&gt;
+This paper presents efficient low-rank updating algorithms for a variety of materials science and statistical physics applications.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Fri, 05 Mar 2010 03:01:56 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">21 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Opletal, George</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/37</link>
+    <description>Title: Hybrid Reverse Monte Carlo Modelling of Disordered Materials&lt;br/&gt;
+Author: G. Opletal, S. Russo and I. Snook&lt;br/&gt;
+Affiliation: Applied Physics, School of Applied Science, RMIT University, Melbourne, Australia&lt;br/&gt;
+Abstract:&lt;br/&gt;
+In the construction of models of amorphous materials, the Reverse Monte Carlo modelling methodology, which traditionally only fits experimental diffraction data, suffers from a lack of uniqueness.  For a particular data set, many unphysical atomic configurations are possible.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Tue, 11 May 2010 04:02:37 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">37 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Per, Manolo</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/38</link>
+    <description>Title: Efficient calculation of unbiased estimates in diffusion quantum Monte Carlo&lt;br/&gt;
+Author: Manolo Per&lt;br/&gt;
+Affiliation: Applied Physics, School of Applied Science, RMIT University, Melbourne, Australia&lt;br/&gt;
+Abstract:&lt;br/&gt;
+The diffusion quantum Monte Carlo (DQMC) method is a powerful and relatively straightforward technique for calculating quantum mechanical properties of a wide variety of systems at zero temperature. However, expectation values of operators which do not commute with the Hamiltonian exhibit large variances and a systematic bias.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Tue, 18 May 2010 05:54:48 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">38 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Prellberg, Thomas</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/35</link>
+    <description>Title: PERM and all that - a comparison of growth algorithms&lt;br/&gt;
+Author: Thomas Prellberg&lt;br/&gt;
+Affiliation: Queen Mary, University of London&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Over the last few years, there have been a variety of growth-like algorithms,
+such as PERM, IGW, GARM, and GAS. Some of these have been coupled with
+flat-histogram techniques, resulting in multicanonical PERM, flatPERM, flatIGW.&lt;br/&gt;
+
+In this talk we will describe these various algorithms, point out their differences,
+and discuss their respective strengths.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Fri, 07 May 2010 11:09:54 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">35 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Salas, Jesus</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/32</link>
+    <description>Title: Dynamic critical behavior of the Wang-Swendsen-Kotecky algorithm for two-dimensional Potts antiferromagnets&lt;br/&gt;
+Author: Jesus Salas&lt;br/&gt;
+Affiliation: Universidad Carlos III de Madrid, Spain&lt;br/&gt;
+Abstract:&lt;br/&gt;
+The phase diagram of the antiferromagnetic q-state Potts model is not
+universal: it depends, in addition to the number of states q and the
+dimensionality of the lattice, on the lattice structure. Therefore, one has to
+study this model on a case-by-case basis.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Mon, 03 May 2010 14:22:07 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">32 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Sasaki, Munetaka</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/24</link>
+    <description>Title: Stochastic Cutoff Method for Long-Range Interacting Systems&lt;br/&gt;
+Authors: Munetaka Sasaki and Kazuya Watanabe&lt;br/&gt;
+Affiliation: Tohoku University, Japan&lt;br/&gt;
+Abstract:&lt;br/&gt;
+In this work, we present an efficient Monte-Carlo (MC) method called stochastic cutoff method for long-range interacting systems. This method enables us to reduce the computational time per MC step from O(N&lt;sup&gt;2&lt;/sup&gt;) to O(N) (or O(N log N)) without any approximation, where N is the number of elements. The efficiency of the method is demonstrated by applying it to magnetic dipolar systems.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 07 Apr 2010 02:55:01 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">24 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Schroeder-Turk, Gerd</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/47</link>
+    <description>Title: Hard Sphere Liquids in Complex Pores&lt;br/&gt;
+Author: G.E. Schroeder-Turk, S. Kuczera, R. Roth and K. Mecke&lt;br/&gt;
+Affiliation: Institut für Theoretische Physik I, Universität Erlangen-Nürnberg, Germany&lt;br/&gt;
+Abstract:&lt;br/&gt;
+The thermodynamic properties of fluids confined in topologically and
+geometrically complex pores depend on the shape of the confining
+geometry.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Mon, 12 Jul 2010 04:59:53 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">47 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Seoane, Beatriz</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/26</link>
+    <description>Title: Effective potential study of hard-spheres crystallization&lt;br/&gt;
+Author: Beatriz Seoane&lt;br/&gt;
+Affiliation: Universidad Complutense de Madrid, Spain&lt;br/&gt;
+Abstract:&lt;br/&gt;
+We use tethered Monte Carlo to study the fluid-solid phase transition in hard spheres at constant pressure. Tethered Monte Carlo features directly the effective potential by simulation of
+constrained statistical ensembles. In order to avoid metastabilities, we have found it crucial to constraint the values of two crystalline order parameters, namely Q_6 and C.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 21 Apr 2010 07:17:51 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">26 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Snook, Ian K.</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/23</link>
+    <description>Title: The observation of formation and annihilation of solitons and standing strainwave superstructures in a two-dimensional colloidal crystal&lt;br/&gt;
+Authors: Ian K. Snook,&lt;sup&gt;1&lt;/sup&gt; Yu-Hang Chui,&lt;sup&gt;2&lt;/sup&gt; Surajit Sengupta,&lt;sup&gt;3,4&lt;/sup&gt; and Kurt Binder&lt;sup&gt;2&lt;/sup&gt;&lt;br/&gt;
+Affiliation: &lt;br/&gt;
+1. Applied Physics, School of Applied Science, RMIT University, P.O. Box 2476V, 3001 Victoria, Australia&lt;br/&gt;
+2. Institute of Physics, Johannes-Gutenberg University, D-55099 Mainz, Staudinger Weg 7, Germany&lt;br/&gt;
+3.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 31 Mar 2010 06:32:48 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">23 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Sokal, Alan</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/48</link>
+    <description>Title: Overcoming critical slowing-down: Where do we stand 23 years after Swendsen and Wang?&lt;br/&gt;
+Author: Alan Sokal&lt;br/&gt;
+Affiliation: Department of Physics, NYU, USA&lt;br/&gt;
+Abstract:&lt;br/&gt;
+I begin by reviewing the Swendsen-Wang algorithm
+       for ferromagnetic &lt;emph&gt;q&lt;/emph&gt;-state Potts models --
+       and its extension to noninteger &lt;emph&gt;q&lt;/emph&gt; due to
+       Chayes and Machta -- and our current state of
+       knowledge about these algorithms&#039; dynamic critical
+       behavior.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 14 Jul 2010 08:36:49 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">48 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Suwa, Hidemaro</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/34</link>
+    <description>Title: Markov Chain Monte Carlo without Detailed Balance and Bounce-free Worm Algorithm&lt;br/&gt;
+Author: Hidemaro Suwa&lt;br/&gt;
+Affiliation: Department of Applied Physics, the University of Tokyo, Japan&lt;br/&gt;
+Abstract:&lt;br/&gt;
+In the Markov chain Monte Carlo method, the detailed balance is usually
+imposed as a sufficient condition for the balance condition. If the
+Markov sequence goes beyond the detailed balance, however, rejection
+rates can get minimized.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Thu, 06 May 2010 15:52:33 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">34 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Weigel, Martin</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/45</link>
+    <description>Title: Simulating spin models on GPU&lt;br/&gt;
+Authors: Martin Weigel&lt;br/&gt;
+Affiliation: Institut f&amp;#252;r  Physik, KOMET 331, Johannes Gutenberg-Universit&amp;#228;t Mainz, Germany&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Here is a link to the &lt;a href=&quot;http://lattice.complex.unimelb.edu.au/mcalgorithms/sites/default/files/mydocuments/WeigelAbstract.pdf&quot;&gt;pdf&lt;/a&gt; version.
+&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Fri, 02 Jul 2010 14:24:22 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">45 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Yllanes, David</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/30</link>
+    <description>Title: The low-temperature phase of Ising spin glasses: parallel-tempering simulations with sample-dependent thermalisation on the Janus computer&lt;br/&gt;
+Author: David Yllanes&lt;br/&gt;
+Affiliation: Universidad Complutense de Madrid, Spain&lt;br/&gt;
+Abstract:&lt;br/&gt;
+We have performed a large-scale equilibrium simulation of the three-dimensional Ising spin glass at low temperatures, achieving thermalisation for lattices up to L=32 at temperatures as low as T=0.64Tc.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Fri, 30 Apr 2010 12:15:37 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">30 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Young, Peter</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/22</link>
+    <description>Title: Monte Carlo Simulations of Heisenberg Spin Glasses&lt;br/&gt;
+Author: Peter Young&lt;br/&gt;
+Affiliation: University of California Santa Cruz, USA&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Whereas most numerical studies on spin glasses have focussed on the Ising case, since this is the simplest, there are new features associated with vector spin glasses which need to be elucidated. Here I will discuss results of simulations on 3-component (Heisenberg) spin glasses.&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 10 Mar 2010 00:46:26 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">22 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  <item>
+    <title>Zoontjens, Peter</title>
+    <link>http://lattice.complex.unimelb.edu.au/mcalgorithms/node/29</link>
+    <description>Title: Kinetic Monte Carlo Modelling of Pt on Au (111) in Bimetallic Catalysis&lt;br/&gt;
+Authors: P. Zoontjens, G. Grochola, S. Russo and I. Snook&lt;br/&gt;
+Affiliation: Applied Physics, School of Applied Science, RMIT University, P.O. Box 2476V, 3001 Victoria, Australia&lt;br/&gt;
+Abstract:&lt;br/&gt;
+Here are links to the &lt;a href=&quot;http://lattice.complex.unimelb.edu.au/mcalgorithms/sites/default/files/mydocuments/PZoontjensAbstract.pdf&quot;&gt;pdf&lt;/a&gt; and &lt;a href=&quot;http://lattice.complex.unimelb.edu.au/mcalgorithms/sites/default/files/mydocuments/PZoontjensAbstract.doc&quot;&gt;Microsoft word&lt;/a&gt; versions.
+&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;&lt;/br/&gt;</description>
+     <pubDate>Wed, 28 Apr 2010 02:33:07 +0000</pubDate>
+ <dc:creator>nclisby</dc:creator>
+ <guid isPermaLink="false">29 at http://lattice.complex.unimelb.edu.au/mcalgorithms</guid>
+  </item>
+  </channel>
+</rss>
