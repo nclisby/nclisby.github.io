@@ -6,14 +6,17 @@ html {
 }
 
 body {
-    background-color: #E0FFF5;
+    /*background-color: #ffff99;*/
+    background-color: #ffffcc;
     height: 100%;
     color: #7A3D99;
     margin: 0em;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: #A352CC;
+    /*color: #A352CC;*/
+    /*color: #2d5986;*/
+    color: #002db3;
 }
 
 button {
@@ -99,17 +102,17 @@ a:active
     font-style: italic;
 }
 
-/*#66FFCC*/
+/*#ff8c1a*/
 #topbar {
     margin: auto;
     display: block;
     width: 100%;
     height: 3em;
     /*color: #2F008C;*/
-    background: -webkit-linear-gradient(#66FFCC, #E0FFF5); /* For Safari 5.1 to 6.0 */
-    background: -o-linear-gradient(#66FFCC, #E0FFF5); /* For Opera 11.1 to 12.0 */
-    background: -moz-linear-gradient(#66FFCC, #E0FFF5); /* For Firefox 3.6 to 15 */
-    background: linear-gradient(#66FFCC, #E0FFF5); /* Standard syntax */
+    background: -webkit-linear-gradient(#ff8c1a, #ffffcc); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ff8c1a, #ffffcc); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ff8c1a, #ffffcc); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ff8c1a, #ffffcc); /* Standard syntax */
 }
 
 h1 img
@@ -144,9 +147,9 @@ h1 img
     height: 3em;
     /*height: 6em;*/
     /*color: #2F008C;*/
-    background: -webkit-linear-gradient(#E0FFF5, #66FFCC); /* For Safari 5.1 to 6.0 */
-    background: -o-linear-gradient(#E0FFF5, #66FFCC); /* For Opera 11.1 to 12.0 */
-    background: -moz-linear-gradient(#E0FFF5, #66FFCC); /* For Firefox 3.6 to 15 */
-    background: linear-gradient(#E0FFF5, #66FFCC); /* Standard syntax */
+    background: -webkit-linear-gradient(#ffffcc, #ff8c1a); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ffffcc, #ff8c1a); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ffffcc, #ff8c1a); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ffffcc, #ff8c1a); /* Standard syntax */
 }
 
