@@ -6,7 +6,7 @@
     <meta name="description" content="Will's Random Phrase Generator!"> 
     <link rel="stylesheet" type="text/css" href="css/will.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="refresh" content="5" >
+    <!--<meta http-equiv="refresh" content="5" >-->
     <script>
         function randomInt(n) {
             return Math.floor(Math.random() * n );
@@ -71,7 +71,7 @@
         punctuation[i++] = "?!";
         punctuation[i++] = "!?";
         var npunctuation = i;
-        function generate_phrase() {
+        function generatePhrase() {
             //alert('hello');
             <!--document.getElementById("phrase").innerHTML = 'Hello' ;-->
             <!--document.getElementById("phrase").innerHTML = 'Hello '+Math.random() ;-->
@@ -96,11 +96,12 @@
             document.getElementById("phrase").innerHTML = phrase ;
             return;
         }
+        var myVar = setInterval(generatePhrase, 5000);
     </script>
 </head>
 
-<!--<body>-->
-<body onload="generate_phrase();">
+<body>
+<body onload="generatePhrase();">
     <div id="topwrapper">
         <div id="topbar">
         </div> <!-- topbar -->
