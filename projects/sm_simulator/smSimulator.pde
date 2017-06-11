@@ -132,7 +132,7 @@ boolean showPivotInformation = false;
 float re2sum = 0.0;
 
 int iPalette = 0;
-int nPalette = 3;
+int nPalette = 4;
 
 int iTerminate = 0;
 int nTerminate = 15;
@@ -969,6 +969,11 @@ int myPalette(float x, int ic)
         if (ic == 1) colour = 255;
     }
     break;
+  case 3:
+  //red on white background
+    if (ic == 0) colour = 255;
+    if (ic == 1) colour = 0;
+    if (ic == 2) colour = 0;  
   default:
     break;
   }
@@ -988,6 +993,9 @@ int myFG(int ic)
     break;
   case 2:
     colour = 255;
+    break;
+  case 3:
+    colour = 0;
     break;
   default:
     colour = 255;
@@ -1009,6 +1017,9 @@ int myBG(int ic)
     break;
   case 2:
     colour = 0;
+    break;
+  case 3:
+    colour = 255;
     break;
   default:
     colour = 0;
@@ -1327,6 +1338,7 @@ void setup()
   //Can't set size dynamically in javascript
   //size(displayWidth, displayHeight, OPENGL);
   size(1024, 768, OPENGL);
+  //size(1280, 1024, OPENGL);
   minSize = min(width, height);
   //processing.js requires textSize to allocate the correct
   //amount of space for text, rather than relying on textFont to
