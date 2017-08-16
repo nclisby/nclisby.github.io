@@ -51,6 +51,7 @@ function draw_path()
     circle.setAttributeNS(null, 'r', 0.5);
     circle.setAttributeNS(null, 'style', 'fill: black; ' );
     svg.appendChild(circle);
+    //var dist2;
     for (i=0; i<n; i++)
     {
         r = Math.pow(1.0-path[i][1],-1.0/a)
@@ -61,14 +62,16 @@ function draw_path()
         line.setAttributeNS(null, 'y1', y);
         line.setAttributeNS(null, 'x2', x+dx);
         line.setAttributeNS(null, 'y2', y+dy);
-        line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.5; ' );
+        //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.5; ' );
+        line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
         svg.appendChild(line);
         x = x + dx;
         y = y + dy;
         var circle = document.createElementNS(svgns, 'circle');
         circle.setAttributeNS(null, 'cx', x);
         circle.setAttributeNS(null, 'cy', y);
-        circle.setAttributeNS(null, 'r', 0.5);
+        //circle.setAttributeNS(null, 'r', 0.5);
+        circle.setAttributeNS(null, 'r', 0.4);
         circle.setAttributeNS(null, 'style', 'fill: black; ' );
         svg.appendChild(circle);
         if (x < xmin) xmin = x;
@@ -76,6 +79,8 @@ function draw_path()
         if (y < ymin) ymin = y;
         if (y > ymax) ymax = y;
     }
+        //dist2 = dx*dx+dy*dy;
+        //alert(dist2);
     var a = xmin-1
     var b = ymin-1
     var c = xmax+1-a
