@@ -5,7 +5,6 @@
 var path = [];
 var n = 100;
 var a = 1.0;
-var minWidth = true;
 
 
 //function generate_hamiltonian_path(n,q)
@@ -37,6 +36,8 @@ function draw_path()
     }
     n = parseInt(document.path_parameters.elements["n"].value);
     a = parseFloat(document.path_parameters.elements["a"].value);
+    var pointsOnly = document.path_parameters.elements["points_only"].checked;
+    var minSize = document.path_parameters.elements["min_size"].checked;
     var dx;
     var dy;
     var x = 0.0;
@@ -65,11 +66,18 @@ function draw_path()
     var cc = xmax+1-aa
     var dd = ymax+1-bb
     var strokeWidth;
-    if (minWidth) {
+    var circleRadius;
+    //if (minWidth) {
+    if (min_size) {
         strokeWidth = 0.004*0.5*(cc+dd);
         if (strokeWidth < 0.35)
         {
             strokeWidth = 0.35;
+        }
+        circleRadius = 0.003*0.5*(cc+dd);
+        if (circleRadius < 0.4)
+        {
+            circleRadius = 0.4;
         }
     }
     x = 0.0;
@@ -89,13 +97,16 @@ function draw_path()
         //r = Math.exp(-Math.log(1.0-path[i][1])/a)
         dx = Math.cos(path[i][0])*r
         dy = Math.sin(path[i][0])*r
+        if (!pointsOnly)
+        {
         var line = document.createElementNS(svgns, 'line');
         line.setAttributeNS(null, 'x1', x);
         line.setAttributeNS(null, 'y1', y);
         line.setAttributeNS(null, 'x2', x+dx);
         line.setAttributeNS(null, 'y2', y+dy);
         //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.5; ' );
-        if (minWidth)
+        //if (minWidth)
+        if (minSize)
         {
             line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:'+strokeWidth+'; ' );
         }
@@ -104,13 +115,22 @@ function draw_path()
             line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
         }
         svg.appendChild(line);
+        }
+
         x = x + dx;
         y = y + dy;
         var circle = document.createElementNS(svgns, 'circle');
         circle.setAttributeNS(null, 'cx', x);
         circle.setAttributeNS(null, 'cy', y);
         //circle.setAttributeNS(null, 'r', 0.5);
-        circle.setAttributeNS(null, 'r', 0.4);
+        if (minSize)
+        {
+            circle.setAttributeNS(null, 'r', circleRadius);
+        }
+        else
+        {
+            circle.setAttributeNS(null, 'r', 0.4);
+        }
         circle.setAttributeNS(null, 'style', 'fill: black; ' );
         svg.appendChild(circle);
     }
