@@ -61,6 +61,7 @@ function draw_path()
         if (y < ymin) ymin = y;
         if (y > ymax) ymax = y;
     }
+    //alert(' '+xmin+' '+xmax+' '+ymin+' '+ymax);
     var aa = xmin-1
     var bb = ymin-1
     var cc = xmax+1-aa
@@ -68,6 +69,15 @@ function draw_path()
     var strokeWidth;
     var circleRadius;
     //if (minWidth) {
+
+    //svg.setAttribute("viewBox", " "+aa+" "+bb+" "+cc+" "+dd+" "); 
+    //var background = document.createElementNS(svgns, 'rect');
+    //background.setAttributeNS(null, 'x', aa);
+    //background.setAttributeNS(null, 'y', bb);
+    //background.setAttributeNS(null, 'width', cc);
+    //background.setAttributeNS(null, 'height', dd);
+    //background.setAttributeNS(null, 'fill', 'black');
+    //<rect x=" "+aa y=" "+bb width=" "+cc height=" "+dd fill="black" />
     if (min_size) {
         strokeWidth = 0.004*0.5*(cc+dd);
         if (strokeWidth < 0.35)
@@ -86,7 +96,8 @@ function draw_path()
     circle.setAttributeNS(null, 'cx', x);
     circle.setAttributeNS(null, 'cy', y);
     circle.setAttributeNS(null, 'r', 0.4);
-    circle.setAttributeNS(null, 'style', 'fill: black; ' );
+    //circle.setAttributeNS(null, 'style', 'fill: black; ' );
+    circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
     svg.appendChild(circle);
     //poorly behaved as alpha approaches zero, likely due to an
     //underflow error of some sort - an issue with very short line
@@ -108,11 +119,13 @@ function draw_path()
         //if (minWidth)
         if (minSize)
         {
-            line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:'+strokeWidth+'; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:'+strokeWidth+'; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
         }
         else
         {
-            line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:0.35; ' );
         }
         svg.appendChild(line);
         }
@@ -131,7 +144,8 @@ function draw_path()
         {
             circle.setAttributeNS(null, 'r', 0.4);
         }
-        circle.setAttributeNS(null, 'style', 'fill: black; ' );
+        //circle.setAttributeNS(null, 'style', 'fill: black; ' );
+        circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
         svg.appendChild(circle);
     }
     //for (i=0; i<n; i++)
