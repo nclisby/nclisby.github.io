@@ -1,1 +1,1 @@
-document.write('<div class="quote">Derbes\' Law: Most of our pleasures come from filling or emptying cavities, and vice versa.</div> Dr. Vincent J. Derbes, <a href="http://www.futilitycloset.com/2013/11/12/derbes-law/">source</a>.');
+document.write(' <div class="quote">In the race of life, always back self-interest; at least you know it's trying.</div> Jack Lang, <a href="https://en.wikiquote.org/wiki/Jack_Lang>source</a>.');
