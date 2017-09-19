@@ -1,1 +1,1 @@
-document.write(' <div class="quote">In the race of life, always back self-interest; at least you know it's trying.</div> Jack Lang, <a href="https://en.wikiquote.org/wiki/Jack_Lang>source</a>.');
+document.write(' <div class="quote">In the race of life, always back self-interest; at least you know it&rquo;s trying.</div> Jack Lang, <a href="https://en.wikiquote.org/wiki/Jack_Lang>source</a>.');
