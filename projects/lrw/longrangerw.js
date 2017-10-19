@@ -2,13 +2,40 @@
 //due to Nathan Clisby, August 2017.
 
 
+//thoughts - 20/10/17
+//zoom - could just zoom along chain, rather than zoom in space.
+//need heap ordering of the steps. This way can avoid overflow and
+//underflow.
+
 var path = [];
 var n = 100;
 var a = 1.0;
+var max_rand = 0.0;
+var min_rand = 1.0;
 
+var path = [];
 
-//function generate_hamiltonian_path(n,q)
+//function path_to_heap()
 function generate_random_path()
+{
+    var i;
+    var x;
+    max_rand = 0.0;
+    min_rand = 1.0;
+    n = parseInt(document.path_parameters.elements["n"].value);
+    for (i=0; i<n; i++)
+    {
+        x = Math.random();
+        if (x < min_rand) { min_rand = x ;}
+        if (x > max_rand) { max_rand = x ;}
+        //path[i] = [2.0*Math.PI*Math.random(), Math.random()];
+        path[i] = [2.0*Math.PI*Math.random(), x];
+    }
+    //alert(' '+max_rand+' '+min_rand);
+
+}
+
+function old_generate_random_path()
 {
     //initialize path
     var i;
@@ -50,7 +77,8 @@ function draw_path()
     //var dist2;
     for (i=0; i<n; i++)
     {
-        r = Math.pow(1.0-path[i][1],-1.0/a)
+        //r = Math.pow(1.0-path[i][1],-1.0/a)
+        r = Math.pow((1.0-path[i][1])/(1.0-max_rand),-1.0/a)
         //r = Math.exp(-Math.log(1.0-path[i][1])/a)
         dx = Math.cos(path[i][0])*r
         dy = Math.sin(path[i][0])*r
@@ -62,10 +90,16 @@ function draw_path()
         if (y > ymax) ymax = y;
     }
     //alert(' '+xmin+' '+xmax+' '+ymin+' '+ymax);
-    var aa = xmin-1
-    var bb = ymin-1
-    var cc = xmax+1-aa
-    var dd = ymax+1-bb
+    //old - this includes a border
+    //var aa = xmin-1
+    //var bb = ymin-1
+    //var cc = xmax+1-aa
+    //var dd = ymax+1-bb
+    //new - for scaled walk - no border
+    var aa = xmin
+    var bb = ymin
+    var cc = xmax-aa
+    var dd = ymax-bb
     var strokeWidth;
     var circleRadius;
     //if (minWidth) {
@@ -78,24 +112,26 @@ function draw_path()
     //background.setAttributeNS(null, 'height', dd);
     //background.setAttributeNS(null, 'fill', 'black');
     //<rect x=" "+aa y=" "+bb width=" "+cc height=" "+dd fill="black" />
-    if (min_size) {
-        strokeWidth = 0.004*0.5*(cc+dd);
+    strokeWidth = 0.004*0.5*(cc+dd);
+    circleRadius = 0.003*0.5*(cc+dd);
+    if (minSize) {
         if (strokeWidth < 0.35)
         {
             strokeWidth = 0.35;
         }
-        circleRadius = 0.003*0.5*(cc+dd);
         if (circleRadius < 0.4)
         {
             circleRadius = 0.4;
         }
     }
+    //alert(' '+strokeWidth+' '+circleRadius);
     x = 0.0;
     y = 0.0;
     var circle = document.createElementNS(svgns, 'circle');
     circle.setAttributeNS(null, 'cx', x);
     circle.setAttributeNS(null, 'cy', y);
-    circle.setAttributeNS(null, 'r', 0.4);
+    //circle.setAttributeNS(null, 'r', 0.4);
+    circle.setAttributeNS(null, 'r', circleRadius);
     //circle.setAttributeNS(null, 'style', 'fill: black; ' );
     circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
     svg.appendChild(circle);
@@ -104,7 +140,8 @@ function draw_path()
     //segments
     for (i=0; i<n; i++)
     {
-        r = Math.pow(1.0-path[i][1],-1.0/a)
+        //r = Math.pow(1.0-path[i][1],-1.0/a)
+        r = Math.pow((1.0-path[i][1])/(1.0-max_rand),-1.0/a)
         //r = Math.exp(-Math.log(1.0-path[i][1])/a)
         dx = Math.cos(path[i][0])*r
         dy = Math.sin(path[i][0])*r
@@ -125,7 +162,8 @@ function draw_path()
         else
         {
             //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
-            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:0.35; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:0.35; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
         }
         svg.appendChild(line);
         }
@@ -142,7 +180,8 @@ function draw_path()
         }
         else
         {
-            circle.setAttributeNS(null, 'r', 0.4);
+            //circle.setAttributeNS(null, 'r', 0.4);
+            circle.setAttributeNS(null, 'r', circleRadius);
         }
         //circle.setAttributeNS(null, 'style', 'fill: black; ' );
         circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
