@@ -15,7 +15,9 @@ var min_rand = 1.0;
 
 var path = [];
 
+//not implemented:
 //function path_to_heap()
+//
 function generate_random_path()
 {
     var i;
@@ -114,6 +116,8 @@ function draw_path()
     //<rect x=" "+aa y=" "+bb width=" "+cc height=" "+dd fill="black" />
     strokeWidth = 0.004*0.5*(cc+dd);
     circleRadius = 0.003*0.5*(cc+dd);
+    //no longer works as it's supposed to - now the whole image is
+    //scaled
     if (minSize) {
         if (strokeWidth < 0.35)
         {
@@ -124,6 +128,12 @@ function draw_path()
             circleRadius = 0.4;
         }
     }
+    //now - add some additional padding for aa, bb, cc, dd
+    aa = aa - 4.0*circleRadius;
+    bb = bb - 4.0*circleRadius;
+    cc = cc + 8.0*circleRadius;
+    dd = dd + 8.0*circleRadius;
+
     //alert(' '+strokeWidth+' '+circleRadius);
     x = 0.0;
     y = 0.0;
