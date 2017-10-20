@@ -114,7 +114,8 @@ function draw_path()
     //background.setAttributeNS(null, 'height', dd);
     //background.setAttributeNS(null, 'fill', 'black');
     //<rect x=" "+aa y=" "+bb width=" "+cc height=" "+dd fill="black" />
-    strokeWidth = 0.004*0.5*(cc+dd);
+    //strokeWidth = 0.004*0.5*(cc+dd);
+    strokeWidth = 0.002666*0.5*(cc+dd);
     //circleRadius = 0.003*0.5*(cc+dd);
     circleRadius = 0.002*0.5*(cc+dd);
     //no longer works as it's supposed to - now the whole image is
