@@ -10,6 +10,7 @@
 var path = [];
 var n = 100;
 var a = 1.0;
+var z = 1.0;
 var max_rand = 0.0;
 var min_rand = 1.0;
 
@@ -53,6 +54,17 @@ function old_generate_random_path()
 
 function draw_path()
 {
+//new method
+//start in centre, work outwards
+//take into account the zoom
+//when steps are too small ignore them
+//when steps are too large in a particular direction stop taking them
+//into account
+//when steps in each direction are too large, stop.
+//
+//shouldn't be doing many drawing operations, even for very long walks
+//should also avoid overflow and underflow.
+//
 //shape = document.getElementsByTagName("svg")[0];
 //shape.setAttribute("viewBox", "-250 -250 500 750"); 
 
@@ -64,6 +76,7 @@ function draw_path()
         svg.removeChild(svg.lastChild);
     }
     n = parseInt(document.path_parameters.elements["n"].value);
+    z = parseFloat(document.path_parameters.elements["z"].value);
     a = parseFloat(document.path_parameters.elements["a"].value);
     var pointsOnly = document.path_parameters.elements["points_only"].checked;
     var minSize = document.path_parameters.elements["min_size"].checked;
@@ -77,7 +90,23 @@ function draw_path()
     var ymax = y;
     var r;
     //var dist2;
-    for (i=0; i<n; i++)
+    //max value of r is 1.
+    //want to rescale by zoom.
+    //for (i=0; i<n; i++)
+    //{
+        ////r = Math.pow(1.0-path[i][1],-1.0/a)
+        //r = Math.pow((1.0-path[i][1])/(1.0-max_rand),-1.0/a)
+        ////r = Math.exp(-Math.log(1.0-path[i][1])/a)
+        //dx = Math.cos(path[i][0])*r
+        //dy = Math.sin(path[i][0])*r
+        //x = x + dx;
+        //y = y + dy;
+        //if (x < xmin) xmin = x;
+        //if (x > xmax) xmax = x;
+        //if (y < ymin) ymin = y;
+        //if (y > ymax) ymax = y;
+    //}
+    for (i=0; i<n; i+=2)
     {
         //r = Math.pow(1.0-path[i][1],-1.0/a)
         r = Math.pow((1.0-path[i][1])/(1.0-max_rand),-1.0/a)
@@ -91,6 +120,61 @@ function draw_path()
         if (y < ymin) ymin = y;
         if (y > ymax) ymax = y;
     }
+    x = 0.0;
+    y = 0.0;
+    for (i=1; i<n; i+=2)
+    {
+        //r = Math.pow(1.0-path[i][1],-1.0/a)
+        r = Math.pow((1.0-path[i][1])/(1.0-max_rand),-1.0/a)
+        //r = Math.exp(-Math.log(1.0-path[i][1])/a)
+        dx = Math.cos(path[i][0])*r
+        dy = Math.sin(path[i][0])*r
+        x = x - dx;
+        y = y - dy;
+        if (x < xmin) xmin = x;
+        if (x > xmax) xmax = x;
+        if (y < ymin) ymin = y;
+        if (y > ymax) ymax = y;
+    }
+
+//choose xmin, xmax so that they are symmetric around origin.
+//will make scaling much easier.
+    if (Math.abs(xmin) > Math.abs(xmax))
+    {
+        xmax = Math.abs(xmin);
+    }
+    else
+    {
+        xmin = -Math.abs(xmax);
+    }
+    if (Math.abs(ymin) > Math.abs(ymax))
+    {
+        ymax = Math.abs(ymin);
+    }
+    else
+    {
+        ymin = -Math.abs(ymax);
+    }
+    //now make it square
+    if (xmax > ymax)
+    {
+        ymax = xmax;
+        ymin = xmin;
+    }
+    else
+    {
+        xmax = ymax;
+        xmin = ymin;
+    }
+
+    
+    xmin = xmin/z;
+    xmax = xmax/z;
+    ymin = ymin/z;
+    ymax = ymax/z;
+
+
+
     //alert(' '+xmin+' '+xmax+' '+ymin+' '+ymax);
     //old - this includes a border
     //var aa = xmin-1
@@ -150,13 +234,68 @@ function draw_path()
     //poorly behaved as alpha approaches zero, likely due to an
     //underflow error of some sort - an issue with very short line
     //segments
-    for (i=0; i<n; i++)
+    //old
+    //for (i=0; i<n; i++)
+    //{
+        ////r = Math.pow(1.0-path[i][1],-1.0/a)
+        //r = Math.pow((1.0-path[i][1])/(1.0-max_rand),-1.0/a)
+        ////r = Math.exp(-Math.log(1.0-path[i][1])/a)
+        //dx = Math.cos(path[i][0])*r
+        //dy = Math.sin(path[i][0])*r
+        //if (!pointsOnly)
+        //{
+        //var line = document.createElementNS(svgns, 'line');
+        //line.setAttributeNS(null, 'x1', x);
+        //line.setAttributeNS(null, 'y1', y);
+        //line.setAttributeNS(null, 'x2', x+dx);
+        //line.setAttributeNS(null, 'y2', y+dy);
+        ////line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.5; ' );
+        ////if (minWidth)
+        //if (minSize)
+        //{
+            ////line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:'+strokeWidth+'; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+        //}
+        //else
+        //{
+            ////line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
+            ////line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:0.35; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+        //}
+        //svg.appendChild(line);
+        //}
+
+        //x = x + dx;
+        //y = y + dy;
+        //var circle = document.createElementNS(svgns, 'circle');
+        //circle.setAttributeNS(null, 'cx', x);
+        //circle.setAttributeNS(null, 'cy', y);
+        ////circle.setAttributeNS(null, 'r', 0.5);
+        //if (minSize)
+        //{
+            //circle.setAttributeNS(null, 'r', circleRadius);
+        //}
+        //else
+        //{
+            ////circle.setAttributeNS(null, 'r', 0.4);
+            //circle.setAttributeNS(null, 'r', circleRadius);
+        //}
+        ////circle.setAttributeNS(null, 'style', 'fill: black; ' );
+        //circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
+        //svg.appendChild(circle);
+    //}
+    x = 0.0;
+    y = 0.0;
+    for (i=0; i<n; i+=2)
     {
         //r = Math.pow(1.0-path[i][1],-1.0/a)
         r = Math.pow((1.0-path[i][1])/(1.0-max_rand),-1.0/a)
         //r = Math.exp(-Math.log(1.0-path[i][1])/a)
         dx = Math.cos(path[i][0])*r
         dy = Math.sin(path[i][0])*r
+        
+        if (r/xmax >= 1.e-4)
+        {
         if (!pointsOnly)
         {
         var line = document.createElementNS(svgns, 'line');
@@ -179,9 +318,12 @@ function draw_path()
         }
         svg.appendChild(line);
         }
+        }
 
         x = x + dx;
         y = y + dy;
+        if (r/xmax >= 1.e-4)
+        {
         var circle = document.createElementNS(svgns, 'circle');
         circle.setAttributeNS(null, 'cx', x);
         circle.setAttributeNS(null, 'cy', y);
@@ -198,7 +340,71 @@ function draw_path()
         //circle.setAttributeNS(null, 'style', 'fill: black; ' );
         circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
         svg.appendChild(circle);
+        }
+        if (Math.abs(x) > 20.0*xmax) break;
+        if (Math.abs(y) > 20.0*ymax) break;
     }
+    x = 0.0;
+    y = 0.0;
+    for (i=1; i<n; i+=2)
+    {
+        //r = Math.pow(1.0-path[i][1],-1.0/a)
+        r = Math.pow((1.0-path[i][1])/(1.0-max_rand),-1.0/a)
+        //r = Math.exp(-Math.log(1.0-path[i][1])/a)
+        dx = Math.cos(path[i][0])*r
+        dy = Math.sin(path[i][0])*r
+        if (r/xmax >= 1.e-4)
+        {
+        if (!pointsOnly)
+        {
+        var line = document.createElementNS(svgns, 'line');
+        line.setAttributeNS(null, 'x1', x);
+        line.setAttributeNS(null, 'y1', y);
+        line.setAttributeNS(null, 'x2', x+dx);
+        line.setAttributeNS(null, 'y2', y+dy);
+        //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.5; ' );
+        //if (minWidth)
+        if (minSize)
+        {
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:'+strokeWidth+'; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+        }
+        else
+        {
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:0.35; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+        }
+        svg.appendChild(line);
+        }
+        }
+
+        x = x - dx;
+        y = y - dy;
+        if (r/xmax >= 1.e-4)
+        {
+        var circle = document.createElementNS(svgns, 'circle');
+        circle.setAttributeNS(null, 'cx', x);
+        circle.setAttributeNS(null, 'cy', y);
+        //circle.setAttributeNS(null, 'r', 0.5);
+        if (minSize)
+        {
+            circle.setAttributeNS(null, 'r', circleRadius);
+        }
+        else
+        {
+            //circle.setAttributeNS(null, 'r', 0.4);
+            circle.setAttributeNS(null, 'r', circleRadius);
+        }
+        //circle.setAttributeNS(null, 'style', 'fill: black; ' );
+        circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
+        svg.appendChild(circle);
+        }
+        if (Math.abs(x) > 20.0*xmax) break;
+        if (Math.abs(y) > 20.0*ymax) break;
+    }
+
+
     //for (i=0; i<n; i++)
     //{
         //r = Math.pow(1.0-path[i][1],-1.0/a)
@@ -257,6 +463,22 @@ window.addEventListener("keydown", function(e) {
     }
 }, false);
 
+function increase_z()
+{
+    z = z*1.05;
+    document.path_parameters.elements["z"].value = z;
+    draw_path();
+    return;
+}
+
+function decrease_z()
+{
+    z = z/1.05;
+    document.path_parameters.elements["z"].value = z;
+    draw_path();
+    return;
+}
+
 function increase_a()
 {
     a = a*1.05;
@@ -296,6 +518,18 @@ document.addEventListener('keydown', function(event) {
     {
         //right arrow
         increase_a();
+        //alert('Right was pressed');
+    }
+    else if (event.keyCode == 38)
+    {
+        //up arrow
+        increase_z();
+        //alert('Left was pressed');
+    }
+    else if (event.keyCode == 40)
+    {
+        //down arrow
+        decrease_z();
         //alert('Right was pressed');
     }
 });
