@@ -11,10 +11,12 @@ var path = [];
 var n = 100;
 var a = 1.0;
 var z = 1.0;
+var v = n;
 var max_rand = 0.0;
 var min_rand = 1.0;
 
 var path = [];
+var newPath = true;
 
 //not implemented:
 //function path_to_heap()
@@ -35,6 +37,7 @@ function generate_random_path()
         path[i] = [2.0*Math.PI*Math.random(), x];
     }
     //alert(' '+max_rand+' '+min_rand);
+    newPath = true;
 
 }
 
@@ -51,6 +54,13 @@ function old_generate_random_path()
 }
 
 //r = (1-x)^{-1/\alpha}
+//
+
+
+var gxmin;
+var gxmax;
+var gymin;
+var gymax;
 
 function draw_path()
 {
@@ -84,10 +94,20 @@ function draw_path()
     var dy;
     var x = 0.0;
     var y = 0.0;
-    var xmin = x;
-    var xmax = x;
-    var ymin = y;
-    var ymax = y;
+    var xmin;
+    var xmax;
+    var ymin;
+    var ymax;
+    //var xmin = x;
+    //var xmax = x;
+    //var ymin = y;
+    //var ymax = y;
+    if (newPath)
+    {
+    xmin = x;
+    xmax = x;
+    ymin = y;
+    ymax = y;
     var r;
     //var dist2;
     //max value of r is 1.
@@ -166,14 +186,18 @@ function draw_path()
         xmax = ymax;
         xmin = ymin;
     }
+    gxmin = xmin;
+    gxmax = xmax;
+    gymin = ymin;
+    gymax = ymax;
 
     
-    xmin = xmin/z;
-    xmax = xmax/z;
-    ymin = ymin/z;
-    ymax = ymax/z;
+    }
 
-
+    xmin = gxmin/z;
+    xmax = gxmax/z;
+    ymin = gymin/z;
+    ymax = gymax/z;
 
     //alert(' '+xmin+' '+xmax+' '+ymin+' '+ymax);
     //old - this includes a border
@@ -286,6 +310,7 @@ function draw_path()
     //}
     x = 0.0;
     y = 0.0;
+    v = 0;
     for (i=0; i<n; i+=2)
     {
         //r = Math.pow(1.0-path[i][1],-1.0/a)
@@ -340,6 +365,11 @@ function draw_path()
         //circle.setAttributeNS(null, 'style', 'fill: black; ' );
         circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
         svg.appendChild(circle);
+        }
+
+        if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax))
+        {
+            v += 1;
         }
         if (Math.abs(x) > 20.0*xmax) break;
         if (Math.abs(y) > 20.0*ymax) break;
@@ -400,6 +430,10 @@ function draw_path()
         circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
         svg.appendChild(circle);
         }
+        if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax))
+        {
+            v += 1;
+        }
         if (Math.abs(x) > 20.0*xmax) break;
         if (Math.abs(y) > 20.0*ymax) break;
     }
@@ -440,6 +474,8 @@ function draw_path()
     //var d = ymax+1-b
     //svg.setAttribute("viewBox", " "+(xmin-1.0)+" "+(ymin-1.0)+" "+(xmax+1.0)+" "+(ymax+1.0)+" "); 
     svg.setAttribute("viewBox", " "+aa+" "+bb+" "+cc+" "+dd+" "); 
+    document.path_parameters.elements["v"].value = v;
+    newPath = false;
     return;
  }
 
@@ -483,6 +519,7 @@ function increase_a()
 {
     a = a*1.05;
     document.path_parameters.elements["a"].value = a;
+    newPath = true;
     draw_path();
     return;
 }
@@ -491,6 +528,7 @@ function decrease_a()
 {
     a = a/1.05;
     document.path_parameters.elements["a"].value = a;
+    newPath = true;
     draw_path();
     return;
 }
@@ -498,6 +536,7 @@ function decrease_a()
 function update_a()
 {
     a = document.path_parameters.elements["a"].value;
+    newPath = true;
     draw_path();
     return;
 }
