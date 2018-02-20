@@ -321,6 +321,7 @@ function draw_path()
         
         if (r/xmax >= 1.e-4)
         {
+        if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax)) {
         if (!pointsOnly)
         {
         var line = document.createElementNS(svgns, 'line');
@@ -344,11 +345,13 @@ function draw_path()
         svg.appendChild(line);
         }
         }
+        }
 
         x = x + dx;
         y = y + dy;
         if (r/xmax >= 1.e-4)
         {
+        if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax)) {
         var circle = document.createElementNS(svgns, 'circle');
         circle.setAttributeNS(null, 'cx', x);
         circle.setAttributeNS(null, 'cy', y);
@@ -365,6 +368,7 @@ function draw_path()
         //circle.setAttributeNS(null, 'style', 'fill: black; ' );
         circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
         svg.appendChild(circle);
+        }
         }
 
         if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax))
@@ -385,6 +389,7 @@ function draw_path()
         dy = Math.sin(path[i][0])*r
         if (r/xmax >= 1.e-4)
         {
+        if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax)) {
         if (!pointsOnly)
         {
         var line = document.createElementNS(svgns, 'line');
@@ -408,11 +413,13 @@ function draw_path()
         svg.appendChild(line);
         }
         }
+        }
 
         x = x - dx;
         y = y - dy;
         if (r/xmax >= 1.e-4)
         {
+        if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax)) {
         var circle = document.createElementNS(svgns, 'circle');
         circle.setAttributeNS(null, 'cx', x);
         circle.setAttributeNS(null, 'cy', y);
@@ -430,6 +437,8 @@ function draw_path()
         circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
         svg.appendChild(circle);
         }
+        }
+
         if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax))
         {
             v += 1;
