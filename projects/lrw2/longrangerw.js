@@ -511,7 +511,8 @@ window.addEventListener("keydown", function(e) {
 function increase_z()
 {
     z = z*1.05;
-    document.path_parameters.elements["z"].value = z;
+    //document.path_parameters.elements["z"].value = z;
+    document.path_parameters.elements["z"].value = z.toExponential(4);
     draw_path();
     return;
 }
@@ -519,7 +520,8 @@ function increase_z()
 function decrease_z()
 {
     z = z/1.05;
-    document.path_parameters.elements["z"].value = z;
+    //document.path_parameters.elements["z"].value = z;
+    document.path_parameters.elements["z"].value = z.toExponential(4);
     draw_path();
     return;
 }
