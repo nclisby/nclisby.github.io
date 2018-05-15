@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hamiltonian path generator</title>
+    <link rel="canonical" href="/projects/hamiltonian_path/" />
+    <link rel="stylesheet" type="text/css" href="/css/nc.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" href="/favicon-192x192.png" sizes="192x192">
+    <link rel="icon" type="image/png" href="/favicon-160x160.png" sizes="160x160">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <meta name="msapplication-TileColor" content="#603cba">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+<!--<title>Hamiltonian path generator</title>-->
+<!--<meta name="Author" content="Nathan Clisby">-->
+<!--[><script src="hamiltonian_path_game.js"> </script><]-->
+<script src="hamiltonian_path.js"> </script>
+<script>
+    //resizing canvas if width < 600/0.9 = 666.6666
+    function writeCanvas()
+    {
+        var w, h;
+        if (window.innerWidth < 666.666)
+        {
+            w = 0.9*window.innerWidth;
+            h = w;
+        }
+        else if (window.innerHeight < 666.666)
+        {
+            h = 0.9*window.innerHeight;
+            w = h;
+        }
+        else
+        {
+            w = 600;
+            h = 600;
+        }
+        document.write('<canvas id="path_canvas" width="'+w+'" height="'+h+'">');
+    }
+
+</script>
+    <script>
+        //Google analytics tracking
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new
+            Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-58103598-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+</head>
+<body onload="refresh_path();">
+    <div id="topwrapper">
+    <div id="topbar">
+        <!--Can assume that tnav elements 2x width of bnav-->
+        <div class="tnav">
+            <ul>
+                <li><a href="/">home</a></li>
+                <li><a href="/research/">research</a></li>
+                <li><a class="current" href="/projects/">projects</a></li>
+            </ul>
+        </div> <!-- tnav -->
+        <div class="bnav w3">
+            <ul>
+                <li><a href="/projects/">(main)</a></li>
+                <li><a href="/projects/saw_videos/">(SAW videos)</a></li>
+                <li><a href="/projects/software/">(software)</a></li>
+            </ul>
+        </div> <!-- bnav -->
+        <div class="bnav w3">
+            <ul>
+                <li><a href="/projects/sm_simulator/">(simulator)</a></li>
+                <li><a href="/projects/backtracker/">(backtracker)</a></li>
+                <li><a class="current" 
+                    href="/projects/hamiltonian_path/">(Hamiltonian paths)</a></li>
+            </ul>
+        </div> <!-- bnav -->
+        <div class="bnav w3">
+            <ul>
+                <li><a href="/projects/snake_puzzle/">(3d printed puzzle)</a></li>
+                <li><a href="/projects/pebble_app/">(pebble app)</a></li>
+                <li><a href="/projects/saw_feature/">(saw feature)</a></li>
+            </ul>
+        </div> <!-- bnav -->
+    </div> <!-- topbar -->
+    <div id="contentblock">
+        <div id="content">
+<!--<center>-->
+<!--<h1 style="color:#07c">Hamiltonian path generator</h1>-->
+                <h1 style="display:inline-block;line-height:1.0em;margin-bottom:0.5em;">
+                <div style="display:block;float:left;margin-right:1.5em;vertical-align:top;">
+                <a href="/" ><img src="/img/nc_full_logo.png"></img></a></div>
+                <div style="display:block;float:left;clear:right;vertical-align:top;">
+                Hamiltonian path generator
+                </div>
+                </h1>
+<!--<div style="text-align:left;width:800px">-->
+<p>
+<b>Author:</b> Nathan Clisby, November 2014
+(<a href="http://clisby.net/">homepage</a>, <a
+href="mailto:clisby@gmail.com">clisby@gmail.com</a>).
+Link to an <a href="hamiltonian_path_v1.html">earlier version</a>. Note:
+both the implementation of the algorithm and the appearance have been
+changed.
+</p>
+<p>
+<b>About:</b> This javascript program generates a Hamiltonian path on an n &times; n grid
+using the backbite move described in the paper &ldquo;Secondary structures
+in long compact polymers&rdquo; by Richard Oberdorf, Allison Ferguson, Jesper
+L. Jacobsen and Jan&eacute; Kondev, Phys. Rev. E 74, 051801 (2006).
+Paper available via the <a
+href="http://dx.doi.org/10.1103/PhysRevE.74.051801">APS</a>
+(subscription required) or as a pre-print on the <a
+href="http://arxiv.org/abs/cond-mat/0508094">arXiv</a>. The resulting
+path is displayed below both as an image and as a sequence of grid
+points. (Further <a href="#details">technical details</a> at the bottom of the page.)
+</p>
+<p>
+<b>Initialisation:</b> Specify desired grid size and choose &ldquo;quality factor&rdquo; which
+determines how &ldquo;random&rdquo; the path will be (QF=1 is a good
+default choice), then click &ldquo;Generate
+Hamiltonian path&rdquo;. Check &ldquo;Circuits only&rdquo; if you wish to
+only generate Hamiltonian circuits. The default option is for the starting configuration to visit
+every site, but if you unselect &ldquo;Must fill&rdquo; it's possible that not every site will be
+visited. In particular, if you set quality factor to 0, and unselect &ldquo;Must fill&rdquo; then
+the starting configuration will be a single point starting at a randomly selected site.
+</p>
+<p>
+<b>Play game:</b>
+Toggle the active end by
+pressing &ldquo;t&rdquo;, toggle the display of arrows indicating the
+path direction by pressing &ldquo;a&rdquo;, and make backbite moves by moving the active end using the
+direction keys. Can you make a spiral, starting from a random
+configuration? 
+</p>
+<p>
+<b>See effect of random backbite moves, enter either via keyboard or
+    clicking appropriate button:</b> &ldquo;r&rdquo; makes a random move for the active end (hold down to
+repeat), &ldquo;shift+r&rdquo; makes 100 random moves, &ldquo;e&rdquo; makes a
+random move for either end (hold down to repeat), &ldquo;shift+e&rdquo; makes 100
+random moves.
+</p>
+<p>
+New command (June 4, 2015): &ldquo;s&rdquo; toggles between different
+modes for showing the trace of the movement of the ends. Default mode: show
+nothing, record nothing (erase traces). Record mode: record traces and
+draw them. Show mode: no longer add to recording of traces, but continue showing
+existing one.
+</p>
+<p>
+New command (February 1, 2016): &ldquo;v&rdquo; toggles between 
+hiding and showing walk, in order to highly the vector field (arrows).
+</p>
+<div class="spacer"></div>
+<p>
+<center>
+<form name="path_parameters">
+Rows: <input type="text" name="y" id="y" size="4" value="10"/>
+&nbsp; &nbsp; &nbsp; 
+Columns: <input type="text" name="x" id="x" size="4" value="10"/>
+&nbsp; &nbsp; &nbsp; 
+Holey-ness: <input type="text" name="h" id="h" size="6" value="0.0"/>
+&nbsp; &nbsp; &nbsp;
+Quality factor: <input type="text" name="q" id="q" size="6" value="1.0"/>
+&nbsp; &nbsp; &nbsp;
+Must fill: <input type="checkbox" name="must_fill" id="must_fill" value="must_fill" checked/>
+&nbsp; &nbsp; &nbsp;
+Circuits only: <input type="checkbox" name="is_circuit" id="is_circuit" value="is_circuit" checked/>
+</form><br/>
+</center>
+<center>
+    <button onclick="refresh_path()"><h3>Generate Hamiltonian
+            path<h3></button><br/><br/>
+    <!--<div style="whitespace:no-wrap;">-->
+    <button onclick="toggle_end()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;t&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="toggle_arrow()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;a&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="move_r()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;r&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="move_R()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;R&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="move_e()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;e&nbsp;&nbsp;</h3>
+    </button>
+    &nbsp;&nbsp;<button onclick="move_E()" style="margin:0;padding:0;line-height:0.8em;">
+        <h3>&nbsp;&nbsp;E&nbsp;&nbsp;</h3>
+    </button>
+<!--</div>-->
+        </center><br/>
+<center>
+    <script> 
+    //writeCanvas writes the opening canvas tag
+    writeCanvas(); 
+    </script> 
+    <!--<canvas>-->
+    <p>Canvas element not supported in your browser.</p>
+    </canvas>
+</center>
+</p>
+<p>
+<div class="spacer"></div>
+<!--</div>-->
+<b>History:</b> The impetus to create this generator came from <a
+href="http://danielcrooks.com/">Daniel Crooks</a>, an artist based in Melbourne, who needed a
+tool for generating long Hamiltonian paths.
+In his words: 
+<div class="blockquote">My original
+interest in the Hamiltonian paths was for a portraiture project. I've
+developed a process for taking large format photographs using a video
+camera and a robotic pan/tilt head to 'scan' the image of the sitter
+over time. As part of the research I became interested in Hamiltonian
+paths, firstly as a motion path for the camera and then subsequently the
+aesthetic and conceptual possibilities inherent in the paths
+themselves.</div>
+</p>
+<p>
+I had previously come
+across the aforementioned paper on sampling Hamiltonian paths,
+and took the
+opportunity to learn some javascript and create this generator.
+I hope to apply the expertise gained in this enterprise to other
+visualisation projects in combinatorics and statistical mechanics.
+</p>
+<p>
+<b>Usage:</b> Specify desired grid size and choose &ldquo;quality
+factor&rdquo; which
+determines how &ldquo;random&rdquo; the path will be, then click "Generate
+Hamiltonian path" or reload page. Check &ldquo;Circuits only&rdquo; if you wish to
+only generate Hamiltonian circuits (read <a href="#details">technical
+details</a> below to see why circuits are not
+selected uniformly at random).
+</p>
+<p>
+Quality factor of 1.0 should be fine for most
+purposes; for large grids it may be worth trying 0.5 or even
+0.1.
+</p>
+<p>
+Tested on firefox and chrome browsers. N.B.: for large grids (say 100
+&times; 100 or larger) you may be prompted to stop the script due to the
+long running time. For chrome, I found that if I did nothing the script
+would keep running in the background, whereas for firefox I would have
+to click "continue" for the script to complete.
+</p>
+<p>
+<b><a name="details">Technical details:</a></b><br/>
+<ul>
+<li>Running time(n &times; n grid) = (Quality factor) &times; 20 &times;
+n<sup>2</sup>
+log<sup>2</sup>n &times; Pr(success of backbite move)
+&times; (Expected CPU time for backbite move)</li>
+<li>The `quality factor' is an arbitrary constant, while the factor of 20
+seems to ensure that Hamiltonian path with good randomness is achieved
+when quality factor is 1.</li>
+<li>The cover time for the simple random walk on an n
+&times; n grid is n<sup>2</sup> log<sup>2</sup>n (I've found this stated
+in a number of places, but if anyone could give me the original
+reference I would appreciate it). The Hamiltonian path endpoints perform
+something like a random walk on the grid, and so we use this as an
+approximation for the cover time. (It may be a tight bound, but I'm not
+an expert on this problem and can only say that it seems plausible that
+the bound is in fact tight.)</li>
+<li>The probability of success of the backbite
+move approaches 1 as n becomes large.</li>
+<li>I have not performed any testing
+to determine the mean CPU time for a backbite move, but it must be
+O(n<sup>2</sup>), and it is reasonable to suppose that in fact it is a relatively
+small power of n. A more sophisticated implementation would allow the
+backbite move to be performed in time O(log n).</li>
+<li>The Markov chain resulting from repeated application of the
+backbite move has not (yet) been
+proved to be ergodic. This is an interesting open problem. The Markov
+chain is ergodic
+for small grid sizes, and my intuition is that
+the algorithm is extremely likely to be ergodic
+for arbitrary two-dimensional
+grids (it seems to me that if the set of Hamiltonian paths were to be
+       disconnected this would be more likely to occur for smaller grids
+       for which the grid boundary has greater influence).
+For three dimensions and
+higher I don't have any intuition because here large grids are intrinsically
+different to small grids due to the existence of knots.
+</li>
+<li>
+Hamiltonian circuit generator just generates a path, and continues
+iterating the backbite move until a circuit is generated. This method
+<it>cannot</it> select a circuit uniformly at random because circuit
+selection probability is weighted by the (expected) space between
+samples. I think this can be best explained by an example: suppose we
+have a Markov chain to uniformly select elements 1 and 2 from a list of
+N elements. For each time step we can move up or down one element on the
+list with uniform probability; if this reaches 0 or N+1 the move is
+rejected. This Markov chain selects 1 and 2 with uniform probability,
+    but if we look at the behaviour of the full chain the probability
+    that we will sample 1 before 2 given an arbitrary starting time vanishes with
+    increasing N as 1/N. This is because at the starting time we are
+    almost surely in the interval [3,N], and in this case the next
+    element must be a 2. This is
+    an extreme example, and the Hamiltonian circuits generated here are
+    likely to be statistically extremely similar to circuits generated
+    from the uniform distribution, but the method used in this
+    Hamiltonian circuit generator should most definitely not
+    be used for serious numerical work.
+</li>
+</ul>
+</p>
+</div>
+<!--</center>-->
+        </div> <!-- content -->
+    </div> <!-- contentblock -->
+    <div id="push"></div>
+    </div> <!-- topwrapper -->
+    <div id="bottombar">
+            <div id="footer">
+               <div id="footquote">
+                    <script src="/includesnippet.js"></script>
+                </div>
+            </div> <!-- footer -->
+    </div> <!-- bottombar -->
+</body>
+</html>
+
+
