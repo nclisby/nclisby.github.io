@@ -462,10 +462,13 @@ function generate_hamiltonian_circuit(q)
     var nmax = xmax*ymax;
     var success;
     var min_dist = 1 + (n % 2);
+    var icount = 0;
     while (Math.abs(path[n-1][0] - path[0][0])
            + Math.abs(path[n-1][1] - path[0][1]) != min_dist)
     {
         n = backbite(n,path);
+        icount += 1;
+        if (icount >= 1000000) break;
     }
     return [n,path];
 }
