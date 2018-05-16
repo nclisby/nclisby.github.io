@@ -163,6 +163,19 @@ existing one.
 New command (February 1, 2016): &ldquo;v&rdquo; toggles between 
 hiding and showing walk, in order to highly the vector field (arrows).
 </p>
+<p>
+Holey-ness factor added. Create holes in lattice with this proportion,
+subject to constraints that are chosen to make it possible/likely that
+a Hamiltonian path still exists. (Neal Madras pointed out that same
+number of sites of each sub-lattice parity should be removed.) 
+
+Parameter must be between 0 (no holes) and 1 (as holey as
+possible; in practice same effect is achieved at a smaller proportion).
+
+Not guaranteed to produce a Hamiltonian path or circuit. Note that
+setting holey degree to be 3 (recommended) forces the outer two layers
+of sub-lattice to remain intact.
+</p>
 <div class="spacer"></div>
 <p>
 <center>
@@ -171,13 +184,15 @@ Rows: <input type="text" name="y" id="y" size="4" value="10"/>
 &nbsp; &nbsp; &nbsp; 
 Columns: <input type="text" name="x" id="x" size="4" value="10"/>
 &nbsp; &nbsp; &nbsp; 
-Holey-ness: <input type="text" name="h" id="h" size="6" value="0.06"/>
-&nbsp; &nbsp; &nbsp;
 Quality factor: <input type="text" name="q" id="q" size="6" value="1.0"/>
 &nbsp; &nbsp; &nbsp;
 Must fill: <input type="checkbox" name="must_fill" id="must_fill" value="must_fill" checked/>
 &nbsp; &nbsp; &nbsp;
 Circuits only: <input type="checkbox" name="is_circuit" id="is_circuit" value="is_circuit" checked/>
+<br/>
+Holey-ness: <input type="text" name="h" id="h" size="6" value="0.2"/>
+&nbsp; &nbsp; &nbsp;
+Holey degree: <input type="text" name="deg" id="deg" size="6" value="3"/>
 </form><br/>
 </center>
 <center>

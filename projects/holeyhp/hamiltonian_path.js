@@ -744,6 +744,8 @@ function refresh_path()
     ymax = -1+parseInt(document.path_parameters.elements["y"].value);
     var q = parseFloat(document.path_parameters.elements["q"].value);
     var h = parseFloat(document.path_parameters.elements["h"].value);
+    var h = parseFloat(document.path_parameters.elements["h"].value);
+    var deg = parseFloat(document.path_parameters.elements["deg"].value);
     //var is_circuit = parseFloat(document.path_parameters.elements["is_circuit"].checked);
 
 
@@ -751,9 +753,17 @@ function refresh_path()
         h = 0.0;
         alert('Setting h to 0.0 (was < 0)');
     }
-    if (h > 0.1) { 
-        h = 0.1;
-        alert('Setting h to 0.1 (was > 0.1)');
+    if (h > 1) { 
+        h = 1.0;
+        alert('Setting h to 1.0, which makes the lattice as holey as possible (was > 1)');
+    }
+    if (deg < 0) { 
+        deg = 0;
+        alert('Setting deg to 0 (was < 0)');
+    }
+    if (deg > 3) { 
+        deg = 3;
+        alert('Setting deg to 3 (was > 3)');
     }
     //set isHole based on holey-ness factor h.
     //will set an even number of holes by default
@@ -775,29 +785,34 @@ function refresh_path()
 
     icount = 0;
 
+// pointed out by Neal Madras that we need to remove same number of
+// sites of each parity as a necessary condition for a Hamiltonian path
+// to exist. (Not sufficient.)
+    var parity = 0;
     while(nholes > 0)
     {
         x = Math.floor(Math.random()*(xmax+1));
         y = Math.floor(Math.random()*(ymax+1));
-        if (!isHole[x][y])
+        if (((x + y) % 2 === parity) && (!isHole[x][y]))
         {
             //check that each of its neighbours has at least 2 other
             //neighbours
 
             nt = countNeighbours(x+1,y);
-            if (nt >= 4)
+            if (nt > deg)
             {
                 nt = countNeighbours(x-1,y);
-                if (nt >= 4)
+                if (nt > deg)
                 {
                     nt = countNeighbours(x,y+1);
-                    if (nt >= 4)
+                    if (nt > deg)
                     {
                         nt = countNeighbours(x,y-1);
-                        if (nt >= 4)
+                        if (nt > deg)
                         {
                             isHole[x][y] = true;
                             nholes = nholes - 1;
+                            parity = (parity + 1) % 2;
                         }
                     }
                 }
@@ -806,7 +821,7 @@ function refresh_path()
         icount += 1;
         //console.log(x,y,nholes);
         //console.log(nholes);
-        if (icount > 100000) break;
+        if (icount > 1000000) break;
     }
 
     must_fill = document.path_parameters.elements["must_fill"].checked;
