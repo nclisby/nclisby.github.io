@@ -420,8 +420,12 @@ function generate_hamiltonian_path(q)
     //var path = new Array(n*n);
     //var path = new Array(100000);
     //var path = new Array((xmax+1)*(ymax+1));
-    path[0] = [Math.floor(Math.random()*(xmax+1)),
-    Math.floor(Math.random()*(ymax+1))];
+
+    while (true)
+    {
+        path[0] = [Math.floor(Math.random()*(xmax+1)), Math.floor(Math.random()*(ymax+1))];
+        if (inSublattice(path[0][0],path[0][1])) break;
+    }
     //path[0] = [0,0];
     n = 1;
     //nattempts = 1+q*10.0 * (xmax+1) * (ymax+1) * Math.pow(Math.log(2.+(xmax+1)*(ymax+1)),2);
@@ -800,8 +804,9 @@ function refresh_path()
             }
         }
         icount += 1;
+        //console.log(x,y,nholes);
         //console.log(nholes);
-        if (icount > 1000) break;
+        if (icount > 100000) break;
     }
 
     must_fill = document.path_parameters.elements["must_fill"].checked;
