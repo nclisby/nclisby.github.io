@@ -748,7 +748,6 @@ function refresh_path()
     var deg = parseFloat(document.path_parameters.elements["deg"].value);
     //var is_circuit = parseFloat(document.path_parameters.elements["is_circuit"].checked);
 
-
     if (h < 0.0) { 
         h = 0.0;
         alert('Setting h to 0.0 (was < 0)');
@@ -810,7 +809,10 @@ function refresh_path()
                         nt = countNeighbours(x,y-1);
                         if (nt > deg)
                         {
+                            //alert((x+y)% 2);
                             isHole[x][y] = true;
+                            xold = x;
+                            yold = y;
                             nholes = nholes - 1;
                             parity = (parity + 1) % 2;
                         }
@@ -821,7 +823,18 @@ function refresh_path()
         icount += 1;
         //console.log(x,y,nholes);
         //console.log(nholes);
-        if (icount > 1000000) break;
+        if (icount > 1000000) {
+        // check that parity == 0, i.e. that we've removed an even
+        // number of sites
+        // if not, restore last site.
+            if (parity == 1)
+            {
+                isHole[xold][yold] = false;
+                //alert("restoring a site");
+                parity = 0;
+            }
+            break;
+        }
     }
 
     must_fill = document.path_parameters.elements["must_fill"].checked;
