@@ -222,6 +222,7 @@ function draw_path()
     //background.setAttributeNS(null, 'height', dd);
     //background.setAttributeNS(null, 'fill', 'black');
     //<rect x=" "+aa y=" "+bb width=" "+cc height=" "+dd fill="black" />
+    //strokeWidth = 0.01*0.5*(cc+dd);
     //strokeWidth = 0.004*0.5*(cc+dd);
     strokeWidth = 0.002666*0.5*(cc+dd);
     //circleRadius = 0.003*0.5*(cc+dd);
@@ -253,7 +254,8 @@ function draw_path()
     //circle.setAttributeNS(null, 'r', 0.4);
     circle.setAttributeNS(null, 'r', circleRadius);
     //circle.setAttributeNS(null, 'style', 'fill: black; ' );
-    circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
+    //circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
+    circle.setAttributeNS(null, 'style', 'fill: rgb(0,0,128); ' );
     svg.appendChild(circle);
     //poorly behaved as alpha approaches zero, likely due to an
     //underflow error of some sort - an issue with very short line
@@ -319,6 +321,7 @@ function draw_path()
         dx = Math.cos(path[i][0])*r
         dy = Math.sin(path[i][0])*r
         
+        //if (r/xmax >= 1.e-4)
         if (r/xmax >= 1.e-4)
         {
         if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax)) {
@@ -334,13 +337,15 @@ function draw_path()
         if (minSize)
         {
             //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:'+strokeWidth+'; ' );
-            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,128);stroke-width:'+strokeWidth+'; ' );
         }
         else
         {
             //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
             //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:0.35; ' );
-            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,128);stroke-width:'+strokeWidth+'; ' );
         }
         svg.appendChild(line);
         }
@@ -366,7 +371,8 @@ function draw_path()
             circle.setAttributeNS(null, 'r', circleRadius);
         }
         //circle.setAttributeNS(null, 'style', 'fill: black; ' );
-        circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
+        //circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
+        circle.setAttributeNS(null, 'style', 'fill: rgb(0,0,128); ' );
         svg.appendChild(circle);
         }
         }
@@ -387,6 +393,7 @@ function draw_path()
         //r = Math.exp(-Math.log(1.0-path[i][1])/a)
         dx = Math.cos(path[i][0])*r
         dy = Math.sin(path[i][0])*r
+        //if (r/xmax >= 1.e-4)
         if (r/xmax >= 1.e-4)
         {
         if ((Math.abs(x) <= xmax) && (Math.abs(y) <= ymax)) {
@@ -395,20 +402,22 @@ function draw_path()
         var line = document.createElementNS(svgns, 'line');
         line.setAttributeNS(null, 'x1', x);
         line.setAttributeNS(null, 'y1', y);
-        line.setAttributeNS(null, 'x2', x+dx);
-        line.setAttributeNS(null, 'y2', y+dy);
+        line.setAttributeNS(null, 'x2', x-dx);
+        line.setAttributeNS(null, 'y2', y-dy);
         //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.5; ' );
         //if (minWidth)
         if (minSize)
         {
             //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:'+strokeWidth+'; ' );
-            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,128);stroke-width:'+strokeWidth+'; ' );
         }
         else
         {
             //line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,0);stroke-width:0.35; ' );
             //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:0.35; ' );
-            line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+            //line.setAttributeNS(null, 'style', 'stroke:rgb(0,255,0);stroke-width:'+strokeWidth+'; ' );
+            line.setAttributeNS(null, 'style', 'stroke:rgb(0,0,128);stroke-width:'+strokeWidth+'; ' );
         }
         svg.appendChild(line);
         }
@@ -434,7 +443,8 @@ function draw_path()
             circle.setAttributeNS(null, 'r', circleRadius);
         }
         //circle.setAttributeNS(null, 'style', 'fill: black; ' );
-        circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
+        //circle.setAttributeNS(null, 'style', 'fill: rgb(0,255,0); ' );
+        circle.setAttributeNS(null, 'style', 'fill: rgb(0,0,128); ' );
         svg.appendChild(circle);
         }
         }
