@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sammy's Random Phrase Generator!</title>
+    <link rel="canonical" href="/" />
+    <meta name="description" content="Sammy's Random Phrase Generator!"> 
+    <link rel="stylesheet" type="text/css" href="css/sammy.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--<meta http-equiv="refresh" content="5" >-->
+    <script>
+        function randomInt(n) {
+            return Math.floor(Math.random() * n );
+        }
+        var i;
+        i = 0;
+        var title = [];
+        title[i++] = "";
+        title[i++] = "";
+        title[i++] = "Queen";
+        title[i++] = "King";
+        title[i++] = "Professor";
+        //title[i++] = "President";
+        //title[i++] = "Prime Minister";
+        //title[i++] = "Master";
+        //title[i++] = "Princess";
+        //title[i++] = "Darth";
+        //title[i++] = "Dr";
+        //title[i++] = "Nurse";
+        var ntitle = i;
+        i = 0;
+        var namearr = [];
+        namearr[i++] = "NASA";
+        namearr[i++] = "Sammy";
+        namearr[i++] = "Thomas";
+        namearr[i++] = "Olivia";
+        namearr[i++] = "Nathan";
+        namearr[i++] = "Ladybug";
+        namearr[i++] = "Beach ball";
+        namearr[i++] = "Work bench";
+        var nname = i;
+        i = 0;
+        var adjective = [];
+        adjective[i++] = "super silly";
+        adjective[i++] = "cool";
+        adjective[i++] = "totally awesome";
+        <!--adjective[i++] = "stinky";-->
+        adjective[i++] = "the best";
+        <!--adjective[i++] = "dumb as a spud";-->
+        <!--adjective[i++] = "embarrassing";-->
+        <!--adjective[i++] = "super smart";-->
+        <!--adjective[i++] = "interesting";-->
+        adjective[i++] = "crazy";
+        adjective[i++] = "funny";
+        adjective[i++] = "scary";
+        var nadjective = i;
+        i = 0;
+        var punctuation = [];
+        punctuation[i++] = ".";
+        punctuation[i++] = "!";
+        punctuation[i++] = "!!";
+        punctuation[i++] = "!!!";
+        punctuation[i++] = "!!!!!!";
+        punctuation[i++] = " :)";
+        punctuation[i++] = " :(";
+        punctuation[i++] = " ;(";
+        punctuation[i++] = " ;)";
+        punctuation[i++] = " :/";
+        punctuation[i++] = " ;/";
+        punctuation[i++] = "?!";
+        punctuation[i++] = "!?";
+        var npunctuation = i;
+        function generatePhrase() {
+            //alert('hello');
+            <!--document.getElementById("phrase").innerHTML = 'Hello' ;-->
+            <!--document.getElementById("phrase").innerHTML = 'Hello '+Math.random() ;-->
+            <!--document.getElementById("phrase").innerHTML = 'Hello '+Math.random() ;-->
+            var ititle = randomInt(ntitle);
+            var ititle2 = randomInt(ntitle-1);
+            if (ititle2 == ititle) ititle2 = ntitle-1;
+            var iname = randomInt(nname);
+            var iname2 = randomInt(nname-1);
+            if (iname2 == iname) iname2 = nname-1;
+            var iadjective = randomInt(nadjective);
+            var ipunctuation = randomInt(npunctuation);
+            if ( randomInt(2) == 0)
+            {
+                phrase = title[ititle]+' '+namearr[iname]+' thinks that '+title[ititle2]+' '+namearr[iname2]+' is '+adjective[iadjective]+punctuation[ipunctuation]
+            }
+            else
+            {
+                phrase = title[ititle]+' '+namearr[iname]+' is '+adjective[iadjective]+punctuation[ipunctuation]
+            }
+            <!--document.getElementById("phrase").innerHTML = title[randomInt(ntitle)] ;-->
+            document.getElementById("phrase").innerHTML = phrase ;
+            return;
+        }
+        var myVar = setInterval(generatePhrase, 5000);
+    </script>
+</head>
+
+<body>
+<body onload="generatePhrase();">
+    <div id="topwrapper">
+        <div id="topbar">
+        </div> <!-- topbar -->
+
+        <div id="contentblock">
+            <div id="content">
+                <h1 style="display:inline-block;line-height:1.0em;margin-bottom:-0.3em;">
+                    Sammy's Random Phrase Generator!
+                </h1>
+                <br />
+                <br />
+                <p>
+                <div class="image">
+                <img src="shuttle.gif" alt="me" width="40%"
+                style="float:right;min-width:100px;margin: 10px 0px 0px
+                10px">
+            </div>
+                <blockquote style="font-size:150%">
+                <div id="phrase">
+                </div>
+                </blockquote>
+                </p>
+                <br />
+            </div> <!-- content -->
+        </div> <!-- contentblock -->
+        <div id="push"></div>
+    </div> <!-- topwrapper -->
+    <div id="bottombar">
+        <div id="footer">
+        </div> <!-- footer -->
+    </div> <!-- bottombar -->
+</body>
+</html>
