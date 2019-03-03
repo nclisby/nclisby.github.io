@@ -1,24 +1,43 @@
-//Implementation of Hamiltonian Path algorithm due to 
-//Nathan Clisby, July 2012.
+/*
+    hamiltonian_paths.js implements a method for Monte Carlo sampling of Hamiltonian paths.
 
-//Comments about the Markov chain used to generate paths
-//* using backbiting move described in Secondary structures in long
-//compact polymers, PHYSICAL REVIEW E 74, 051801 ͑2006, by Richard
-//Oberdorf, Allison Ferguson, Jesper L. Jacobsen and Jan\'e Kondev
-//* algorithm is believed to be ergodic, but this has not been proved.
-//* current implementation is not the most efficient possible, O(N) for N
-//step walks, which could be improved with more sophisticated data
-//structure
-//* heuristic used for decision that equilibrium distribution is being
-//sampled from. This heuristic is quite conservative, but not certain.
-//* currently using default random number generator. This should be `good
-//enough' for generating typical walks, but shouldn't be replied upon for
-//serious numerical work.
+    Copyright (C) 2012, 2018, 2019 Nathan Clisby
 
-//Adapted to arbitrarily shaped sublattices - just have an 'accept' function
-//Simplified reversal procedure - just go through each step (O(N) to reverse, anyway)
-//Different initialisation - start from a single point, incrementally add.
-//Simplified checking of neighbours.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    See https://www.gnu.org/licenses/ for details of the GNU General
+    Public License. 
+*/
+
+/*
+    Notes on implementation.
+
+    Comments about the Markov chain used to generate paths using backbiting
+    move described in Secondary structures in long compact polymers,
+    PHYSICAL REVIEW E 74, 051801 2006, by Richard Oberdorf, Allison
+    Ferguson, Jesper L. Jacobsen and Jan\'e Kondev algorithm is believed to
+    be ergodic, but this has not been proved.  current implementation is not
+    the most efficient possible, O(N) for N step walks, which could be
+    improved with more sophisticated data structure heuristic used for
+    decision that equilibrium distribution is being sampled from. This
+    heuristic is quite conservative, but not certain.  currently using
+    default random number generator. This should be `good enough' for
+    generating typical walks, but shouldn't be replied upon for serious
+    numerical work.
+
+    Adapted to arbitrarily shaped sublattices - just have an 'accept'
+    function Simplified reversal procedure - just go through each step (O(N)
+    to reverse, anyway) Different initialisation - start from a single
+    point, incrementally add.  Simplified checking of neighbours.
+*/
 
 function rgbColour(s,c1,c2)
 {
