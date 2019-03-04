@@ -1,5 +1,7 @@
 // $Id: googleanalytics.js,v 1.3.2.8 2009/03/04 07:25:47 hass Exp $
 
+/*
+
 Drupal.behaviors.gaTrackerAttach = function(context) {
 
   // Attach onclick event to all links.
@@ -39,3 +41,5 @@ Drupal.behaviors.gaTrackerAttach = function(context) {
     } catch(err) {}
   });
 }
+
+*/

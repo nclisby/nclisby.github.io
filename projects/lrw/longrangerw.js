@@ -1,11 +1,33 @@
-//Implementation of long-range random walk generator
-//due to Nathan Clisby, August 2017.
+/*
+    longrangerw.js implements a method for Monte Carlo sampling of long-range random walks.
+
+    Copyright (C) 2017, 2019 Nathan Clisby
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    See https://www.gnu.org/licenses/ for details of the GNU General
+    Public License. 
+*/
+
+/*
+    Notes on implementation.
+
+    Thoughts - 20/10/17
+    zoom - could just zoom along chain, rather than zoom in space.
+    need heap ordering of the steps. This way can avoid overflow and
+    underflow.
+*/
 
 
-//thoughts - 20/10/17
-//zoom - could just zoom along chain, rather than zoom in space.
-//need heap ordering of the steps. This way can avoid overflow and
-//underflow.
+
 
 var path = [];
 var n = 100;

@@ -1,7 +1,25 @@
-//Implementation of Backtracking tree generator 
-//Nathan Clisby, October 2012.
-//Modified by Paul Leopardi, September 2014.
-//Modified by Nathan Clisby, October 2014.
+/*
+    backtracker.js implements a method to generate graphical representation of Backtracking tree for a search algorithm.
+
+    Copyright (C) 2012, 2014, 2019 Nathan Clisby and Paul Leopardi
+
+    Created by Nathan Clisby, October 2012.
+    Modified by Paul Leopardi, September 2014.
+    Modified by Nathan Clisby, October 2014.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    See https://www.gnu.org/licenses/ for details of the GNU General
+    Public License. 
+*/
 var gTreeView = { };
 gTreeView.searchDepth = 1;
 function updateSearchDepth()
