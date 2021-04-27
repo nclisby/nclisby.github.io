@@ -1,1 +1,0 @@
-document.write('<div class="quote">With four parameters I can fit an elephant, and with five I can make him wiggle his trunk.</div> John von Neumann, <a href="http://en.wikiquote.org/wiki/John_von_Neumann">source</a>.');

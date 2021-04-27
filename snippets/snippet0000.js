@@ -1,1 +1,0 @@
-document.write('<div class="quote">... Captain Aubrey was not only an officer professionally concerned with celestial navigation but also a disinterested astronomer and, although one would never have suspected it from his honest, open face, a mathematician ...</div> Patrick O\'Brian in The Commodore.');

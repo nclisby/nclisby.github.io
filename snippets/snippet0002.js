@@ -1,1 +1,0 @@
-document.write('<div class="quote">In a completely rational society, the best of us would be teachers and the rest of us would have to settle for something less</div> Lee Iacocca, <a href="http://izquotes.com/quote/344896">source</a>.');

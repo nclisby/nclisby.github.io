@@ -1,1 +1,0 @@
-document.write('<div class="quote">By the way, anyone who believes that the laws of physics are mere social conventions is invited to try transgressing those conventions from the windows of my apartment. I live on the twenty-first floor.</div> Alan Sokal, <a href="http://www.physics.nyu.edu/sokal/afterword_v1a/afterword_v1a_singlefile.html">source</a>.');
