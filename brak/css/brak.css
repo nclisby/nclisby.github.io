@@ -161,3 +161,15 @@ h1 img
     background: #FFFFFF; 
 }
 
+
+
+#abstract {
+    max-width: 600px;
+    display: block;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    margin-left: 0em;
+    margin-right: auto;
+    color: black;
+    font-style: normal;
+}
