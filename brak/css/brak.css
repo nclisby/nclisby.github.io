@@ -173,3 +173,20 @@ h1 img
     color: black;
     font-style: normal;
 }
+
+@media all and (min-width: 0px) and (max-width: 599px) {
+    .desktop {
+        display: none;
+    }
+    .mobile {
+        display: block;
+    }
+}
+@media all and (min-width: 600px) {
+    .desktop {
+        display: block;
+    }
+    .mobile {
+        display: none;
+    }
+}
