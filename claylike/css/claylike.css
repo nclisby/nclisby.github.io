@@ -1,0 +1,288 @@
+html {
+    /* font-family: Helvetica, Arial, sans-serif; */
+    font-family: Verdana, sans-serif;
+    /* font-family: "Georgia", serif; */
+    height: 100%;
+    /*font-family: "Verdana", sans-serif;*/
+    /*font-family: Arial, Helvetica, sans-serif;*/
+}
+
+p {
+  font-size: 1.3rem;
+  color: black;
+  /* font-family: Helvetica, Arial, sans-serif; */
+  /* font-family: Verdana, sans-serif; */
+  line-height: 1.3;
+  /* margin-top: 2em; */
+  margin-bottom: 1.2em;
+}
+
+body {
+    /*background-color: #EBF5FF;*/
+    background-color: #ffffff;
+    height: 100%;
+    color: #000000;
+    /* margin: 0em; */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #000000;
+}
+
+button {
+    background-color: #FFFFFF;
+}
+
+.spacer {
+    height: 1em;
+}
+
+/* p { */
+/*     margin: 0.5em 0em; */
+/* } */
+
+table th, table th *, table td, table td * {
+    padding: 0.3em;
+    vertical-align: top;
+}
+
+html b, i {
+    margin: 0em;
+    padding: 0em;
+}
+
+.image {
+    border: 10px solid transparent;
+    /*padding: 50px 50px;*/
+}  
+
+.caption {
+    align:center;
+    font-size: 0.8em;
+    margin: 1em;
+}
+
+a:link,
+a:visited,
+a:hover,
+a:active
+{
+    color: #000000;
+    text-decoration: none;
+    padding: 0;
+}
+
+#topwrapper {
+    /*sticky footer based on: http://ryanfait.com/sticky-footer/*/
+    /* the bottom margin is the negative value of the footer's height */
+    min-height: 100%;
+    /*margin: 0 auto -6em; */
+    margin: 0 0 -3em; 
+}
+
+#contentblock {
+    color: #000000;
+    text-align: center;
+    padding-left: 4%;
+    padding-right: 4%;
+    /*this is a hack, using more padding than necessary to help*/
+    /*this look a bit better on mobile devices*/
+    /*padding-bottom: 4.5em;*/
+    /*padding-bottom: 6em;*/
+}
+
+#content {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+}
+
+.blockquote {
+    display: block;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 3em;
+    margin-right: 3em;
+    font-style: italic;
+}
+
+.quote {
+    display: inline;
+    font-style: italic;
+}
+
+/*#66FFCC*/
+#topbar {
+    margin: auto;
+    display: block;
+    width: 100%;
+    height: 3em;
+    /*color: #2F008C;*/
+    /*background-color: #ffe6cc;*/
+    /*color: #ffb366;*/
+    /*background: -webkit-linear-gradient(#8AB8E6, #EBF5FF); [> For Safari 5.1 to 6.0 <]*/
+    /*background: -o-linear-gradient(#8AB8E6, #EBF5FF); [> For Opera 11.1 to 12.0 <]*/
+    /*background: -moz-linear-gradient(#8AB8E6, #EBF5FF); [> For Firefox 3.6 to 15 <]*/
+    /*background: linear-gradient(#8AB8E6, #EBF5FF); [> Standard syntax <]*/
+    /* background: -webkit-linear-gradient(#ffb366,#ffe6cc); /1* For Safari 5.1 to 6.0 *1/ */
+    /* background: -o-linear-gradient(#ffb366,#ffe6cc); /1* For Opera 11.1 to 12.0 *1/ */
+    /* background: -moz-linear-gradient(#ffb366,#ffe6cc); /1* For Firefox 3.6 to 15 *1/ */
+    /* background: linear-gradient(#ffb366,#ffe6cc); /1* Standard syntax *1/ */
+}
+
+.tnav {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    max-width: 800px;
+    /*height: 2em;*/
+    height: 2.6em;
+    padding-left: 4%;
+    padding-right: 4%;
+}
+
+h1 img
+{
+    height: 1em;
+    vertical-align: bottom;
+    width: auto;
+}
+
+.tnav a:link,
+.tnav a:visited,
+.tnav a:hover,
+.tnav a:active
+{
+    display:block;
+    width: 100%;
+    /*font-size: 1.5em;*/
+    /*font-size: 1.4em;*/
+    font-size: 2em;
+    /*color: #1E0059;*/
+    /*color: #EEEEEE;*/
+    color: #000000;
+    /*color: #ffb366;*/
+    text-decoration: none;
+    border-radius: 0.4em;
+    /*height: 1.6em;*/
+}
+
+@media (max-width: 600px) {
+    .tnav a:link,
+    .tnav a:visited,
+    .tnav a:hover,
+    .tnav a:active
+    {
+        font-size: 1.5em;
+    }
+}
+
+@media (max-width: 400px) {
+    .tnav a:link,
+    .tnav a:visited,
+    .tnav a:hover,
+    .tnav a:active
+    {
+        font-size: 1.3em;
+    }
+}
+
+.tnav a:hover
+{
+    /*background-color: #FFECA9;*/
+    /* background-color: #EBF5FF; */
+}
+
+.tnav ul {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    /*height: 2em;*/
+    height: 2.6em;
+}
+
+.tnav li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    float: left;
+    width: 33.333333%;
+    /*height: 2em;*/
+    height: 2.6em;
+    /*line-height: 2em;*/
+    line-height: 2.6em;
+}
+
+.tnav a.current:link,
+.tnav a.current:visited,
+.tnav a.current:hover,
+.tnav a.current:active
+{
+    /*color: #5500FF;*/
+    color: #DDDDDD;
+    /*font-size: 1.6em;*/
+    font-size: 2.3em;
+}
+
+@media (max-width: 600px) {
+    .tnav a.current:link,
+    .tnav a.current:visited,
+    .tnav a.current:hover,
+    .tnav a.current:active
+    {
+        font-size: 1.7em;
+    }
+}
+
+@media (max-width: 400px) {
+    .tnav a.current:link,
+    .tnav a.current:visited,
+    .tnav a.current:hover,
+    .tnav a.current:active
+    {
+        font-size: 1.5em;
+    }
+}
+
+
+
+.w3 li {
+    width: 33.333333%;
+}
+
+.w5 li {
+    width: 20%;
+}
+
+#push {
+    height: 3em; /* #push must be the same height as #footer */
+}
+
+#bottombar {
+    /*position: fixed;*/
+    /*bottom: 0;*/
+    /*z-index: -10;*/
+    /*margin: auto;*/
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+    display: block;
+    width: 100%;
+    height: 3em;
+    /*height: 6em;*/
+    /*color: #2F008C;*/
+    /*background: -webkit-linear-gradient(#EBF5FF, #8AB8E6); [> For Safari 5.1 to 6.0 <]*/
+    /*background: -o-linear-gradient(#EBF5FF, #8AB8E6); [> For Opera 11.1 to 12.0 <]*/
+    /*background: -moz-linear-gradient(#EBF5FF, #8AB8E6); [> For Firefox 3.6 to 15 <]*/
+    /*background: linear-gradient(#EBF5FF, #8AB8E6); [> Standard syntax <]*/
+    /* background: -webkit-linear-gradient(#ffe6cc,#ffb366); /1* For Safari 5.1 to 6.0 *1/ */
+    /* background: -o-linear-gradient(#ffe6cc,#ffb366); /1* For Opera 11.1 to 12.0 *1/ */
+    /* background: -moz-linear-gradient(#ffe6cc,#ffb366); /1* For Firefox 3.6 to 15 *1/ */
+    /* background: linear-gradient(#ffe6cc,#ffb366); /1* Standard syntax *1/ */
+}
+
