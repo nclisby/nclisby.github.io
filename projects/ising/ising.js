@@ -467,25 +467,26 @@ function displayControls() {
   // colorButton.display();
   // helpButton.display();
 
+  let textHeight = 30;
   fill(0);
   textAlign(LEFT, CENTER);
   //textFont(font);
   textFont('Verdana');
-  text("Lattice: " + selectedGridSize, metropolisButton.x, metropolisButton.y - buttonHeight );
-  text("T/Tc = " + nf(temperature / Tc, 1, 2), swendsenWangButton.x , swendsenWangButton.y + 2*buttonHeight );
-  text("Flips = " + int(spinFlipAttempts), swendsenWangButton.x , swendsenWangButton.y + 3*buttonHeight );
-  text("Help menu: h" , swendsenWangButton.x , swendsenWangButton.y + 5*buttonHeight );
+  text("Lattice: " + selectedGridSize, metropolisButton.x, metropolisButton.y - textHeight );
+  text("T/Tc = " + nf(temperature / Tc, 1, 2), swendsenWangButton.x , swendsenWangButton.y + 2*textHeight );
+  text("Flips = " + int(spinFlipAttempts), swendsenWangButton.x , swendsenWangButton.y + 3*textHeight );
+  text("Help menu: h" , swendsenWangButton.x , swendsenWangButton.y + 4.5*textHeight );
   textStyle(BOLD);
-  text("Main commands" , swendsenWangButton.x , swendsenWangButton.y + 7*buttonHeight );
+  text("Main commands" , swendsenWangButton.x , swendsenWangButton.y + 6*textHeight );
   textStyle(NORMAL);
-  text("Temperature: up/down" , swendsenWangButton.x , swendsenWangButton.y + 8*buttonHeight );
-  text("Speed: left/right" , swendsenWangButton.x , swendsenWangButton.y + 9*buttonHeight );
-  text("Algorithm: m/w/s" , swendsenWangButton.x , swendsenWangButton.y + 10*buttonHeight );
-  text("Cycle lattice size: l" , swendsenWangButton.x , swendsenWangButton.y + 11*buttonHeight );
-  text("Cycle colour: c" , swendsenWangButton.x , swendsenWangButton.y + 12*buttonHeight );
-  text("Pause / resume: p" , swendsenWangButton.x , swendsenWangButton.y + 13*buttonHeight );
-  text("Reload after resizing window." , swendsenWangButton.x , swendsenWangButton.y + 14.5*buttonHeight );
-  text("Use fullscreen!" , swendsenWangButton.x , swendsenWangButton.y + 15.5*buttonHeight );
+  text("Temperature: up/down" , swendsenWangButton.x , swendsenWangButton.y + 7*textHeight );
+  text("Speed: left/right" , swendsenWangButton.x , swendsenWangButton.y + 8*textHeight );
+  text("Algorithm: m/w/s" , swendsenWangButton.x , swendsenWangButton.y + 9*textHeight );
+  text("Cycle lattice size: l" , swendsenWangButton.x , swendsenWangButton.y + 10*textHeight );
+  text("Cycle colour: c" , swendsenWangButton.x , swendsenWangButton.y + 11*textHeight );
+  text("Pause / resume: p" , swendsenWangButton.x , swendsenWangButton.y + 12*textHeight );
+  text("Reload after resizing window." , swendsenWangButton.x , swendsenWangButton.y + 13.5*textHeight );
+  text("Use fullscreen!" , swendsenWangButton.x , swendsenWangButton.y + 14.5*textHeight );
 }
 
 function displayHelp() {
