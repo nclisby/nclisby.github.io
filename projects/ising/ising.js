@@ -473,13 +473,16 @@ function displayControls() {
   text("T/Tc = " + nf(temperature / Tc, 1, 2), swendsenWangButton.x , swendsenWangButton.y + 2*buttonHeight );
   text("Flips = " + int(spinFlipAttempts), swendsenWangButton.x , swendsenWangButton.y + 3*buttonHeight );
   text("Help menu: h" , swendsenWangButton.x , swendsenWangButton.y + 5*buttonHeight );
+  textStyle(BOLD);
   text("Main commands" , swendsenWangButton.x , swendsenWangButton.y + 7*buttonHeight );
+  textStyle(NORMAL);
   text("Temperature: up/down" , swendsenWangButton.x , swendsenWangButton.y + 8*buttonHeight );
   text("Speed: left/right" , swendsenWangButton.x , swendsenWangButton.y + 9*buttonHeight );
   text("Algorithm: m/w/s" , swendsenWangButton.x , swendsenWangButton.y + 10*buttonHeight );
   text("Cycle lattice size: l" , swendsenWangButton.x , swendsenWangButton.y + 11*buttonHeight );
-  text("Reload after resizing window." , swendsenWangButton.x , swendsenWangButton.y + 12.5*buttonHeight );
-  text("(Use fullscreen!)" , swendsenWangButton.x , swendsenWangButton.y + 13.5*buttonHeight );
+  text("Cycle colour: c" , swendsenWangButton.x , swendsenWangButton.y + 12*buttonHeight );
+  text("Reload after resizing window." , swendsenWangButton.x , swendsenWangButton.y + 13.5*buttonHeight );
+  text("Use fullscreen!" , swendsenWangButton.x , swendsenWangButton.y + 14.5*buttonHeight );
 }
 
 function displayHelp() {
