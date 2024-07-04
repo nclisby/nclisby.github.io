@@ -469,7 +469,7 @@ function displayControls() {
   textAlign(LEFT, CENTER);
   //textFont(font);
   textFont('Verdana');
-  text("Lattice = " + selectedGridSize, metropolisButton.x, metropolisButton.y - buttonHeight );
+  text("Lattice: " + selectedGridSize, metropolisButton.x, metropolisButton.y - buttonHeight );
   text("T/Tc = " + nf(temperature / Tc, 1, 2), swendsenWangButton.x , swendsenWangButton.y + 2*buttonHeight );
   text("Flips = " + int(spinFlipAttempts), swendsenWangButton.x , swendsenWangButton.y + 3*buttonHeight );
   text("Help menu: h" , swendsenWangButton.x , swendsenWangButton.y + 5*buttonHeight );
