@@ -483,7 +483,7 @@ function displayControls() {
   text("Algorithm: m/w/s" , swendsenWangButton.x , swendsenWangButton.y + 10*buttonHeight );
   text("Cycle lattice size: l" , swendsenWangButton.x , swendsenWangButton.y + 11*buttonHeight );
   text("Cycle colour: c" , swendsenWangButton.x , swendsenWangButton.y + 12*buttonHeight );
-  text("Pause: p" , swendsenWangButton.x , swendsenWangButton.y + 13*buttonHeight );
+  text("Pause / resume: p" , swendsenWangButton.x , swendsenWangButton.y + 13*buttonHeight );
   text("Reload after resizing window." , swendsenWangButton.x , swendsenWangButton.y + 14.5*buttonHeight );
   text("Use fullscreen!" , swendsenWangButton.x , swendsenWangButton.y + 15.5*buttonHeight );
 }
