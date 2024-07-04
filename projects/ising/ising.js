@@ -495,7 +495,7 @@ function displayHelp() {
   helpText += "q - Quit\n";
   helpText += "\n";
   helpText += "l - Cycle Grid Size\n";
-  helpText += "0-4 - Change Grid Size\n";
+  helpText += "0-6 - Change Grid Size\n";
   helpText += "\n";
   helpText += "Up Arrow - Increase Temperature\n";
   helpText += "Down Arrow - Decrease Temperature\n";
