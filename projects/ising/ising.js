@@ -103,6 +103,7 @@ function decreaseTemperature() {
   }
 }
 
+//not working! Not sure if I care about adding it.
 function mousePressed() {
   if (quitButton.isClicked(mouseX, mouseY)) {
     noLoop();
@@ -168,8 +169,9 @@ function keyPressed() {
     spinFlipAttempts = min(1000000, 1 + (3 * spinFlipAttempts) / 2);
   } else if (keyCode === LEFT_ARROW) {
     spinFlipAttempts = max(0, (2 * spinFlipAttempts) / 3);
-  } else if (key === 'q' || key === 'Q') {
-    noLoop();
+  // } else if (key === 'q' || key === 'Q') {
+  //disabling quit
+    // noLoop();
   } else if (key === 'p' || key === 'P') {
     togglePause();
   } else if (key === 'i' || key === 'I') {
@@ -481,8 +483,9 @@ function displayControls() {
   text("Algorithm: m/w/s" , swendsenWangButton.x , swendsenWangButton.y + 10*buttonHeight );
   text("Cycle lattice size: l" , swendsenWangButton.x , swendsenWangButton.y + 11*buttonHeight );
   text("Cycle colour: c" , swendsenWangButton.x , swendsenWangButton.y + 12*buttonHeight );
-  text("Reload after resizing window." , swendsenWangButton.x , swendsenWangButton.y + 13.5*buttonHeight );
-  text("Use fullscreen!" , swendsenWangButton.x , swendsenWangButton.y + 14.5*buttonHeight );
+  text("Pause: p" , swendsenWangButton.x , swendsenWangButton.y + 13*buttonHeight );
+  text("Reload after resizing window." , swendsenWangButton.x , swendsenWangButton.y + 14.5*buttonHeight );
+  text("Use fullscreen!" , swendsenWangButton.x , swendsenWangButton.y + 15.5*buttonHeight );
 }
 
 function displayHelp() {
@@ -495,7 +498,7 @@ function displayHelp() {
   //textFont(font);
   textSize(24);
   let helpText = "Controls:\n\n";
-  helpText += "q - Quit\n";
+  // helpText += "q - Quit\n";
   helpText += "\n";
   helpText += "l - Cycle Grid Size\n";
   helpText += "0-6 - Change Grid Size\n";
