@@ -1,4 +1,3 @@
-let gridSize = 100;
 let spins;
 let spinFlipAttempts = 100;
 let savedSpinFlipAttempts = spinFlipAttempts;
@@ -10,7 +9,8 @@ let font;
 let squareSize;
 let sideMargin = 0;
 let menuWidth = 400;
-let indexGridSize = 3;
+let gridSize = 200;
+let indexGridSize = 4;
 let gridSizes = ["10x10", "20x20", "50x50", "100x100", "200x200", "500x500", "1000x1000"];
 let selectedGridSize;
 let gridSizeButtons = [];
