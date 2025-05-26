@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sampling Distribution Teaching Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        
+        .probability-inputs {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            text-align: center;
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .input-group input {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .input-group input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .chart-container {
+            margin: 30px 0;
+            height: 300px;
+            position: relative;
+        }
+        
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .controls label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .controls input {
+            padding: 8px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            width: 80px;
+            text-align: center;
+        }
+        
+        .controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-animate {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-sample {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-reset {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .controls button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .sample-display {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            min-height: 60px;
+        }
+        
+        .sample-values {
+            font-family: monospace;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+        
+        .sample-mean {
+            font-weight: bold;
+            color: #e74c3c;
+            margin-top: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .toggle-container {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .toggle-container input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+        
+        .bin-size-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .bin-size-control input {
+            width: 60px;
+            padding: 5px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-box {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-box h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        .falling-dot {
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .sample-dot {
+            width: 10px;
+            height: 10px;
+            background: black;
+            border: 1px solid #333;
+        }
+        
+        .mean-dot {
+            width: 20px;
+            height: 20px;
+            background: #e74c3c;
+            border: 2px solid #c0392b;
+        }
+        
+        #samplingChartContainer {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bootstrap Sampling Tool</h1>
+        
+        <div class="toggle-container" style="margin-bottom: 20px; padding: 15px; background: #ecf0f1; border-radius: 8px;">
+            <label style="font-weight: bold; margin-right: 20px;">Bootstrap Statistic:</label>
+            <input type="radio" id="statMean" name="statistic" value="mean" checked>
+            <label for="statMean" style="margin-right: 20px;">Mean</label>
+            <input type="radio" id="statMedian" name="statistic" value="median">
+            <label for="statMedian">Median</label>
+        </div>
+        
+        <h2>Enter Probability Distribution</h2>
+        <div class="probability-inputs">
+            <div class="input-group">
+                <label>x = 1</label>
+                <input type="number" id="prob1" value="1" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label>x = 2</label>
+                <input type="number" id="prob2" value="1" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label>x = 3</label>
+                <input type="number" id="prob3" value="1" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label>x = 4</label>
+                <input type="number" id="prob4" value="1" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label>x = 5</label>
+                <input type="number" id="prob5" value="1" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label>x = 6</label>
+                <input type="number" id="prob6" value="1" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label>x = 7</label>
+                <input type="number" id="prob7" value="1" min="0" step="1">
+            </div>
+            <div class="input-group">
+                <label>x = 8</label>
+                <input type="number" id="prob8" value="1" min="0" step="1">
+            </div>
+        </div>
+        
+        <h2>Frequency Histogram</h2>
+        <div class="chart-container">
+            <canvas id="frequencyChart"></canvas>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <h3>Population <span class="stat-type">Mean</span> (μ)</h3>
+                <div class="stat-value" id="popMean">4.5</div>
+            </div>
+            <div class="stat-box">
+                <h3>Population Variance (σ²)</h3>
+                <div class="stat-value" id="popVariance">5.25</div>
+            </div>
+            <div class="stat-box">
+                <h3>Population Std Dev (σ)</h3>
+                <div class="stat-value" id="popStdDev">2.29</div>
+            </div>
+        </div>
+        
+        <h2>Random Sample</h2>
+        <div class="controls">
+            <label>Sample Size:</label>
+            <input type="number" id="sampleSize" value="8" min="1" max="1000">
+            <button class="btn-animate" onclick="animateSample()" id="animateBtn">Animate</button>
+            <button class="btn-sample" onclick="takeSamples(5)">5 Samples</button>
+            <button class="btn-sample" onclick="takeSamples(100)">100 Samples</button>
+            <button class="btn-sample" onclick="takeSamples(10000)">10000 Samples</button>
+            <button class="btn-reset" onclick="resetSampling()">Reset</button>
+        </div>
+        
+        <div class="sample-display" id="sampleDisplay">
+            <div class="sample-values" id="sampleValues">Click "Animate" to see a sample with animation, or use the other buttons for multiple samples.</div>
+            <div class="sample-mean" id="sampleMean"></div>
+        </div>
+        
+        <h2>Sampling Distribution of the <span class="stat-type">Mean</span></h2>
+        <div class="toggle-container">
+            <input type="checkbox" id="showNormalApprox">
+            <label for="showNormalApprox">Show Normal Approximation</label>
+            
+            <div class="bin-size-control">
+                <label for="binSize">Bin Size:</label>
+                <input type="number" id="binSize" value="0.5" min="0.1" max="1.5" step="0.1">
+            </div>
+        </div>
+        <div class="chart-container" id="samplingChartContainer">
+            <canvas id="samplingChart"></canvas>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <h3>Number of Samples</h3>
+                <div class="stat-value" id="numSamples">0</div>
+            </div>
+            <div class="stat-box">
+                <h3>Sample <span class="stat-type">Mean</span> (x̄)</h3>
+                <div class="stat-value" id="meanOfMeans">-</div>
+            </div>
+            <div class="stat-box">
+                <h3>Sample Std Error</h3>
+                <div class="stat-value" id="standardError">-</div>
+            </div>
+            <div class="stat-box">
+                <h3>Theoretical SE (σ/√n)</h3>
+                <div class="stat-value" id="theoreticalSE">-</div>
+            </div>
+            <div class="stat-box">
+                <h3>95% CI (Normal)</h3>
+                <div class="stat-value" id="normalCI">-</div>
+            </div>
+            <div class="stat-box">
+                <h3>95% CI (Bootstrap)</h3>
+                <div class="stat-value" id="bootstrapCI">-</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let frequencyChart, samplingChart;
+        let sampleMeans = [];
+        let isAnimating = false;
+        let shouldStop = false;
+        
+        // Get current statistic type
+        function getStatisticType() {
+            return document.querySelector('input[name="statistic"]:checked').value;
+        }
+        
+        // Calculate median from array
+        function calculateMedian(arr) {
+            const sorted = [...arr].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 
+                ? (sorted[mid - 1] + sorted[mid]) / 2 
+                : sorted[mid];
+        }
+        
+        // Calculate population median
+        function getPopulationMedian() {
+            const values = [];
+            for (let i = 1; i <= 8; i++) {
+                const freq = parseInt(document.getElementById(`prob${i}`).value) || 0;
+                for (let j = 0; j < freq; j++) {
+                    values.push(i);
+                }
+            }
+            return values.length > 0 ? calculateMedian(values) : 4.5;
+        }
+        
+        // Initialize charts
+        function initCharts() {
+            const freqCtx = document.getElementById('frequencyChart').getContext('2d');
+            const sampCtx = document.getElementById('samplingChart').getContext('2d');
+            
+            frequencyChart = new Chart(freqCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['1', '2', '3', '4', '5', '6', '7', '8'],
+                    datasets: [{
+                        label: 'Relative Frequency',
+                        data: [0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125],
+                        backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'X Value' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Relative Frequency' },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+            
+            createSamplingChart();
+            
+            // Add custom drawing plugin for histogram bars
+            Chart.register({
+                id: 'customHistogramBars',
+                afterDatasetsDraw: function(chart) {
+                    if (chart.canvas.id === 'samplingChart' && chart.binData) {
+                        drawHistogramBars(chart, chart.binData, chart.binSize);
+                    }
+                }
+            });
+        }
+        
+        // Create sampling chart with dynamic bins
+        function createSamplingChart() {
+            const sampCtx = document.getElementById('samplingChart').getContext('2d');
+            
+            if (samplingChart) {
+                samplingChart.destroy();
+            }
+            
+            samplingChart = new Chart(sampCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Probability Density',
+                        data: [],
+                        backgroundColor: 'rgba(231, 76, 60, 0.8)',
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        borderWidth: 1,
+                        showLine: false,
+                        pointRadius: 0
+                    }, {
+                        label: 'Normal Approximation',
+                        data: [],
+                        backgroundColor: 'transparent',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 3,
+                        fill: false,
+                        showLine: true,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        hidden: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'nearest'
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: { display: true, text: 'Sample Statistic' },
+                            min: 0.5,
+                            max: 8.5,
+                            ticks: {
+                                stepSize: 0.5
+                            }
+                        },
+                        y: {
+                            title: { display: true, text: 'Probability Density' },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    onHover: (event, activeElements) => {
+                        event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                    }
+                }
+            });
+        }
+        
+        // Draw custom rectangles for histogram bins
+        function drawHistogramBars(chart, binData, binSize) {
+            const ctx = chart.ctx;
+            const chartArea = chart.chartArea;
+            const xScale = chart.scales.x;
+            const yScale = chart.scales.y;
+            
+            ctx.save();
+            
+            binData.forEach(bin => {
+                if (bin.density <= 0) return;
+                
+                const binStart = bin.center - binSize / 2;
+                const binEnd = bin.center + binSize / 2;
+                
+                // Add small gap between bars (2% of bin width)
+                const gap = binSize * 0.02;
+                
+                const x1 = xScale.getPixelForValue(binStart + gap);
+                const x2 = xScale.getPixelForValue(binEnd - gap);
+                const y1 = yScale.getPixelForValue(0);
+                const y2 = yScale.getPixelForValue(bin.density);
+                
+                const width = x2 - x1;
+                const height = y1 - y2;
+                
+                // Draw rectangle
+                ctx.fillStyle = 'rgba(231, 76, 60, 0.8)';
+                ctx.strokeStyle = 'rgba(231, 76, 60, 1)';
+                ctx.lineWidth = 1;
+                
+                ctx.fillRect(x1, y2, width, height);
+                ctx.strokeRect(x1, y2, width, height);
+            });
+            
+            ctx.restore();
+        }
+        
+        // Get population statistics
+        function getPopulationStats() {
+            const probs = getNormalizedProbs();
+            
+            // Calculate mean
+            let mean = 0;
+            for (let i = 0; i < 8; i++) {
+                mean += (i + 1) * probs[i];
+            }
+            
+            // Calculate variance
+            let variance = 0;
+            for (let i = 0; i < 8; i++) {
+                variance += probs[i] * Math.pow((i + 1) - mean, 2);
+            }
+            
+            const stdDev = Math.sqrt(variance);
+            
+            return { mean, variance, stdDev };
+        }
+        
+        // Update population statistics display
+        function updatePopulationStats() {
+            const stats = getPopulationStats();
+            const isMedian = getStatisticType() === 'median';
+            
+            if (isMedian) {
+                const median = getPopulationMedian();
+                document.getElementById('popMean').textContent = median.toFixed(3);
+                // Hide variance and std dev for median
+                document.getElementById('popVariance').parentElement.style.display = 'none';
+                document.getElementById('popStdDev').parentElement.style.display = 'none';
+                document.getElementById('theoreticalSE').parentElement.style.display = 'none';
+                document.getElementById('normalCI').parentElement.style.display = 'none';
+            } else {
+                document.getElementById('popMean').textContent = stats.mean.toFixed(3);
+                document.getElementById('popVariance').textContent = stats.variance.toFixed(3);
+                document.getElementById('popStdDev').textContent = stats.stdDev.toFixed(3);
+                // Show variance and std dev for mean
+                document.getElementById('popVariance').parentElement.style.display = 'block';
+                document.getElementById('popStdDev').parentElement.style.display = 'block';
+                document.getElementById('theoreticalSE').parentElement.style.display = 'block';
+                document.getElementById('normalCI').parentElement.style.display = 'block';
+                
+                // Update theoretical standard error
+                const sampleSize = parseInt(document.getElementById('sampleSize').value) || 8;
+                const theoreticalSE = stats.stdDev / Math.sqrt(sampleSize);
+                document.getElementById('theoreticalSE').textContent = theoreticalSE.toFixed(3);
+                
+                // Update theoretical 95% CI
+                const z = 1.96; // z-score for 95% CI
+                const margin = z * theoreticalSE;
+                const normalCILower = stats.mean - margin;
+                const normalCIUpper = stats.mean + margin;
+                document.getElementById('normalCI').textContent = `[${normalCILower.toFixed(3)}, ${normalCIUpper.toFixed(3)}]`;
+            }
+            
+            // Update labels
+            document.querySelectorAll('.stat-type').forEach(el => {
+                el.textContent = isMedian ? 'Median' : 'Mean';
+            });
+        }
+        
+        // Normal distribution PDF
+        function normalPDF(x, mean, stdDev) {
+            const coefficient = 1 / (stdDev * Math.sqrt(2 * Math.PI));
+            const exponent = -0.5 * Math.pow((x - mean) / stdDev, 2);
+            return coefficient * Math.exp(exponent);
+        }
+        
+        // Generate normal approximation data as smooth curve (always 200 points)
+        function generateNormalApproximation() {
+            const popStats = getPopulationStats();
+            const sampleSize = parseInt(document.getElementById('sampleSize').value) || 10;
+            const theoreticalMean = popStats.mean;
+            const theoreticalSE = popStats.stdDev / Math.sqrt(sampleSize);
+            
+            // Generate 200 points for smooth curve from 0.75 to 8.25
+            const normalData = [];
+            for (let i = 0; i < 200; i++) {
+                const x = 0.75 + (i / 199) * 7.5; // From 0.75 to 8.25
+                const density = normalPDF(x, theoreticalMean, theoreticalSE);
+                normalData.push({ x: x, y: density });
+            }
+            
+            return normalData;
+        }
+        
+        function getNormalizedProbs() {
+            const probs = [];
+            let sum = 0;
+            
+            for (let i = 1; i <= 8; i++) {
+                let val = parseFloat(document.getElementById(`prob${i}`).value) || 0;
+                if (val < 0) val = 0;
+                probs.push(val);
+                sum += val;
+            }
+            
+            if (sum === 0) return new Array(8).fill(0.125);
+            return probs.map(p => p / sum);
+        }
+        
+        // Update frequency histogram
+        function updateFrequencyChart() {
+            const probs = getNormalizedProbs();
+            frequencyChart.data.datasets[0].data = probs;
+            frequencyChart.update();
+            updatePopulationStats();
+            
+            // Update sample size to match sum of frequencies
+            const totalFreq = getTotalFrequency();
+            document.getElementById('sampleSize').value = totalFreq;
+        }
+        
+        // Get total frequency (sum of all values)
+        function getTotalFrequency() {
+            let sum = 0;
+            for (let i = 1; i <= 8; i++) {
+                sum += parseInt(document.getElementById(`prob${i}`).value) || 0;
+            }
+            return sum;
+        }
+        
+        // Sample from distribution
+        function sampleValue() {
+            const probs = getNormalizedProbs();
+            const rand = Math.random();
+            let cumSum = 0;
+            
+            for (let i = 0; i < 8; i++) {
+                cumSum += probs[i];
+                if (rand <= cumSum) {
+                    return i + 1;
+                }
+            }
+            return 8;
+        }
+        
+        // Track dot positions for stacking
+        let dotPositions = {};
+        
+        // Create falling dot animation
+        function createFallingDot(value, duration, isMean = false) {
+            return new Promise((resolve) => {
+                const container = document.getElementById('samplingChartContainer');
+                const canvas = document.getElementById('samplingChart');
+                const rect = canvas.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                const dot = document.createElement('div');
+                dot.className = isMean ? 'falling-dot mean-dot' : 'falling-dot sample-dot';
+                
+                // Calculate x position based on value
+                const xScale = samplingChart.scales.x;
+                const xPixel = xScale.getPixelForValue(value);
+                
+                // Position relative to container
+                const leftPos = xPixel - (isMean ? 10 : 5); // Center the dot
+                dot.style.left = leftPos + 'px';
+                dot.style.top = '0px';
+                
+                // Calculate final y position based on stacking
+                let finalY;
+                if (!isMean) {
+                    // For sample dots, get y position of x-axis
+                    const yScale = samplingChart.scales.y;
+                    const xAxisY = yScale.getPixelForValue(0);
+                    
+                    // Stack above x-axis
+                    const key = value.toString();
+                    if (!dotPositions[key]) {
+                        dotPositions[key] = 0;
+                    }
+                    finalY = xAxisY - 10 - (dotPositions[key] * 12); // Stack with 12px spacing above x-axis
+                    dotPositions[key]++;
+                } else {
+                    // Mean dot goes to x-axis
+                    const yScale = samplingChart.scales.y;
+                    const xAxisY = yScale.getPixelForValue(0);
+                    finalY = xAxisY - 20;
+                }
+                
+                container.appendChild(dot);
+                
+                // Force reflow
+                dot.offsetHeight;
+                
+                // Animate to calculated position
+                dot.style.transition = `top ${duration}ms linear`;
+                dot.style.top = finalY + 'px';
+                
+                setTimeout(() => {
+                    resolve(dot);
+                }, duration);
+            });
+        }
+        
+                    // Animate single sample
+        async function animateSample() {
+            if (isAnimating) return;
+            isAnimating = true;
+            shouldStop = false;
+            
+            // Disable button
+            document.getElementById('animateBtn').disabled = true;
+            
+            const sampleSize = parseInt(document.getElementById('sampleSize').value) || 10;
+            const sampleValues = [];
+            const sampleDisplay = document.getElementById('sampleValues');
+            const sampleMeanDiv = document.getElementById('sampleMean');
+            
+            // Calculate animation duration per sample (max 2000ms total)
+            const totalDuration = Math.min(2000, sampleSize * 200);
+            const durationPerSample = totalDuration / sampleSize;
+            
+            sampleDisplay.innerHTML = 'Sampling... ';
+            sampleMeanDiv.innerHTML = '';
+            
+            // Reset dot positions for stacking
+            dotPositions = {};
+            
+            const dots = [];
+            
+            // Animate each sample value
+            for (let i = 0; i < sampleSize && !shouldStop; i++) {
+                const value = sampleValue();
+                sampleValues.push(value);
+                
+                // Update display
+                sampleDisplay.innerHTML = `Sample: [${sampleValues.join(', ')}]`;
+                
+                // Create falling dot
+                const dotPromise = createFallingDot(value, durationPerSample);
+                dots.push(dotPromise);
+                
+                // Small delay between drops
+                await new Promise(resolve => setTimeout(resolve, durationPerSample / 2));
+            }
+            
+            // Wait for all dots to fall
+            const dotElements = await Promise.all(dots);
+            
+            if (!shouldStop) {
+                // Calculate statistic (mean or median)
+                const isMedian = getStatisticType() === 'median';
+                const statistic = isMedian 
+                    ? calculateMedian(sampleValues)
+                    : sampleValues.reduce((a, b) => a + b, 0) / sampleValues.length;
+                
+                sampleMeanDiv.innerHTML = `Sample ${isMedian ? 'Median' : 'Mean'}: ${statistic.toFixed(3)}`;
+                
+                // Wait a moment, then drop the statistic dot
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const meanDot = await createFallingDot(statistic, 400, true);
+                
+                // Wait, then remove all dots
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Remove sample dots
+                dotElements.forEach(dot => dot.remove());
+                
+                // Wait, then remove mean dot
+                await new Promise(resolve => setTimeout(resolve, 200));
+                meanDot.remove();
+                
+                // Add to sampling distribution
+                sampleMeans.push(statistic);
+                updateSamplingChart();
+                updateStats();
+            } else {
+                // Clean up dots if stopped
+                dotElements.forEach(dot => dot.remove());
+                sampleDisplay.innerHTML = 'Animation stopped.';
+                sampleMeanDiv.innerHTML = '';
+            }
+            
+            isAnimating = false;
+            document.getElementById('animateBtn').disabled = false;
+        }
+        
+        // Take multiple samples
+        function takeSamples(numSamples) {
+            if (isAnimating) return;
+            
+            const sampleSize = parseInt(document.getElementById('sampleSize').value) || 10;
+            const isMedian = getStatisticType() === 'median';
+            const newMeans = [];
+            
+            for (let s = 0; s < numSamples; s++) {
+                const sample = [];
+                for (let i = 0; i < sampleSize; i++) {
+                    sample.push(sampleValue());
+                }
+                const statistic = isMedian 
+                    ? calculateMedian(sample)
+                    : sample.reduce((a, b) => a + b, 0) / sample.length;
+                newMeans.push(statistic);
+            }
+            
+            sampleMeans.push(...newMeans);
+            
+            // Display last sample
+            const lastStat = newMeans[newMeans.length - 1];
+            document.getElementById('sampleValues').innerHTML = `Generated ${numSamples} samples of size ${sampleSize}`;
+            document.getElementById('sampleMean').innerHTML = `Last Sample ${isMedian ? 'Median' : 'Mean'}: ${lastStat.toFixed(3)}`;
+            
+            updateSamplingChart();
+            updateStats();
+        }
+        
+        // Update sampling distribution chart
+        function updateSamplingChart() {
+            const binSize = parseFloat(document.getElementById('binSize').value) || 0.5;
+            const numBins = Math.ceil((8.25 - 0.75) / binSize);
+            const bins = new Array(numBins).fill(0);
+            
+            sampleMeans.forEach(mean => {
+                const binIndex = Math.floor((mean - 0.75) / binSize);
+                if (binIndex >= 0 && binIndex < bins.length) {
+                    bins[binIndex]++;
+                }
+            });
+            
+            // Convert to probability density and create bin data
+            const totalSamples = sampleMeans.length;
+            const binData = [];
+            
+            for (let i = 0; i < numBins; i++) {
+                const binCenter = 0.75 + (i + 0.5) * binSize;
+                const density = totalSamples > 0 ? bins[i] / (totalSamples * binSize) : 0;
+                binData.push({
+                    center: binCenter,
+                    density: density
+                });
+            }
+            
+            // Find max density for y-axis scaling
+            const maxDensity = Math.max(...binData.map(b => b.density), 0.1);
+            
+            // Update y-axis scale
+            samplingChart.options.scales.y.max = maxDensity * 1.1; // Add 10% padding
+            
+            // Store bin data for custom drawing
+            samplingChart.binData = binData;
+            samplingChart.binSize = binSize;
+            
+            // Update normal approximation if checkbox is checked
+            if (document.getElementById('showNormalApprox').checked) {
+                const normalData = generateNormalApproximation();
+                samplingChart.data.datasets[1].data = normalData;
+                samplingChart.data.datasets[1].hidden = false;
+            } else {
+                samplingChart.data.datasets[1].hidden = true;
+            }
+            
+            samplingChart.update();
+        }
+        
+        // Update statistics
+        function updateStats() {
+            document.getElementById('numSamples').textContent = sampleMeans.length;
+            
+            // Update theoretical standard error
+            updatePopulationStats();
+            
+            if (sampleMeans.length > 0) {
+                const meanOfMeans = sampleMeans.reduce((a, b) => a + b, 0) / sampleMeans.length;
+                document.getElementById('meanOfMeans').textContent = meanOfMeans.toFixed(3);
+                
+                if (sampleMeans.length > 1) {
+                    const variance = sampleMeans.reduce((sum, mean) => sum + Math.pow(mean - meanOfMeans, 2), 0) / sampleMeans.length;
+                    const stdError = Math.sqrt(variance);
+                    document.getElementById('standardError').textContent = stdError.toFixed(3);
+                    
+                    // Calculate bootstrap 95% CI using percentile method
+                    if (sampleMeans.length >= 20) {
+                        const sortedMeans = [...sampleMeans].sort((a, b) => a - b);
+                        const lowerIndex = Math.floor(sampleMeans.length * 0.025);
+                        const upperIndex = Math.ceil(sampleMeans.length * 0.975) - 1;
+                        const bootstrapCILower = sortedMeans[lowerIndex];
+                        const bootstrapCIUpper = sortedMeans[upperIndex];
+                        document.getElementById('bootstrapCI').textContent = `[${bootstrapCILower.toFixed(3)}, ${bootstrapCIUpper.toFixed(3)}]`;
+                    } else {
+                        document.getElementById('bootstrapCI').textContent = 'Need ≥20 samples';
+                    }
+                } else {
+                    document.getElementById('bootstrapCI').textContent = '-';
+                }
+            } else {
+                document.getElementById('bootstrapCI').textContent = '-';
+            }
+        }
+        
+        // Reset sampling
+        function resetSampling() {
+            // Stop any ongoing animation
+            shouldStop = true;
+            
+            // Remove any existing dots
+            const dots = document.querySelectorAll('.falling-dot');
+            dots.forEach(dot => dot.remove());
+            
+            sampleMeans = [];
+            document.getElementById('sampleValues').innerHTML = 'Click "Animate" to see a sample with animation, or use the other buttons for multiple samples.';
+            document.getElementById('sampleMean').innerHTML = '';
+            updateSamplingChart();
+            document.getElementById('numSamples').textContent = '0';
+            document.getElementById('meanOfMeans').textContent = '-';
+            document.getElementById('standardError').textContent = '-';
+            document.getElementById('bootstrapCI').textContent = '-';
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            updatePopulationStats();
+            
+            // Add event listeners to probability inputs
+            for (let i = 1; i <= 8; i++) {
+                document.getElementById(`prob${i}`).addEventListener('input', function() {
+                    // Ensure integer values only
+                    this.value = Math.floor(this.value);
+                    if (this.value < 0) this.value = 0;
+                    updateFrequencyChart();
+                });
+            }
+            
+            // Add event listener for normal approximation checkbox
+            document.getElementById('showNormalApprox').addEventListener('change', function() {
+                updateSamplingChart();
+            });
+            
+            // Add event listener for bin size changes
+            document.getElementById('binSize').addEventListener('input', function() {
+                createSamplingChart();
+                updateSamplingChart();
+            });
+            
+            // Add event listener for sample size changes
+            document.getElementById('sampleSize').addEventListener('input', function() {
+                updatePopulationStats();
+                updateSamplingChart();
+            });
+            
+            // Add event listeners for statistic type changes
+            document.querySelectorAll('input[name="statistic"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Reset when changing statistic type
+                    resetSampling();
+                    updatePopulationStats();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
