@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sampling Distribution Teaching Tool</title>
+    <title>Bootstrap Sampling Tool</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         body {
@@ -126,26 +126,6 @@
             background: #bdc3c7;
             cursor: not-allowed;
             transform: none;
-        }
-        
-        .sample-display {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            min-height: 60px;
-        }
-        
-        .sample-values {
-            font-family: monospace;
-            font-size: 16px;
-            line-height: 1.8;
-        }
-        
-        .sample-mean {
-            font-weight: bold;
-            color: #e74c3c;
-            margin-top: 10px;
         }
         
         .stats {
@@ -292,32 +272,32 @@
             </div>
         </div>
         
-        <h2>Random Sample</h2>
-        <div class="controls">
-            <label>Sample Size:</label>
-            <input type="number" id="sampleSize" value="8" min="1" max="1000">
-            <button class="btn-animate" onclick="animateSample()" id="animateBtn">Animate</button>
-            <button class="btn-sample" onclick="takeSamples(5)">5 Samples</button>
-            <button class="btn-sample" onclick="takeSamples(100)">100 Samples</button>
-            <button class="btn-sample" onclick="takeSamples(10000)">10000 Samples</button>
-            <button class="btn-reset" onclick="resetSampling()">Reset</button>
-        </div>
-        
-        <div class="sample-display" id="sampleDisplay">
-            <div class="sample-values" id="sampleValues">Click "Animate" to see a sample with animation, or use the other buttons for multiple samples.</div>
-            <div class="sample-mean" id="sampleMean"></div>
+        <h2>Sample Settings</h2>
+        <div class="toggle-container">
+            <label style="font-weight: bold;">Sample Size:</label>
+            <input type="number" id="sampleSize" value="8" min="1" max="1000" style="width: 80px; padding: 5px; border: 2px solid #bdc3c7; border-radius: 5px; text-align: center;">
+            
+            <div class="bin-size-control" style="margin-left: 20px;">
+                <label for="binSize">Bin Size:</label>
+                <input type="number" id="binSize" value="0.5" min="0.05" max="1.5" step="0.05">
+            </div>
+            
+            <div style="margin-left: 20px;">
+                <input type="checkbox" id="showNormalApprox">
+                <label for="showNormalApprox">Show Normal Approximation</label>
+            </div>
         </div>
         
         <h2>Sampling Distribution of the <span class="stat-type">Mean</span></h2>
-        <div class="toggle-container">
-            <input type="checkbox" id="showNormalApprox">
-            <label for="showNormalApprox">Show Normal Approximation</label>
-            
-            <div class="bin-size-control">
-                <label for="binSize">Bin Size:</label>
-                <input type="number" id="binSize" value="0.5" min="0.1" max="1.5" step="0.1">
-            </div>
+        
+        <div class="controls" style="margin-bottom: 10px;">
+            <button class="btn-animate" onclick="animateSample()" id="animateBtn">Animate</button>
+            <button class="btn-sample" onclick="takeSamples(5)">5</button>
+            <button class="btn-sample" onclick="takeSamples(100)">100</button>
+            <button class="btn-sample" onclick="takeSamples(10000)">10000</button>
+            <button class="btn-reset" onclick="resetSampling()">Reset</button>
         </div>
+        
         <div class="chart-container" id="samplingChartContainer">
             <canvas id="samplingChart"></canvas>
         </div>
@@ -486,8 +466,7 @@
                     },
                     plugins: {
                         legend: { 
-                            display: true,
-                            position: 'top'
+                            display: false
                         }
                     },
                     onHover: (event, activeElements) => {
@@ -733,7 +712,7 @@
             });
         }
         
-                    // Animate single sample
+        // Animate single sample
         async function animateSample() {
             if (isAnimating) return;
             isAnimating = true;
@@ -744,15 +723,10 @@
             
             const sampleSize = parseInt(document.getElementById('sampleSize').value) || 10;
             const sampleValues = [];
-            const sampleDisplay = document.getElementById('sampleValues');
-            const sampleMeanDiv = document.getElementById('sampleMean');
             
             // Calculate animation duration per sample (max 2000ms total)
             const totalDuration = Math.min(2000, sampleSize * 200);
             const durationPerSample = totalDuration / sampleSize;
-            
-            sampleDisplay.innerHTML = 'Sampling... ';
-            sampleMeanDiv.innerHTML = '';
             
             // Reset dot positions for stacking
             dotPositions = {};
@@ -763,9 +737,6 @@
             for (let i = 0; i < sampleSize && !shouldStop; i++) {
                 const value = sampleValue();
                 sampleValues.push(value);
-                
-                // Update display
-                sampleDisplay.innerHTML = `Sample: [${sampleValues.join(', ')}]`;
                 
                 // Create falling dot
                 const dotPromise = createFallingDot(value, durationPerSample);
@@ -784,8 +755,6 @@
                 const statistic = isMedian 
                     ? calculateMedian(sampleValues)
                     : sampleValues.reduce((a, b) => a + b, 0) / sampleValues.length;
-                
-                sampleMeanDiv.innerHTML = `Sample ${isMedian ? 'Median' : 'Mean'}: ${statistic.toFixed(3)}`;
                 
                 // Wait a moment, then drop the statistic dot
                 await new Promise(resolve => setTimeout(resolve, 300));
@@ -809,8 +778,6 @@
             } else {
                 // Clean up dots if stopped
                 dotElements.forEach(dot => dot.remove());
-                sampleDisplay.innerHTML = 'Animation stopped.';
-                sampleMeanDiv.innerHTML = '';
             }
             
             isAnimating = false;
@@ -838,11 +805,6 @@
             
             sampleMeans.push(...newMeans);
             
-            // Display last sample
-            const lastStat = newMeans[newMeans.length - 1];
-            document.getElementById('sampleValues').innerHTML = `Generated ${numSamples} samples of size ${sampleSize}`;
-            document.getElementById('sampleMean').innerHTML = `Last Sample ${isMedian ? 'Median' : 'Mean'}: ${lastStat.toFixed(3)}`;
-            
             updateSamplingChart();
             updateStats();
         }
@@ -850,13 +812,48 @@
         // Update sampling distribution chart
         function updateSamplingChart() {
             const binSize = parseFloat(document.getElementById('binSize').value) || 0.5;
-            const numBins = Math.ceil((8.25 - 0.75) / binSize);
-            const bins = new Array(numBins).fill(0);
             
+            // Calculate bins centered on integers
+            // Find the range we need to cover
+            const minValue = 0.5;
+            const maxValue = 8.5;
+            
+            // Start from 1.0 and work outwards to ensure bins are centered on integers
+            const binCenters = [];
+            
+            // Add bins going right from 1.0
+            for (let center = 1.0; center <= maxValue; center += binSize) {
+                binCenters.push(center);
+            }
+            
+            // Add bins going left from 1.0 (if needed)
+            for (let center = 1.0 - binSize; center >= minValue; center -= binSize) {
+                binCenters.unshift(center);
+            }
+            
+            // Create bins object to count samples
+            const bins = {};
+            binCenters.forEach(center => {
+                bins[center] = 0;
+            });
+            
+            // Assign samples to bins
             sampleMeans.forEach(mean => {
-                const binIndex = Math.floor((mean - 0.75) / binSize);
-                if (binIndex >= 0 && binIndex < bins.length) {
-                    bins[binIndex]++;
+                // Find the closest bin center
+                let closestCenter = binCenters[0];
+                let minDistance = Math.abs(mean - closestCenter);
+                
+                for (const center of binCenters) {
+                    const distance = Math.abs(mean - center);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestCenter = center;
+                    }
+                }
+                
+                // Only count if within half bin size of the center
+                if (minDistance <= binSize / 2) {
+                    bins[closestCenter]++;
                 }
             });
             
@@ -864,11 +861,10 @@
             const totalSamples = sampleMeans.length;
             const binData = [];
             
-            for (let i = 0; i < numBins; i++) {
-                const binCenter = 0.75 + (i + 0.5) * binSize;
-                const density = totalSamples > 0 ? bins[i] / (totalSamples * binSize) : 0;
+            for (const center of binCenters) {
+                const density = totalSamples > 0 ? bins[center] / (totalSamples * binSize) : 0;
                 binData.push({
-                    center: binCenter,
+                    center: center,
                     density: density
                 });
             }
@@ -940,8 +936,6 @@
             dots.forEach(dot => dot.remove());
             
             sampleMeans = [];
-            document.getElementById('sampleValues').innerHTML = 'Click "Animate" to see a sample with animation, or use the other buttons for multiple samples.';
-            document.getElementById('sampleMean').innerHTML = '';
             updateSamplingChart();
             document.getElementById('numSamples').textContent = '0';
             document.getElementById('meanOfMeans').textContent = '-';
