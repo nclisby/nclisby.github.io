@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molecular Dynamics Trajectory Viewer</title>
+    <!-- Version: 63 - Improved sphere shading with less fuzziness -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #444;
+        }
+        
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #555;
+        }
+        
+        button:active {
+            background: #222;
+        }
+        
+        button.active {
+            background: #0066cc;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .control-group {
+            margin: 10px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #444;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        
+        label {
+            display: block;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        input[type="range"] {
+            width: 200px;
+            margin: 0 10px;
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .cluster-buttons {
+            display: none;
+        }
+        
+        .cluster-buttons.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="canvas-container"></div>
+        
+        <div id="controls">
+            <div class="control-group">
+                <input type="file" id="fileInput" accept=".xyz,.xyzc">
+                <button onclick="document.getElementById('fileInput').click()">Upload Trajectory</button>
+            </div>
+            
+            <div class="control-group">
+                <button id="playPauseBtn">Play</button>
+                <button id="slowDownBtn">← Slower</button>
+                <button id="speedUpBtn">Faster →</button>
+                <label>
+                    Speed: <span id="speedDisplay">1.0x</span>
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    Frame: <span id="frameDisplay">0/0</span>
+                </label>
+                <input type="range" id="frameSlider" min="0" max="0" value="0">
+            </div>
+            
+            <div class="control-group">
+                <button id="showTestParticleBtn">Show Test Particle</button>
+            </div>
+            
+            <div class="control-group cluster-buttons">
+                <button id="showClustersBtn">Show Clusters</button>
+                <button id="showLargestBtn">Show Largest Cluster</button>
+            </div>
+        </div>
+        
+        <div id="info">
+            <div>FPS: <span id="fpsDisplay">20</span></div>
+            <div>Atoms: <span id="atomCount">0</span></div>
+            <div>Use mouse to rotate, scroll to zoom</div>
+            <div>Space: play/pause | ←/→: speed control</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let particles, particleGeometry, particleMaterial;
+        let trajectoryData = [];
+        let currentFrame = 0;
+        let isPlaying = false;
+        let playbackSpeed = 1.0;
+        let fps = 20;
+        let lastFrameTime = 0;
+        let frameAccumulator = 0;
+        let atomColors = [];
+        let clusterData = null;
+        let showClusters = false;
+        let showLargestOnly = false;
+        let showTestParticle = false;
+        let largestClusterIndex = -1;
+        
+        // Atom type to size mapping
+        const atomSizes = {
+            'H': 0.25,
+            'C': 0.35,
+            'N': 0.32,
+            'O': 0.30,
+            'S': 0.40,
+            'default': 0.35
+        };
+        
+        // Initialize Three.js scene
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+            
+            // Camera setup
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+            camera.position.set(30, 30, 30);
+            
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.rotateSpeed = 0.5;
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            directionalLight.position.set(10, 10, 10);
+            scene.add(directionalLight);
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start animation loop
+            animate();
+        }
+        
+        // Window resize handler
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Parse trajectory file
+        function parseTrajectory(content, filename) {
+            console.log('Parsing trajectory file:', filename);
+            const lines = content.trim().split('\n');
+            let lineIndex = 0;
+            trajectoryData = [];
+            clusterData = null;
+            
+            const isXYZC = filename.toLowerCase().endsWith('.xyzc');
+            console.log('File type:', isXYZC ? 'XYZC' : 'XYZ');
+            
+            while (lineIndex < lines.length) {
+                const numAtoms = parseInt(lines[lineIndex]);
+                if (isNaN(numAtoms)) break;
+                
+                const boxDimensions = lines[lineIndex + 1].split(' ').map(parseFloat);
+                
+                const frame = {
+                    atoms: [],
+                    box: boxDimensions,
+                    clusters: isXYZC ? {} : null
+                };
+                
+                for (let i = 0; i < numAtoms; i++) {
+                    const parts = lines[lineIndex + 2 + i].split(' ').filter(p => p);
+                    const atom = {
+                        type: parts[0],
+                        x: parseFloat(parts[1]),
+                        y: parseFloat(parts[2]),
+                        z: parseFloat(parts[3])
+                    };
+                    
+                    if (isXYZC && parts.length > 4) {
+                        atom.cluster = parseInt(parts[4]);
+                        if (!frame.clusters[atom.cluster]) {
+                            frame.clusters[atom.cluster] = [];
+                        }
+                        frame.clusters[atom.cluster].push(i);
+                    }
+                    
+                    frame.atoms.push(atom);
+                }
+                
+                trajectoryData.push(frame);
+                lineIndex += numAtoms + 2;
+            }
+            
+            console.log('Parsed frames:', trajectoryData.length);
+            console.log('First frame atoms:', trajectoryData[0]?.atoms.length);
+            
+            // If XYZC file, analyze clusters
+            if (isXYZC && trajectoryData.length > 0) {
+                analyzeCluster();
+                document.querySelector('.cluster-buttons').classList.add('visible');
+            } else {
+                document.querySelector('.cluster-buttons').classList.remove('visible');
+            }
+            
+            // Update UI
+            updateFrameSlider();
+            currentFrame = 0;
+            displayFrame(0);
+            
+            // Auto-adjust camera to fit the molecule
+            if (trajectoryData.length > 0) {
+                adjustCameraToFitMolecule();
+            }
+        }
+        
+        // Analyze clusters to find the largest
+        function analyzeCluster() {
+            clusterData = {};
+            
+            // Count atoms in each cluster across all frames
+            trajectoryData.forEach(frame => {
+                if (frame.clusters) {
+                    Object.keys(frame.clusters).forEach(clusterId => {
+                        if (!clusterData[clusterId]) {
+                            clusterData[clusterId] = 0;
+                        }
+                        clusterData[clusterId] += frame.clusters[clusterId].length;
+                    });
+                }
+            });
+            
+            // Find largest cluster
+            let maxSize = 0;
+            Object.keys(clusterData).forEach(clusterId => {
+                if (clusterData[clusterId] > maxSize) {
+                    maxSize = clusterData[clusterId];
+                    largestClusterIndex = parseInt(clusterId);
+                }
+            });
+        }
+        
+        // Generate cluster colors
+        function getClusterColor(clusterId, isLargest, isSecondLargest) {
+            if (isLargest) return 0xffffff; // White
+            if (isSecondLargest) return 0xffff00; // Yellow
+            
+            // Other distinct colors
+            const colors = [
+                0x00ff00, // Green
+                0x00ffff, // Cyan
+                0xff00ff, // Magenta
+                0xffa500, // Orange
+                0x9370db, // Purple
+                0x32cd32, // Lime
+                0x1e90ff, // Blue
+                0xff69b4  // Pink
+            ];
+            
+            return colors[clusterId % colors.length];
+        }
+        
+        // Auto-adjust camera to fit molecule
+        function adjustCameraToFitMolecule() {
+            if (trajectoryData.length === 0) return;
+            
+            const frame = trajectoryData[0];
+            let minX = Infinity, minY = Infinity, minZ = Infinity;
+            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            
+            frame.atoms.forEach(atom => {
+                minX = Math.min(minX, atom.x);
+                minY = Math.min(minY, atom.y);
+                minZ = Math.min(minZ, atom.z);
+                maxX = Math.max(maxX, atom.x);
+                maxY = Math.max(maxY, atom.y);
+                maxZ = Math.max(maxZ, atom.z);
+            });
+            
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            const centerZ = (minZ + maxZ) / 2;
+            
+            const size = Math.max(maxX - minX, maxY - minY, maxZ - minZ);
+            const distance = size * 2;
+            
+            console.log('Adjusting camera:', {
+                center: [centerX, centerY, centerZ],
+                size: size,
+                distance: distance
+            });
+            
+            camera.position.set(centerX + distance, centerY + distance, centerZ + distance);
+            controls.target.set(centerX, centerY, centerZ);
+            controls.update();
+        }
+        
+        // Display a specific frame
+        function displayFrame(frameIndex) {
+            if (frameIndex < 0 || frameIndex >= trajectoryData.length) return;
+            
+            const frame = trajectoryData[frameIndex];
+            console.log('Displaying frame:', frameIndex, 'with', frame.atoms.length, 'atoms');
+            
+            // Remove existing particles
+            if (particles) {
+                scene.remove(particles);
+                particleGeometry.dispose();
+                particleMaterial.dispose();
+            }
+            
+            // Create geometry for spheres
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+            const sizes = [];
+            
+            // Sort clusters by size if showing clusters
+            let sortedClusters = [];
+            if (showClusters && frame.clusters) {
+                sortedClusters = Object.keys(frame.clusters)
+                    .map(id => ({ id: parseInt(id), size: frame.clusters[id].length }))
+                    .sort((a, b) => b.size - a.size);
+            }
+            
+            let atomCount = 0;
+            frame.atoms.forEach((atom, index) => {
+                // Check if we should show this atom
+                if (showLargestOnly && frame.clusters) {
+                    if (!atom.hasOwnProperty('cluster') || atom.cluster !== largestClusterIndex) {
+                        return;
+                    }
+                }
+                
+                positions.push(atom.x, atom.y, atom.z);
+                atomCount++;
+                
+                // Determine color
+                let color = new THREE.Color(0xff0000); // Default red
+                
+                // Test particle mode - first particle is white
+                if (showTestParticle && index === 0) {
+                    color = new THREE.Color(0xffffff);
+                }
+                // Other color modes
+                else if (showLargestOnly && frame.clusters && atom.hasOwnProperty('cluster') && atom.cluster === largestClusterIndex) {
+                    color = new THREE.Color(0xffffff); // White for largest cluster only mode
+                } else if (showClusters && atom.hasOwnProperty('cluster')) {
+                    const clusterRank = sortedClusters.findIndex(c => c.id === atom.cluster);
+                    const isLargest = clusterRank === 0;
+                    const isSecondLargest = clusterRank === 1;
+                    color = new THREE.Color(getClusterColor(atom.cluster, isLargest, isSecondLargest));
+                }
+                
+                colors.push(color.r, color.g, color.b);
+                
+                // Size based on atom type
+                const baseSize = atomSizes[atom.type] || atomSizes.default;
+                const size = baseSize * 3; // Reduced from 50 to 3 for better visualization
+                sizes.push(size);
+            });
+            
+            console.log('Prepared', atomCount, 'atoms for rendering');
+            
+            if (atomCount === 0) {
+                console.warn('No atoms to display!');
+                return;
+            }
+            
+            // Log bounds for debugging
+            const posArray = new Float32Array(positions);
+            let minX = Infinity, minY = Infinity, minZ = Infinity;
+            let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+            for (let i = 0; i < posArray.length; i += 3) {
+                minX = Math.min(minX, posArray[i]);
+                maxX = Math.max(maxX, posArray[i]);
+                minY = Math.min(minY, posArray[i + 1]);
+                maxY = Math.max(maxY, posArray[i + 1]);
+                minZ = Math.min(minZ, posArray[i + 2]);
+                maxZ = Math.max(maxZ, posArray[i + 2]);
+            }
+            console.log('Molecule bounds:', {
+                x: [minX, maxX],
+                y: [minY, maxY],
+                z: [minZ, maxZ]
+            });
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+            
+            // Create material with 3D shading
+            // Using a simple PointsMaterial with a shaded texture for compatibility
+            const shaderCanvas = document.createElement('canvas');
+            shaderCanvas.width = 64;
+            shaderCanvas.height = 64;
+            const ctx = shaderCanvas.getContext('2d');
+            
+            // Create radial gradient for 3D effect with sharper edges
+            const gradient = ctx.createRadialGradient(26, 26, 4, 32, 32, 30);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.2, 'rgba(220,220,220,1)');
+            gradient.addColorStop(0.5, 'rgba(180,180,180,1)');
+            gradient.addColorStop(0.8, 'rgba(120,120,120,1)');
+            gradient.addColorStop(0.95, 'rgba(80,80,80,1)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(32, 32, 30, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            const shaderTexture = new THREE.Texture(shaderCanvas);
+            shaderTexture.needsUpdate = true;
+            
+            particleMaterial = new THREE.PointsMaterial({
+                size: 1,
+                vertexColors: true,
+                sizeAttenuation: true,
+                map: shaderTexture,
+                alphaTest: 0.5,
+                transparent: true,
+                blending: THREE.NormalBlending
+            });
+            
+            particleGeometry = geometry;
+            particles = new THREE.Points(geometry, particleMaterial);
+            scene.add(particles);
+            
+            console.log('Particles added to scene');
+            
+            // Update UI
+            document.getElementById('frameDisplay').textContent = `${frameIndex + 1}/${trajectoryData.length}`;
+            document.getElementById('frameSlider').value = frameIndex;
+            document.getElementById('atomCount').textContent = atomCount;
+        }
+        
+        // Update frame slider
+        function updateFrameSlider() {
+            const slider = document.getElementById('frameSlider');
+            slider.max = trajectoryData.length - 1;
+            slider.value = currentFrame;
+        }
+        
+        // Animation loop
+        function animate(timestamp) {
+            requestAnimationFrame(animate);
+            
+            controls.update();
+            
+            // Handle playback with frame skipping for accurate speed
+            if (isPlaying && trajectoryData.length > 0 && playbackSpeed > 0) {
+                if (!lastFrameTime) lastFrameTime = timestamp;
+                
+                const deltaTime = timestamp - lastFrameTime;
+                const targetFrameTime = 1000 / fps; // Base frame time (50ms for 20 FPS)
+                
+                // Accumulate time and calculate how many frames to advance
+                frameAccumulator += (deltaTime * playbackSpeed) / targetFrameTime;
+                
+                const framesToAdvance = Math.floor(frameAccumulator);
+                if (framesToAdvance > 0) {
+                    currentFrame += framesToAdvance;
+                    frameAccumulator -= framesToAdvance;
+                    
+                    if (currentFrame >= trajectoryData.length) {
+                        currentFrame = currentFrame % trajectoryData.length;
+                    }
+                    
+                    displayFrame(currentFrame);
+                }
+                
+                lastFrameTime = timestamp;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Event listeners
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    parseTrajectory(e.target.result, file.name);
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        document.getElementById('playPauseBtn').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? 'Pause' : 'Play';
+            if (isPlaying) {
+                lastFrameTime = 0; // Reset timing when starting playback
+                frameAccumulator = 0;
+            }
+        });
+        
+        document.getElementById('slowDownBtn').addEventListener('click', function() {
+            playbackSpeed = Math.max(0.0, playbackSpeed - 0.2);
+            playbackSpeed = Math.round(playbackSpeed * 10) / 10;
+            document.getElementById('speedDisplay').textContent = playbackSpeed.toFixed(1) + 'x';
+        });
+        
+        document.getElementById('speedUpBtn').addEventListener('click', function() {
+            playbackSpeed = Math.min(20.0, playbackSpeed + 0.2);
+            playbackSpeed = Math.round(playbackSpeed * 10) / 10;
+            document.getElementById('speedDisplay').textContent = playbackSpeed.toFixed(1) + 'x';
+        });
+        
+        document.getElementById('frameSlider').addEventListener('input', function(e) {
+            currentFrame = parseInt(e.target.value);
+            displayFrame(currentFrame);
+        });
+        
+        document.getElementById('showClustersBtn').addEventListener('click', function() {
+            showClusters = !showClusters;
+            showLargestOnly = false;
+            showTestParticle = false;
+            this.classList.toggle('active');
+            document.getElementById('showLargestBtn').classList.remove('active');
+            document.getElementById('showTestParticleBtn').classList.remove('active');
+            displayFrame(currentFrame);
+        });
+        
+        document.getElementById('showLargestBtn').addEventListener('click', function() {
+            showLargestOnly = !showLargestOnly;
+            showClusters = false;
+            showTestParticle = false;
+            this.classList.toggle('active');
+            document.getElementById('showClustersBtn').classList.remove('active');
+            document.getElementById('showTestParticleBtn').classList.remove('active');
+            displayFrame(currentFrame);
+        });
+        
+        document.getElementById('showTestParticleBtn').addEventListener('click', function() {
+            showTestParticle = !showTestParticle;
+            showClusters = false;
+            showLargestOnly = false;
+            this.classList.toggle('active');
+            document.getElementById('showClustersBtn').classList.remove('active');
+            document.getElementById('showLargestBtn').classList.remove('active');
+            displayFrame(currentFrame);
+        });
+        
+        // Keyboard controls
+        document.addEventListener('keydown', function(e) {
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    document.getElementById('playPauseBtn').click();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    document.getElementById('slowDownBtn').click();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    document.getElementById('speedUpBtn').click();
+                    break;
+            }
+        });
+        
+        // Three.js OrbitControls
+        THREE.OrbitControls = function(object, domElement) {
+            this.object = object;
+            this.domElement = domElement;
+            this.enabled = true;
+            this.target = new THREE.Vector3();
+            
+            this.minDistance = 0;
+            this.maxDistance = Infinity;
+            
+            this.enableDamping = false;
+            this.dampingFactor = 0.05;
+            
+            this.enableZoom = true;
+            this.zoomSpeed = 1.0;
+            
+            this.enableRotate = true;
+            this.rotateSpeed = 1.0;
+            
+            this.enablePan = true;
+            this.panSpeed = 1.0;
+            
+            const scope = this;
+            const STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2 };
+            let state = STATE.NONE;
+            
+            const spherical = new THREE.Spherical();
+            const sphericalDelta = new THREE.Spherical();
+            
+            let scale = 1;
+            const panOffset = new THREE.Vector3();
+            let zoomChanged = false;
+            
+            const rotateStart = new THREE.Vector2();
+            const rotateEnd = new THREE.Vector2();
+            const rotateDelta = new THREE.Vector2();
+            
+            const panStart = new THREE.Vector2();
+            const panEnd = new THREE.Vector2();
+            const panDelta = new THREE.Vector2();
+            
+            const dollyStart = new THREE.Vector2();
+            const dollyEnd = new THREE.Vector2();
+            const dollyDelta = new THREE.Vector2();
+            
+            function getZoomScale() {
+                return Math.pow(0.95, scope.zoomSpeed);
+            }
+            
+            function rotateLeft(angle) {
+                sphericalDelta.theta -= angle;
+            }
+            
+            function rotateUp(angle) {
+                sphericalDelta.phi -= angle;
+            }
+            
+            const panLeft = function() {
+                const v = new THREE.Vector3();
+                return function panLeft(distance, objectMatrix) {
+                    v.setFromMatrixColumn(objectMatrix, 0);
+                    v.multiplyScalar(-distance);
+                    panOffset.add(v);
+                };
+            }();
+            
+            const panUp = function() {
+                const v = new THREE.Vector3();
+                return function panUp(distance, objectMatrix) {
+                    v.setFromMatrixColumn(objectMatrix, 1);
+                    v.multiplyScalar(distance);
+                    panOffset.add(v);
+                };
+            }();
+            
+            const pan = function() {
+                const offset = new THREE.Vector3();
+                return function pan(deltaX, deltaY) {
+                    const element = scope.domElement;
+                    if (scope.object.isPerspectiveCamera) {
+                        const position = scope.object.position;
+                        offset.copy(position).sub(scope.target);
+                        let targetDistance = offset.length();
+                        targetDistance *= Math.tan((scope.object.fov / 2) * Math.PI / 180.0);
+                        panLeft(2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix);
+                        panUp(2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix);
+                    }
+                };
+            }();
+            
+            function dollyIn(dollyScale) {
+                if (scope.object.isPerspectiveCamera) {
+                    scale /= dollyScale;
+                }
+            }
+            
+            function dollyOut(dollyScale) {
+                if (scope.object.isPerspectiveCamera) {
+                    scale *= dollyScale;
+                }
+            }
+            
+            function handleMouseDownRotate(event) {
+                rotateStart.set(event.clientX, event.clientY);
+            }
+            
+            function handleMouseDownDolly(event) {
+                dollyStart.set(event.clientX, event.clientY);
+            }
+            
+            function handleMouseDownPan(event) {
+                panStart.set(event.clientX, event.clientY);
+            }
+            
+            function handleMouseMoveRotate(event) {
+                rotateEnd.set(event.clientX, event.clientY);
+                rotateDelta.subVectors(rotateEnd, rotateStart).multiplyScalar(scope.rotateSpeed);
+                const element = scope.domElement;
+                rotateLeft(2 * Math.PI * rotateDelta.x / element.clientHeight);
+                rotateUp(2 * Math.PI * rotateDelta.y / element.clientHeight);
+                rotateStart.copy(rotateEnd);
+                scope.update();
+            }
+            
+            function handleMouseMoveDolly(event) {
+                dollyEnd.set(event.clientX, event.clientY);
+                dollyDelta.subVectors(dollyEnd, dollyStart);
+                if (dollyDelta.y > 0) {
+                    dollyIn(getZoomScale());
+                } else if (dollyDelta.y < 0) {
+                    dollyOut(getZoomScale());
+                }
+                dollyStart.copy(dollyEnd);
+                scope.update();
+            }
+            
+            function handleMouseMovePan(event) {
+                panEnd.set(event.clientX, event.clientY);
+                panDelta.subVectors(panEnd, panStart).multiplyScalar(scope.panSpeed);
+                pan(panDelta.x, panDelta.y);
+                panStart.copy(panEnd);
+                scope.update();
+            }
+            
+            function handleMouseWheel(event) {
+                if (event.deltaY < 0) {
+                    dollyOut(getZoomScale());
+                } else if (event.deltaY > 0) {
+                    dollyIn(getZoomScale());
+                }
+                scope.update();
+            }
+            
+            function onMouseWheel(event) {
+                if (scope.enabled === false) return;
+                event.preventDefault();
+                event.stopPropagation();
+                handleMouseWheel(event);
+            }
+            
+            function onMouseDown(event) {
+                if (scope.enabled === false) return;
+                event.preventDefault();
+                if (event.button === 0) {
+                    state = STATE.ROTATE;
+                    handleMouseDownRotate(event);
+                } else if (event.button === 1) {
+                    state = STATE.DOLLY;
+                    handleMouseDownDolly(event);
+                } else if (event.button === 2) {
+                    state = STATE.PAN;
+                    handleMouseDownPan(event);
+                }
+                if (state !== STATE.NONE) {
+                    document.addEventListener('mousemove', onMouseMove, false);
+                    document.addEventListener('mouseup', onMouseUp, false);
+                }
+            }
+            
+            function onMouseMove(event) {
+                if (scope.enabled === false) return;
+                event.preventDefault();
+                switch (state) {
+                    case STATE.ROTATE:
+                        if (scope.enableRotate === false) return;
+                        handleMouseMoveRotate(event);
+                        break;
+                    case STATE.DOLLY:
+                        if (scope.enableZoom === false) return;
+                        handleMouseMoveDolly(event);
+                        break;
+                    case STATE.PAN:
+                        if (scope.enablePan === false) return;
+                        handleMouseMovePan(event);
+                        break;
+                }
+            }
+            
+            function onMouseUp() {
+                if (scope.enabled === false) return;
+                document.removeEventListener('mousemove', onMouseMove, false);
+                document.removeEventListener('mouseup', onMouseUp, false);
+                state = STATE.NONE;
+            }
+            
+            this.update = function() {
+                const offset = new THREE.Vector3();
+                const quat = new THREE.Quaternion().setFromUnitVectors(object.up, new THREE.Vector3(0, 1, 0));
+                const quatInverse = quat.clone().invert();
+                const lastPosition = new THREE.Vector3();
+                const lastQuaternion = new THREE.Quaternion();
+                
+                return function update() {
+                    const position = scope.object.position;
+                    offset.copy(position).sub(scope.target);
+                    offset.applyQuaternion(quat);
+                    spherical.setFromVector3(offset);
+                    
+                    spherical.theta += sphericalDelta.theta;
+                    spherical.phi += sphericalDelta.phi;
+                    spherical.phi = Math.max(0.001, Math.min(Math.PI - 0.001, spherical.phi));
+                    spherical.radius *= scale;
+                    spherical.radius = Math.max(scope.minDistance, Math.min(scope.maxDistance, spherical.radius));
+                    
+                    scope.target.add(panOffset);
+                    offset.setFromSpherical(spherical);
+                    offset.applyQuaternion(quatInverse);
+                    position.copy(scope.target).add(offset);
+                    scope.object.lookAt(scope.target);
+                    
+                    if (scope.enableDamping === true) {
+                        sphericalDelta.theta *= (1 - scope.dampingFactor);
+                        sphericalDelta.phi *= (1 - scope.dampingFactor);
+                        panOffset.multiplyScalar(1 - scope.dampingFactor);
+                    } else {
+                        sphericalDelta.set(0, 0, 0);
+                        panOffset.set(0, 0, 0);
+                    }
+                    
+                    scale = 1;
+                    
+                    if (zoomChanged || lastPosition.distanceToSquared(scope.object.position) > 0.000001 ||
+                        8 * (1 - lastQuaternion.dot(scope.object.quaternion)) > 0.000001) {
+                        lastPosition.copy(scope.object.position);
+                        lastQuaternion.copy(scope.object.quaternion);
+                        zoomChanged = false;
+                        return true;
+                    }
+                    return false;
+                };
+            }();
+            
+            this.dispose = function() {
+                scope.domElement.removeEventListener('contextmenu', onContextMenu, false);
+                scope.domElement.removeEventListener('mousedown', onMouseDown, false);
+                scope.domElement.removeEventListener('wheel', onMouseWheel, false);
+            };
+            
+            const onContextMenu = function(event) {
+                event.preventDefault();
+            };
+            
+            scope.domElement.addEventListener('contextmenu', onContextMenu, false);
+            scope.domElement.addEventListener('mousedown', onMouseDown, false);
+            scope.domElement.addEventListener('wheel', onMouseWheel, false);
+            
+            this.update();
+        };
+        
+        THREE.OrbitControls.prototype = Object.create(THREE.EventDispatcher.prototype);
+        THREE.OrbitControls.prototype.constructor = THREE.OrbitControls;
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
