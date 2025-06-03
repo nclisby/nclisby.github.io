@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Towers of Hanoi</title>
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #36454F;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            touch-action: none;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #canvas {
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            box-sizing: border-box;
+        }
+        
+        #resetBtn {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            background-color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #resetBtn:hover {
+            background-color: #f0f0f0;
+        }
+        
+        #timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        #sizeSelector {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        #message {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #4169E1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        @media (max-width: 768px) {
+            #controls {
+                padding: 0 10px;
+            }
+            
+            #timer {
+                font-size: 18px;
+            }
+            
+            #resetBtn, #sizeSelector {
+                font-size: 14px;
+                padding: 8px;
+            }
+            
+            #message {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="canvas"></canvas>
+        <div id="controls">
+            <button id="resetBtn">Reset</button>
+            <div id="timer">00:00</div>
+            <select id="sizeSelector">
+                <option value="2">2 Rings</option>
+                <option value="3" selected>3 Rings</option>
+                <option value="4">4 Rings</option>
+                <option value="5">5 Rings</option>
+                <option value="6">6 Rings</option>
+                <option value="7">7 Rings</option>
+                <option value="8">8 Rings</option>
+            </select>
+        </div>
+        <div id="message">Puzzle Complete!</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const resetBtn = document.getElementById('resetBtn');
+        const sizeSelector = document.getElementById('sizeSelector');
+        const timerDisplay = document.getElementById('timer');
+        const message = document.getElementById('message');
+
+        // Game state
+        let numRings = 3;
+        let spindles = [[], [], []];
+        let selectedSpindle = null;
+        let isAnimating = false;
+        let moveCount = 0;
+        let timerStarted = false;
+        let startTime = null;
+        let timerInterval = null;
+        let isComplete = false;
+
+        // Visual constants
+        const SPINDLE_WIDTH = 20;
+        const SPINDLE_HEIGHT = 300;
+        const SPINDLE_COLOR = '#FF0000';
+        const BASE_COLOR = '#000000';
+        const RING_COLOR = '#FFD700';
+        const RING_HEIGHT = 30;
+        const RING_GAP = RING_HEIGHT * 0.05;
+        let MIN_RING_WIDTH = 60;
+        let MAX_RING_WIDTH = 200;
+        let SPINDLE_SPACING = 300;
+        const BASE_HEIGHT = 40;
+        let BASE_WIDTH = 250;
+        
+        // Mobile detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Calculate maximum base width to prevent overlap
+            const minSpacing = 10; // Minimum gap between bases
+            const availableWidth = canvas.width - 60; // Leave some margin
+            const maxBaseWidth = Math.floor((availableWidth - 2 * minSpacing) / 3);
+            
+            // Adjust visual constants based on screen size
+            if (maxBaseWidth < 250) {
+                BASE_WIDTH = Math.max(100, maxBaseWidth); // Minimum base width of 100
+                MAX_RING_WIDTH = BASE_WIDTH - 50;
+                MIN_RING_WIDTH = Math.max(40, MAX_RING_WIDTH / 4);
+                SPINDLE_SPACING = BASE_WIDTH + minSpacing;
+            } else {
+                BASE_WIDTH = 250;
+                MAX_RING_WIDTH = 200;
+                MIN_RING_WIDTH = 60;
+                SPINDLE_SPACING = 300;
+            }
+        }
+
+        // Initialize game
+        function initGame() {
+            numRings = parseInt(sizeSelector.value);
+            spindles = [[], [], []];
+            
+            // Place all rings on first spindle
+            for (let i = numRings; i > 0; i--) {
+                spindles[0].push(i);
+            }
+            
+            selectedSpindle = null;
+            moveCount = 0;
+            timerStarted = false;
+            startTime = null;
+            isComplete = false;
+            message.style.opacity = '0';
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            updateTimer();
+            draw();
+        }
+
+        // Draw the game
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2 + 50;
+            
+            // Draw spindles and bases
+            for (let i = 0; i < 3; i++) {
+                const x = centerX + (i - 1) * SPINDLE_SPACING;
+                
+                // Draw base
+                ctx.fillStyle = BASE_COLOR;
+                ctx.fillRect(x - BASE_WIDTH/2, centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT/2, BASE_WIDTH, BASE_HEIGHT);
+                
+                // Draw spindle (stop at the base)
+                ctx.fillStyle = SPINDLE_COLOR;
+                ctx.fillRect(x - SPINDLE_WIDTH/2, centerY - SPINDLE_HEIGHT/2, SPINDLE_WIDTH, SPINDLE_HEIGHT - BASE_HEIGHT/2);
+                
+                // Highlight selected spindle
+                if (selectedSpindle === i) {
+                    ctx.strokeStyle = '#4169E1';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(x - BASE_WIDTH/2 - 5, centerY - SPINDLE_HEIGHT/2 - 5, BASE_WIDTH + 10, SPINDLE_HEIGHT + BASE_HEIGHT + 10);
+                }
+                
+                // Draw rings
+                const rings = spindles[i];
+                for (let j = 0; j < rings.length; j++) {
+                    const ringSize = rings[j];
+                    const ringWidth = MIN_RING_WIDTH + (ringSize - 1) * ((MAX_RING_WIDTH - MIN_RING_WIDTH) / (numRings - 1));
+                    const y = centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT - RING_GAP - j * (RING_HEIGHT + RING_GAP) - RING_HEIGHT;
+                    
+                    ctx.fillStyle = RING_COLOR;
+                    ctx.fillRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
+                    
+                    // Add border to rings
+                    ctx.strokeStyle = '#CC9900';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
+                }
+            }
+        }
+
+        // Handle clicks and touches
+        function handleInteraction(event) {
+            if (isAnimating || isComplete) return;
+            
+            event.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            let x, y;
+            
+            if (event.type === 'touchstart' || event.type === 'touchend') {
+                // For touch events
+                const touch = event.changedTouches[0];
+                x = touch.clientX - rect.left;
+                y = touch.clientY - rect.top;
+            } else {
+                // For mouse events
+                x = event.clientX - rect.left;
+                y = event.clientY - rect.top;
+            }
+            
+            const centerX = canvas.width / 2;
+            
+            // Determine which spindle was clicked/touched
+            let clickedSpindle = null;
+            const touchBuffer = isMobile ? 20 : 0; // Larger touch target on mobile
+            
+            for (let i = 0; i < 3; i++) {
+                const spindleX = centerX + (i - 1) * SPINDLE_SPACING;
+                if (Math.abs(x - spindleX) < (BASE_WIDTH/2 + touchBuffer)) {
+                    clickedSpindle = i;
+                    break;
+                }
+            }
+            
+            if (clickedSpindle === null) return;
+            
+            if (selectedSpindle === null) {
+                // First click - select source spindle if it has rings
+                if (spindles[clickedSpindle].length > 0) {
+                    selectedSpindle = clickedSpindle;
+                    draw();
+                }
+            } else {
+                // Second click - attempt move
+                if (clickedSpindle !== selectedSpindle) {
+                    attemptMove(selectedSpindle, clickedSpindle);
+                }
+                selectedSpindle = null;
+                draw();
+            }
+        }
+
+        // Attempt to move a ring
+        function attemptMove(from, to) {
+            if (spindles[from].length === 0) return;
+            
+            const ring = spindles[from][spindles[from].length - 1];
+            
+            // Check if move is valid
+            if (spindles[to].length === 0 || spindles[to][spindles[to].length - 1] > ring) {
+                // Valid move
+                spindles[from].pop();
+                spindles[to].push(ring);
+                moveCount++;
+                
+                // Start timer on first move
+                if (!timerStarted) {
+                    timerStarted = true;
+                    startTime = Date.now();
+                    timerInterval = setInterval(updateTimer, 10);
+                }
+                
+                // Check for completion
+                if (checkCompletion()) {
+                    isComplete = true;
+                    clearInterval(timerInterval);
+                    message.style.opacity = '1';
+                }
+                
+                draw();
+            }
+        }
+
+        // Check if puzzle is complete
+        function checkCompletion() {
+            // Puzzle is complete if all rings are on spindle 1 or 2 (not the starting spindle 0)
+            return (spindles[1].length === numRings || spindles[2].length === numRings);
+        }
+
+        // Update timer display
+        function updateTimer() {
+            if (!timerStarted) {
+                timerDisplay.textContent = '00:00.00';
+                return;
+            }
+            
+            const elapsed = Date.now() - startTime;
+            const totalSeconds = elapsed / 1000;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const hundredths = Math.floor((elapsed % 1000) / 10);
+            
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${hundredths.toString().padStart(2, '0')}`;
+        }
+
+        // Event listeners
+        canvas.addEventListener('click', handleInteraction);
+        canvas.addEventListener('touchend', handleInteraction);
+        resetBtn.addEventListener('click', initGame);
+        resetBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            initGame();
+        });
+        sizeSelector.addEventListener('change', initGame);
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            draw();
+        });
+        
+        // Prevent default touch behaviors
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Initialize
+        resizeCanvas();
+        initGame();
+    </script>
+</body>
+</html>
