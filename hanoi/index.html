@@ -149,16 +149,16 @@
 
         // Visual constants
         const SPINDLE_WIDTH = 20;
-        const SPINDLE_HEIGHT = 300;
+        let SPINDLE_HEIGHT = 300;
         const SPINDLE_COLOR = '#FF0000';
         const BASE_COLOR = '#000000';
         const RING_COLOR = '#FFD700';
-        const RING_HEIGHT = 30;
-        const RING_GAP = RING_HEIGHT * 0.05;
+        let RING_HEIGHT = 30;
+        let RING_GAP = RING_HEIGHT * 0.05;
         let MIN_RING_WIDTH = 60;
         let MAX_RING_WIDTH = 200;
         let SPINDLE_SPACING = 300;
-        const BASE_HEIGHT = 40;
+        let BASE_HEIGHT = 40;
         let BASE_WIDTH = 250;
         
         // Mobile detection
@@ -185,6 +185,23 @@
                 MAX_RING_WIDTH = 200;
                 MIN_RING_WIDTH = 60;
                 SPINDLE_SPACING = 300;
+            }
+            
+            // Vertical scaling for landscape mode
+            const availableHeight = canvas.height - 120; // Account for controls and margins
+            const maxSpindleHeight = availableHeight * 0.7; // Use 70% of available height
+            
+            if (maxSpindleHeight < 300) {
+                SPINDLE_HEIGHT = Math.max(150, maxSpindleHeight);
+                // Scale ring height proportionally
+                RING_HEIGHT = Math.max(15, Math.floor(SPINDLE_HEIGHT / 10));
+                RING_GAP = RING_HEIGHT * 0.05;
+                BASE_HEIGHT = Math.max(20, Math.floor(SPINDLE_HEIGHT / 7.5));
+            } else {
+                SPINDLE_HEIGHT = 300;
+                RING_HEIGHT = 30;
+                RING_GAP = RING_HEIGHT * 0.05;
+                BASE_HEIGHT = 40;
             }
         }
 
@@ -219,7 +236,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2 + 50;
+            const centerY = canvas.height / 2 + 30;
             
             // Draw spindles and bases
             for (let i = 0; i < 3; i++) {
@@ -245,7 +262,7 @@
                 for (let j = 0; j < rings.length; j++) {
                     const ringSize = rings[j];
                     const ringWidth = MIN_RING_WIDTH + (ringSize - 1) * ((MAX_RING_WIDTH - MIN_RING_WIDTH) / (numRings - 1));
-                    const y = centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT - RING_GAP - j * (RING_HEIGHT + RING_GAP) - RING_HEIGHT;
+                    const y = centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT - j * (RING_HEIGHT + RING_GAP) - RING_HEIGHT + RING_HEIGHT * 0.25;
                     
                     ctx.fillStyle = RING_COLOR;
                     ctx.fillRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
