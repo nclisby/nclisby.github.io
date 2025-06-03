@@ -78,15 +78,16 @@
         
         #message {
             position: absolute;
-            bottom: 30px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
             font-weight: bold;
-            color: #4169E1;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            color: #00BFFF;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             opacity: 0;
             transition: opacity 0.5s;
+            pointer-events: none;
         }
         
         @media (max-width: 768px) {
@@ -104,7 +105,7 @@
             }
             
             #message {
-                font-size: 20px;
+                font-size: 30px;
             }
         }
     </style>
@@ -361,7 +362,20 @@
         // Check if puzzle is complete
         function checkCompletion() {
             // Puzzle is complete if all rings are on spindle 1 or 2 (not the starting spindle 0)
-            return (spindles[1].length === numRings || spindles[2].length === numRings);
+            const isComplete = (spindles[1].length === numRings || spindles[2].length === numRings);
+            
+            if (isComplete) {
+                // Position message over middle spindle, 2/3 up
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2 + 30;
+                const messageY = centerY - (SPINDLE_HEIGHT * 2/3);
+                
+                message.style.left = centerX + 'px';
+                message.style.top = messageY + 'px';
+                message.style.transform = 'translate(-50%, -50%)';
+            }
+            
+            return isComplete;
         }
 
         // Update timer display
