@@ -65,6 +65,13 @@
             background-color: #f0f0f0;
         }
         
+        #moveCounter {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
         #timer {
             font-size: 24px;
             font-weight: bold;
@@ -100,7 +107,7 @@
                 padding: 0 10px;
             }
             
-            #timer {
+            #moveCounter, #timer {
                 font-size: 18px;
             }
             
@@ -120,7 +127,8 @@
         <canvas id="canvas"></canvas>
         <div id="controls">
             <button id="resetBtn">Reset</button>
-            <div id="timer">00:00</div>
+            <div id="moveCounter">0</div>
+            <div id="timer">00:00.00</div>
             <select id="sizeSelector">
                 <option value="2">2 Rings</option>
                 <option value="3" selected>3 Rings</option>
@@ -140,6 +148,7 @@
         const resetBtn = document.getElementById('resetBtn');
         const sizeSelector = document.getElementById('sizeSelector');
         const timerDisplay = document.getElementById('timer');
+        const moveCounterDisplay = document.getElementById('moveCounter');
         const message = document.getElementById('message');
 
         // Game state
@@ -183,8 +192,7 @@
             // Adjust visual constants based on screen size
             if (maxBaseWidth < 250) {
                 BASE_WIDTH = Math.max(100, maxBaseWidth); // Minimum base width of 100
-                <!-- MAX_RING_WIDTH = BASE_WIDTH - 50; -->
-                MAX_RING_WIDTH = BASE_WIDTH*210./250.;
+                MAX_RING_WIDTH = BASE_WIDTH * 210 / 250;
                 MIN_RING_WIDTH = Math.max(40, MAX_RING_WIDTH / 4);
                 SPINDLE_SPACING = BASE_WIDTH + minSpacing;
             } else {
@@ -235,6 +243,7 @@
             }
             
             updateTimer();
+            updateMoveCounter();
             draw();
         }
 
@@ -346,6 +355,7 @@
                 spindles[from].pop();
                 spindles[to].push(ring);
                 moveCount++;
+                updateMoveCounter();
                 
                 // Start timer on first move
                 if (!timerStarted) {
@@ -398,6 +408,11 @@
             const hundredths = Math.floor((elapsed % 1000) / 10);
             
             timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${hundredths.toString().padStart(2, '0')}`;
+        }
+
+        // Update move counter display
+        function updateMoveCounter() {
+            moveCounterDisplay.textContent = moveCount.toString();
         }
 
         // Event listeners
