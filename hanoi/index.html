@@ -254,6 +254,13 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2 + 30;
             
+            // Update message position if complete
+            if (isComplete) {
+                const messageY = centerY - (SPINDLE_HEIGHT * 2/3);
+                message.style.left = centerX + 'px';
+                message.style.top = messageY + 'px';
+            }
+            
             // Draw spindles and bases
             for (let i = 0; i < 3; i++) {
                 const x = centerX + (i - 1) * SPINDLE_SPACING;
