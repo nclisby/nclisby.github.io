@@ -162,7 +162,7 @@
         let RING_HEIGHT = 30;
         let RING_GAP = RING_HEIGHT * 0.05;
         let MIN_RING_WIDTH = 60;
-        let MAX_RING_WIDTH = 200;
+        let MAX_RING_WIDTH = 210;
         let SPINDLE_SPACING = 300;
         let BASE_HEIGHT = 40;
         let BASE_WIDTH = 250;
@@ -183,12 +183,13 @@
             // Adjust visual constants based on screen size
             if (maxBaseWidth < 250) {
                 BASE_WIDTH = Math.max(100, maxBaseWidth); // Minimum base width of 100
-                MAX_RING_WIDTH = BASE_WIDTH - 50;
+                <!-- MAX_RING_WIDTH = BASE_WIDTH - 50; -->
+                MAX_RING_WIDTH = BASE_WIDTH*210./250.;
                 MIN_RING_WIDTH = Math.max(40, MAX_RING_WIDTH / 4);
                 SPINDLE_SPACING = BASE_WIDTH + minSpacing;
             } else {
                 BASE_WIDTH = 250;
-                MAX_RING_WIDTH = 200;
+                MAX_RING_WIDTH = 210;
                 MIN_RING_WIDTH = 60;
                 SPINDLE_SPACING = 300;
             }
