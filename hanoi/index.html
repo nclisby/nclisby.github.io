@@ -169,7 +169,7 @@
         let SPINDLE_HEIGHT = 300;
         const SPINDLE_COLOR = '#FF0000';
         const BASE_COLOR = '#000000';
-        const RING_COLOR = '#FFD700';
+        const RING_COLOR = '#ffff77';
         const RING_COLOR_RGB = {r: 255, g: 215, b: 0}; // Canary yellow in RGB
         const WHITE_RGB = {r: 255, g: 255, b: 255}; // White in RGB
         let RING_HEIGHT = 30;
@@ -291,13 +291,20 @@
                     const ringWidth = MIN_RING_WIDTH + (ringSize - 1) * ((MAX_RING_WIDTH - MIN_RING_WIDTH) / (numRings - 1));
                     const y = centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT - j * (RING_HEIGHT + RING_GAP) - RING_HEIGHT + RING_HEIGHT * 0.25;
                     
-                    ctx.fillStyle = getRingColor(ringSize);
+                    ctx.fillStyle = RING_COLOR;
                     ctx.fillRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
                     
                     // Add border to rings
                     ctx.strokeStyle = '#CC9900';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
+                    
+                    // Add ring number in the center
+                    ctx.fillStyle = '#CC9900';
+                    ctx.font = `bold ${Math.floor(RING_HEIGHT * 0.6)}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(ringSize.toString(), x, y + RING_HEIGHT / 2);
                 }
             }
         }
@@ -424,20 +431,6 @@
         // Update move counter display
         function updateMoveCounter() {
             moveCounterDisplay.textContent = moveCount.toString();
-        }
-        
-        // Calculate ring color based on size
-        function getRingColor(ringSize) {
-            // Linear interpolation between canary yellow (largest) and 90% white (smallest)
-            // ringSize goes from 1 (smallest) to numRings (largest)
-            const t = (ringSize - 1) / (numRings - 1); // 0 for smallest, 1 for largest
-            
-            // Interpolate between 90% white (10% yellow) and 100% yellow
-            const r = Math.round(WHITE_RGB.r * (1 - 0.9 * t) + RING_COLOR_RGB.r * (0.1 + 0.9 * t));
-            const g = Math.round(WHITE_RGB.g * (1 - 0.9 * t) + RING_COLOR_RGB.g * (0.1 + 0.9 * t));
-            const b = Math.round(WHITE_RGB.b * (1 - 0.9 * t) + RING_COLOR_RGB.b * (0.1 + 0.9 * t));
-            
-            return `rgb(${r}, ${g}, ${b})`;
         }
 
         // Event listeners
