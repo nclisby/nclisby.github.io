@@ -137,6 +137,8 @@
                 <option value="6">6 Rings</option>
                 <option value="7">7 Rings</option>
                 <option value="8">8 Rings</option>
+                <option value="9">9 Rings</option>
+                <option value="10">10 Rings</option>
             </select>
         </div>
         <div id="message">Puzzle Complete!</div>
@@ -168,6 +170,8 @@
         const SPINDLE_COLOR = '#FF0000';
         const BASE_COLOR = '#000000';
         const RING_COLOR = '#FFD700';
+        const RING_COLOR_RGB = {r: 255, g: 215, b: 0}; // Canary yellow in RGB
+        const WHITE_RGB = {r: 255, g: 255, b: 255}; // White in RGB
         let RING_HEIGHT = 30;
         let RING_GAP = RING_HEIGHT * 0.05;
         let MIN_RING_WIDTH = 60;
@@ -209,12 +213,12 @@
             if (maxSpindleHeight < 300) {
                 SPINDLE_HEIGHT = Math.max(150, maxSpindleHeight);
                 // Scale ring height proportionally
-                RING_HEIGHT = Math.max(15, Math.floor(SPINDLE_HEIGHT / 10));
+                RING_HEIGHT = Math.max(12, Math.floor(SPINDLE_HEIGHT / 10 * 0.8));
                 RING_GAP = RING_HEIGHT * 0.05;
                 BASE_HEIGHT = Math.max(20, Math.floor(SPINDLE_HEIGHT / 7.5));
             } else {
                 SPINDLE_HEIGHT = 300;
-                RING_HEIGHT = 30;
+                RING_HEIGHT = 24;
                 RING_GAP = RING_HEIGHT * 0.05;
                 BASE_HEIGHT = 40;
             }
@@ -287,7 +291,7 @@
                     const ringWidth = MIN_RING_WIDTH + (ringSize - 1) * ((MAX_RING_WIDTH - MIN_RING_WIDTH) / (numRings - 1));
                     const y = centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT - j * (RING_HEIGHT + RING_GAP) - RING_HEIGHT + RING_HEIGHT * 0.25;
                     
-                    ctx.fillStyle = RING_COLOR;
+                    ctx.fillStyle = getRingColor(ringSize);
                     ctx.fillRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
                     
                     // Add border to rings
@@ -420,6 +424,20 @@
         // Update move counter display
         function updateMoveCounter() {
             moveCounterDisplay.textContent = moveCount.toString();
+        }
+        
+        // Calculate ring color based on size
+        function getRingColor(ringSize) {
+            // Linear interpolation between canary yellow (largest) and 90% white (smallest)
+            // ringSize goes from 1 (smallest) to numRings (largest)
+            const t = (ringSize - 1) / (numRings - 1); // 0 for smallest, 1 for largest
+            
+            // Interpolate between 90% white (10% yellow) and 100% yellow
+            const r = Math.round(WHITE_RGB.r * (1 - 0.9 * t) + RING_COLOR_RGB.r * (0.1 + 0.9 * t));
+            const g = Math.round(WHITE_RGB.g * (1 - 0.9 * t) + RING_COLOR_RGB.g * (0.1 + 0.9 * t));
+            const b = Math.round(WHITE_RGB.b * (1 - 0.9 * t) + RING_COLOR_RGB.b * (0.1 + 0.9 * t));
+            
+            return `rgb(${r}, ${g}, ${b})`;
         }
 
         // Event listeners
