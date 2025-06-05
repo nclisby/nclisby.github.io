@@ -102,6 +102,54 @@
             pointer-events: none;
         }
         
+        #confirmDialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(54, 69, 79, 0.95);
+            border: 2px solid #00BFFF;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+        }
+        
+        #confirmDialog p {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        #confirmDialog button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #confirmYes {
+            background-color: #ff4444;
+            color: white;
+        }
+        
+        #confirmYes:hover {
+            background-color: #ff6666;
+        }
+        
+        #confirmNo {
+            background-color: white;
+            color: black;
+        }
+        
+        #confirmNo:hover {
+            background-color: #f0f0f0;
+        }
+        
         @media (max-width: 768px) {
             #controls {
                 padding: 0 10px;
@@ -139,9 +187,16 @@
                 <option value="8">8 Rings</option>
                 <option value="9">9 Rings</option>
                 <option value="10">10 Rings</option>
+                <option value="clear" disabled>──────────</option>
+                <option value="clear-records">Clear Records</option>
             </select>
         </div>
         <div id="message">Puzzle Complete!</div>
+        <div id="confirmDialog">
+            <p>Are you sure you want to clear all record scores?</p>
+            <button id="confirmYes">Yes</button>
+            <button id="confirmNo">No</button>
+        </div>
     </div>
 
     <script>
@@ -152,6 +207,9 @@
         const timerDisplay = document.getElementById('timer');
         const moveCounterDisplay = document.getElementById('moveCounter');
         const message = document.getElementById('message');
+        const confirmDialog = document.getElementById('confirmDialog');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
         
         // Mobile detection
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
@@ -166,6 +224,7 @@
         let startTime = null;
         let timerInterval = null;
         let isComplete = false;
+        let completionTime = null;
         let bestRecords = {};
 
         // Visual constants
@@ -266,6 +325,7 @@
             moveCount = 0;
             timerStarted = false;
             startTime = null;
+            completionTime = null;
             isComplete = false;
             message.style.opacity = '0';
             
@@ -413,7 +473,16 @@
                 // Check for completion
                 if (checkCompletion()) {
                     isComplete = true;
+                    completionTime = Date.now() - startTime;
                     clearInterval(timerInterval);
+                    
+                    // Update timer one final time with exact completion time
+                    const best = getBestRecord();
+                    timerDisplay.textContent = formatTime(completionTime);
+                    if (best.time !== null) {
+                        timerDisplay.textContent += ` (${formatTime(best.time)})`;
+                    }
+                    
                     message.style.opacity = '1';
                 }
                 
@@ -437,7 +506,7 @@
                 message.style.transform = 'translate(-50%, -50%)';
                 
                 // Check for new records
-                const elapsed = Date.now() - startTime;
+                const elapsed = completionTime;
                 const best = getBestRecord();
                 let newTimeRecord = false;
                 let newMoveRecord = false;
@@ -526,7 +595,41 @@
             e.preventDefault();
             initGame();
         });
-        sizeSelector.addEventListener('change', initGame);
+        sizeSelector.addEventListener('change', (e) => {
+            if (e.target.value === 'clear-records') {
+                // Show confirmation dialog
+                confirmDialog.style.display = 'block';
+                // Reset selector to current ring count
+                sizeSelector.value = numRings.toString();
+            } else if (!isNaN(parseInt(e.target.value))) {
+                initGame();
+            }
+        });
+        
+        confirmYes.addEventListener('click', () => {
+            // Clear all records
+            bestRecords = {};
+            saveBestRecords();
+            confirmDialog.style.display = 'none';
+            
+            // Update display to remove the record indicators
+            updateTimer();
+            updateMoveCounter();
+            
+            // Show confirmation message
+            message.textContent = 'All records cleared!';
+            message.style.opacity = '1';
+            setTimeout(() => {
+                message.style.opacity = '0';
+                setTimeout(() => {
+                    message.textContent = 'Puzzle Complete!';
+                }, 500);
+            }, 2000);
+        });
+        
+        confirmNo.addEventListener('click', () => {
+            confirmDialog.style.display = 'none';
+        });
         window.addEventListener('resize', () => {
             resizeCanvas();
             draw();
