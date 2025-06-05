@@ -152,6 +152,9 @@
         const timerDisplay = document.getElementById('timer');
         const moveCounterDisplay = document.getElementById('moveCounter');
         const message = document.getElementById('message');
+        
+        // Mobile detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
         // Game state
         let numRings = 3;
@@ -163,6 +166,7 @@
         let startTime = null;
         let timerInterval = null;
         let isComplete = false;
+        let bestRecords = {};
 
         // Visual constants
         const SPINDLE_WIDTH = 20;
@@ -180,8 +184,32 @@
         let BASE_HEIGHT = 40;
         let BASE_WIDTH = 250;
         
-        // Mobile detection
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        // Load best records from localStorage
+        function loadBestRecords() {
+            try {
+                const stored = localStorage.getItem('towersOfHanoiBestRecords');
+                if (stored) {
+                    bestRecords = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to load best records:', e);
+                bestRecords = {};
+            }
+        }
+
+        // Save best records to localStorage
+        function saveBestRecords() {
+            try {
+                localStorage.setItem('towersOfHanoiBestRecords', JSON.stringify(bestRecords));
+            } catch (e) {
+                console.error('Failed to save best records:', e);
+            }
+        }
+
+        // Get best record for current ring count
+        function getBestRecord() {
+            return bestRecords[numRings] || { moves: null, time: null };
+        }
 
         // Set canvas size
         function resizeCanvas() {
@@ -379,7 +407,7 @@
                 if (!timerStarted) {
                     timerStarted = true;
                     startTime = Date.now();
-                    timerInterval = setInterval(updateTimer, 10);
+                    timerInterval = setInterval(updateTimer, 1);
                 }
                 
                 // Check for completion
@@ -407,6 +435,47 @@
                 message.style.left = centerX + 'px';
                 message.style.top = messageY + 'px';
                 message.style.transform = 'translate(-50%, -50%)';
+                
+                // Check for new records
+                const elapsed = Date.now() - startTime;
+                const best = getBestRecord();
+                let newTimeRecord = false;
+                let newMoveRecord = false;
+                
+                if (best.time === null || elapsed < best.time) {
+                    newTimeRecord = true;
+                }
+                
+                if (best.moves === null || moveCount < best.moves) {
+                    newMoveRecord = true;
+                }
+                
+                // Update records if needed
+                if (newTimeRecord || newMoveRecord) {
+                    if (!bestRecords[numRings]) {
+                        bestRecords[numRings] = { moves: null, time: null };
+                    }
+                    
+                    if (newTimeRecord) {
+                        bestRecords[numRings].time = elapsed;
+                    }
+                    if (newMoveRecord) {
+                        bestRecords[numRings].moves = moveCount;
+                    }
+                    
+                    saveBestRecords();
+                }
+                
+                // Set appropriate message
+                if (newTimeRecord && newMoveRecord) {
+                    message.textContent = 'New record time and move count!';
+                } else if (newTimeRecord) {
+                    message.textContent = 'New record time!';
+                } else if (newMoveRecord) {
+                    message.textContent = 'New record move count!';
+                } else {
+                    message.textContent = 'Puzzle Complete!';
+                }
             }
             
             return isComplete;
@@ -414,23 +483,39 @@
 
         // Update timer display
         function updateTimer() {
+            const best = getBestRecord();
+            
             if (!timerStarted) {
-                timerDisplay.textContent = '00:00.00';
+                timerDisplay.textContent = '0.000';
+                if (best.time !== null) {
+                    timerDisplay.textContent += ` (${formatTime(best.time)})`;
+                }
                 return;
             }
             
             const elapsed = Date.now() - startTime;
-            const totalSeconds = elapsed / 1000;
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = Math.floor(totalSeconds % 60);
-            const hundredths = Math.floor((elapsed % 1000) / 10);
+            timerDisplay.textContent = formatTime(elapsed);
+            if (best.time !== null) {
+                timerDisplay.textContent += ` (${formatTime(best.time)})`;
+            }
+        }
+        
+        // Format time for display
+        function formatTime(milliseconds) {
+            const totalSeconds = milliseconds / 1000;
+            const seconds = Math.floor(totalSeconds);
+            const thousandths = milliseconds % 1000;
             
-            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${hundredths.toString().padStart(2, '0')}`;
+            return `${seconds}.${thousandths.toString().padStart(3, '0')}`;
         }
 
         // Update move counter display
         function updateMoveCounter() {
+            const best = getBestRecord();
             moveCounterDisplay.textContent = moveCount.toString();
+            if (best.moves !== null) {
+                moveCounterDisplay.textContent += ` (${best.moves})`;
+            }
         }
 
         // Event listeners
@@ -453,6 +538,7 @@
         }, { passive: false });
 
         // Initialize
+        loadBestRecords();
         resizeCanvas();
         initGame();
     </script>
