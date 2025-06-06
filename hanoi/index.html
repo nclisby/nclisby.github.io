@@ -116,6 +116,17 @@
             z-index: 1000;
         }
         
+        #confirmOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+        
         #confirmDialog p {
             color: white;
             font-size: 18px;
@@ -124,8 +135,8 @@
         
         #confirmDialog button {
             margin: 0 10px;
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 15px 30px;
+            font-size: 20px;
             border-radius: 5px;
             border: none;
             cursor: pointer;
@@ -192,6 +203,7 @@
             </select>
         </div>
         <div id="message">Puzzle Complete!</div>
+        <div id="confirmOverlay"></div>
         <div id="confirmDialog">
             <p>Are you sure you want to clear all record scores?</p>
             <button id="confirmYes">Yes</button>
@@ -208,6 +220,7 @@
         const moveCounterDisplay = document.getElementById('moveCounter');
         const message = document.getElementById('message');
         const confirmDialog = document.getElementById('confirmDialog');
+        const confirmOverlay = document.getElementById('confirmOverlay');
         const confirmYes = document.getElementById('confirmYes');
         const confirmNo = document.getElementById('confirmNo');
         
@@ -226,6 +239,8 @@
         let isComplete = false;
         let completionTime = null;
         let bestRecords = {};
+        let displayedBestTime = null;
+        let displayedBestMoves = null;
 
         // Visual constants
         const SPINDLE_WIDTH = 20;
@@ -313,7 +328,10 @@
 
         // Initialize game
         function initGame() {
-            numRings = parseInt(sizeSelector.value);
+            const selectedValue = sizeSelector.value;
+            if (!isNaN(parseInt(selectedValue))) {
+                numRings = parseInt(selectedValue);
+            }
             spindles = [[], [], []];
             
             // Place all rings on first spindle
@@ -328,6 +346,11 @@
             completionTime = null;
             isComplete = false;
             message.style.opacity = '0';
+            
+            // Update displayed best records for the new game
+            const best = getBestRecord();
+            displayedBestTime = best.time;
+            displayedBestMoves = best.moves;
             
             if (timerInterval) {
                 clearInterval(timerInterval);
@@ -476,11 +499,10 @@
                     completionTime = Date.now() - startTime;
                     clearInterval(timerInterval);
                     
-                    // Update timer one final time with exact completion time
-                    const best = getBestRecord();
+                    // Update timer one final time with exact completion time and keep showing old record
                     timerDisplay.textContent = formatTime(completionTime);
-                    if (best.time !== null) {
-                        timerDisplay.textContent += ` (${formatTime(best.time)})`;
+                    if (displayedBestTime !== null) {
+                        timerDisplay.textContent += ` (${formatTime(displayedBestTime)})`;
                     }
                     
                     message.style.opacity = '1';
@@ -493,9 +515,12 @@
         // Check if puzzle is complete
         function checkCompletion() {
             // Puzzle is complete if all rings are on spindle 1 or 2 (not the starting spindle 0)
-            const isComplete = (spindles[1].length === numRings || spindles[2].length === numRings);
+            const isCompleted = (spindles[1].length === numRings || spindles[2].length === numRings);
             
-            if (isComplete) {
+            if (isCompleted && !isComplete) {
+                // Capture completion time only once
+                completionTime = Date.now() - startTime;
+                
                 // Position message over middle spindle, 2/3 up
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2 + 30;
@@ -547,25 +572,23 @@
                 }
             }
             
-            return isComplete;
+            return isCompleted;
         }
 
         // Update timer display
         function updateTimer() {
-            const best = getBestRecord();
-            
             if (!timerStarted) {
                 timerDisplay.textContent = '0.000';
-                if (best.time !== null) {
-                    timerDisplay.textContent += ` (${formatTime(best.time)})`;
+                if (displayedBestTime !== null) {
+                    timerDisplay.textContent += ` (${formatTime(displayedBestTime)})`;
                 }
                 return;
             }
             
             const elapsed = Date.now() - startTime;
             timerDisplay.textContent = formatTime(elapsed);
-            if (best.time !== null) {
-                timerDisplay.textContent += ` (${formatTime(best.time)})`;
+            if (displayedBestTime !== null) {
+                timerDisplay.textContent += ` (${formatTime(displayedBestTime)})`;
             }
         }
         
@@ -580,10 +603,9 @@
 
         // Update move counter display
         function updateMoveCounter() {
-            const best = getBestRecord();
             moveCounterDisplay.textContent = moveCount.toString();
-            if (best.moves !== null) {
-                moveCounterDisplay.textContent += ` (${best.moves})`;
+            if (displayedBestMoves !== null) {
+                moveCounterDisplay.textContent += ` (${displayedBestMoves})`;
             }
         }
 
@@ -599,6 +621,7 @@
             if (e.target.value === 'clear-records') {
                 // Show confirmation dialog
                 confirmDialog.style.display = 'block';
+                confirmOverlay.style.display = 'block';
                 // Reset selector to current ring count
                 sizeSelector.value = numRings.toString();
             } else if (!isNaN(parseInt(e.target.value))) {
@@ -606,11 +629,17 @@
             }
         });
         
-        confirmYes.addEventListener('click', () => {
+        function closeConfirmDialog() {
+            confirmDialog.style.display = 'none';
+            confirmOverlay.style.display = 'none';
+        }
+        
+        confirmYes.addEventListener('click', (e) => {
+            e.stopPropagation();
             // Clear all records
             bestRecords = {};
             saveBestRecords();
-            confirmDialog.style.display = 'none';
+            closeConfirmDialog();
             
             // Update display to remove the record indicators
             updateTimer();
@@ -627,8 +656,12 @@
             }, 2000);
         });
         
-        confirmNo.addEventListener('click', () => {
-            confirmDialog.style.display = 'none';
+        confirmNo.addEventListener('click', closeConfirmDialog);
+        confirmOverlay.addEventListener('click', closeConfirmDialog);
+        confirmDialog.addEventListener('click', (e) => {
+            if (e.target !== confirmYes) {
+                closeConfirmDialog();
+            }
         });
         window.addEventListener('resize', () => {
             resizeCanvas();
@@ -643,6 +676,12 @@
         // Initialize
         loadBestRecords();
         resizeCanvas();
+        
+        // Set initial displayed best records
+        const initialBest = getBestRecord();
+        displayedBestTime = initialBest.time;
+        displayedBestMoves = initialBest.moves;
+        
         initGame();
     </script>
 </body>
