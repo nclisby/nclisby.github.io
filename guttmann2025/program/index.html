@@ -50,11 +50,54 @@
             font-weight: bold;
             width: 80px;
         }
+        
+        .local-time {
+            font-weight: bold;
+            width: 120px;
+        }
     </style>
 </head>
 
 <script src="../toggle.js" type="text/javascript"></script>
 
+    <script>
+        function convertMelbourneToLocal() {
+            // Get all cells with local time data
+            const localTimeCells = document.querySelectorAll('.local-time[data-melbourne-time]');
+            
+            localTimeCells.forEach(cell => {
+                const melbourneTime = cell.getAttribute('data-melbourne-time');
+                
+                // Create a date object for today with Melbourne time
+                const today = new Date();
+                const melbourneDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 
+                    parseInt(melbourneTime.split(':')[0]), parseInt(melbourneTime.split(':')[1]));
+                
+                // Melbourne is UTC+10 (or UTC+11 during daylight saving)
+                // We'll use a more robust approach with timezone handling
+                const melbourneOffset = 10 * 60; // 10 hours in minutes
+                const localOffset = new Date().getTimezoneOffset(); // Local offset in minutes (negative for ahead of UTC)
+                
+                // Calculate the time difference
+                const timeDifference = melbourneOffset + localOffset; // Total difference in minutes
+                
+                // Convert to local time
+                const localDateTime = new Date(melbourneDateTime.getTime() - (timeDifference * 60 * 1000));
+                
+                // Format the local time
+                const localTimeString = localDateTime.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+                
+                cell.textContent = localTimeString;
+            });
+        }
+        
+        // Run the conversion when the page loads
+        document.addEventListener('DOMContentLoaded', convertMelbourneToLocal);
+    </script>
 
 <body>
     <div id="topwrapper">
@@ -77,22 +120,26 @@
             <!-- The program will be progressively updated as talk titles and abstracts are received. -->
             <!-- </p> -->
             <p>
-            <b>Date</b>: Monday, 30 June - Wednesday 2 July, 2025.
+            <b>Date</b>: Monday, 30 June - Tuesday 1 July, 2025.
             </p>
             <p>
-            Wednesday will have fewer talks, and we tentatively plan to finish at lunchtime.
-            </p>
-            <p>
-            <b>Venue</b>: Evan Williams Theatre in the Peter Hall Building, University
+            <b>Venue</b>: Old Geology Lecture Theatre 1, University
             of Melbourne. All talks will be shown simultaneously online.
             </p>
-            <p>
-            More details to be added closer to the date of the conference.
-            </p>
             <!-- <p> -->
-            <!-- Times are given in AEST, that is Australian Eastern Standard Time, -->
-            <!-- which is UTC+10:00. -->
+            <!-- More details to be added closer to the date of the conference. -->
             <!-- </p> -->
+            <p>
+            Times are given in AEST, that is Australian Eastern Standard Time,
+            which is UTC+10:00.
+            </p>
+            <p>
+            For convenience, times are also provided in your local system time in the
+            rightmost column. 
+            </p>
+            <p>
+            This is a draft version of the program!
+            </p>
             <!-- <p> -->
             <!-- Click on talk title links to view the corresponding abstract and also links to the talk pdf (if available) as well as -->
             <!-- a video recording on YouTube. -->
@@ -106,12 +153,14 @@
             <!-- <a href=".pdf">here</a>. -->
             <!-- </p> -->
 
+
     <table>
         <thead>
             <tr>
-                <th class="time-column">Time</th>
+                <th class="time-column">Melbourne Time</th>
                 <th>Monday</th>
                 <th>Tuesday</th>
+                <th class="local-time">Your Local Time</th>
             </tr>
         </thead>
         <tbody>
@@ -119,80 +168,183 @@
                 <td class="time-column">10:30</td>
                 <td>Andrew Conway</td>
                 <td>Stuart Whittington</td>
+                <td class="local-time" data-melbourne-time="10:30"></td>
             </tr>
             <tr>
                 <td class="time-column">11:00</td>
                 <td>Andrew Rechnitzer</td>
                 <td>Jay Pantone</td>
+                <td class="local-time" data-melbourne-time="11:00"></td>
             </tr>
             <tr>
                 <td class="time-column">11:30</td>
                 <td>Yao-ban Chan</td>
                 <td>Ian Enting</td>
+                <td class="local-time" data-melbourne-time="11:30"></td>
             </tr>
             <tr>
                 <td class="time-column">12:00</td>
                 <td>Murray Batchelor</td>
                 <td>Vladimir Mangazeev</td>
+                <td class="local-time" data-melbourne-time="12:00"></td>
             </tr>
             <tr class="break-row">
                 <td class="time-column">12:30</td>
                 <td>LUNCH</td>
                 <td>LUNCH</td>
+                <td class="local-time" data-melbourne-time="12:30"></td>
             </tr>
-
             <tr>
                 <td class="time-column">14:30</td>
                 <td>Nick Beaton</td>
                 <td>Tim Garoni</td>
+                <td class="local-time" data-melbourne-time="14:30"></td>
             </tr>
             <tr>
                 <td class="time-column">15:00</td>
                 <td>Jan de Gier</td>
                 <td>Ole Warnaar</td>
+                <td class="local-time" data-melbourne-time="15:00"></td>
             </tr>
             <tr>
                 <td class="time-column">15:30</td>
                 <td>Iwan Jensen</td>
                 <td>Aleks Owczarek</td>
+                <td class="local-time" data-melbourne-time="15:30"></td>
             </tr>
             <tr class="break-row">
                 <td class="time-column">16:00</td>
                 <td>COFFEE</td>
                 <td>COFFEE</td>
+                <td class="local-time" data-melbourne-time="16:00"></td>
             </tr>
             <tr>
                 <td class="time-column">16:30</td>
                 <td>Andrew Elvey Price</td>
                 <td>Nathan Clisby</td>
+                <td class="local-time" data-melbourne-time="16:30"></td>
             </tr>
             <tr>
                 <td class="time-column">17:00</td>
                 <td>Christoph Richard</td>
                 <td>Jean-Marie Maillard</td>
+                <td class="local-time" data-melbourne-time="17:00"></td>
             </tr>
             <tr>
                 <td class="time-column">17:30</td>
                 <td>Thomas Prellberg</td>
                 <td>Jesper Jacobsen</td>
+                <td class="local-time" data-melbourne-time="17:30"></td>
             </tr>
             <tr>
                 <td class="time-column">18:00</td>
                 <td>Mireille Bousquet-Melou</td>
                 <td>Alan Sokal</td>
+                <td class="local-time" data-melbourne-time="18:00"></td>
             </tr>
             <tr>
                 <td class="time-column">18:30</td>
                 <td></td>
                 <td>Tony Guttmann</td>
+                <td class="local-time" data-melbourne-time="18:30"></td>
             </tr>
             <tr class="break-row">
                 <td class="time-column">19:00</td>
                 <td></td>
                 <td>Dinner</td>
+                <td class="local-time" data-melbourne-time="19:00"></td>
             </tr>
         </tbody>
     </table>
+
+
+    <!-- <table> -->
+    <!--     <thead> -->
+    <!--         <tr> -->
+    <!--             <th class="time-column">Time</th> -->
+    <!--             <th>Monday</th> -->
+    <!--             <th>Tuesday</th> -->
+    <!--         </tr> -->
+    <!--     </thead> -->
+    <!--     <tbody> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">10:30</td> -->
+    <!--             <td>Andrew Conway</td> -->
+    <!--             <td>Stuart Whittington</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">11:00</td> -->
+    <!--             <td>Andrew Rechnitzer</td> -->
+    <!--             <td>Jay Pantone</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">11:30</td> -->
+    <!--             <td>Yao-ban Chan</td> -->
+    <!--             <td>Ian Enting</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">12:00</td> -->
+    <!--             <td>Murray Batchelor</td> -->
+    <!--             <td>Vladimir Mangazeev</td> -->
+    <!--         </tr> -->
+    <!--         <tr class="break-row"> -->
+    <!--             <td class="time-column">12:30</td> -->
+    <!--             <td>LUNCH</td> -->
+    <!--             <td>LUNCH</td> -->
+    <!--         </tr> -->
+
+    <!--         <tr> -->
+    <!--             <td class="time-column">14:30</td> -->
+    <!--             <td>Nick Beaton</td> -->
+    <!--             <td>Tim Garoni</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">15:00</td> -->
+    <!--             <td>Jan de Gier</td> -->
+    <!--             <td>Ole Warnaar</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">15:30</td> -->
+    <!--             <td>Iwan Jensen</td> -->
+    <!--             <td>Aleks Owczarek</td> -->
+    <!--         </tr> -->
+    <!--         <tr class="break-row"> -->
+    <!--             <td class="time-column">16:00</td> -->
+    <!--             <td>COFFEE</td> -->
+    <!--             <td>COFFEE</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">16:30</td> -->
+    <!--             <td>Andrew Elvey Price</td> -->
+    <!--             <td>Nathan Clisby</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">17:00</td> -->
+    <!--             <td>Christoph Richard</td> -->
+    <!--             <td>Jean-Marie Maillard</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">17:30</td> -->
+    <!--             <td>Thomas Prellberg</td> -->
+    <!--             <td>Jesper Jacobsen</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">18:00</td> -->
+    <!--             <td>Mireille Bousquet-Melou</td> -->
+    <!--             <td>Alan Sokal</td> -->
+    <!--         </tr> -->
+    <!--         <tr> -->
+    <!--             <td class="time-column">18:30</td> -->
+    <!--             <td></td> -->
+    <!--             <td>Tony Guttmann</td> -->
+    <!--         </tr> -->
+    <!--         <tr class="break-row"> -->
+    <!--             <td class="time-column">19:00</td> -->
+    <!--             <td></td> -->
+    <!--             <td>Dinner</td> -->
+    <!--         </tr> -->
+    <!--     </tbody> -->
+    <!-- </table> -->
             
             <br />
             <br />
