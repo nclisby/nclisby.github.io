@@ -1,0 +1,21 @@
+{
+  "name": "Random Albums",
+  "short_name": "Random Albums",
+  "description": "Discover random albums from your Spotify library",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#191414",
+  "theme_color": "#1db954",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSIyMCIgZmlsbD0iIzFkYjk1NCIvPgogIDxyZWN0IHg9IjIwIiB5PSIyMCIgd2lkdGg9IjcwIiBoZWlnaHQ9IjcwIiByeD0iMTAiIGZpbGw9IndoaXRlIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMyIvPgogIDxjaXJjbGUgY3g9IjM1IiBjeT0iMzUiIHI9IjUiIGZpbGw9IiMwMDAiLz4KICA8Y2lyY2xlIGN4PSI3NSIgY3k9Ijc1IiByPSI1IiBmaWxsPSIjMDAwIi8+CiAgPHBhdGggZD0iTTEwMCA0MFYxMzBjMCAxMSA2LjUgMjAgMTUgMjBzMTUtOSAxNS0yMHMtNi41LTIwLTE1LTIwYy0yLjUgMC01IC41LTcgMS41VjYwSDE0MFY0MEgxMDBaIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIxMTUiIGN5PSIxMzAiIHI9IjEwIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjMiLz4KPC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSI0OSIgZmlsbD0iIzFkYjk1NCIvPgogIDxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjE4MCIgaGVpZ2h0PSIxODAiIHJ4PSIzNCIgZmlsbD0id2hpdGUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSI4Ii8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIyMCIgZmlsbD0iIzAwMCIvPgogIDxjaXJjbGUgY3g9IjE4MCIgY3k9IjE4MCIgcj0iMjAiIGZpbGw9IiMwMDAiLz4KICA8cGF0aCBkPSJNMjgwIDEwMFYzMDBjMCAzMCAyMCA1MCA0MCA1MHM0MC0yMCA0MC01MHMtMjAtNTAtNDAtNTBjLTEwIDAtMjAgMi0yMCA1VjE1MGg2MFYxMDBIMjgwWiIgZmlsbD0id2hpdGUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSI4Ii8+CiAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMzAwIiByPSIzMCIgZmlsbD0id2hpdGUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSI4Ii8+Cjwvc3ZnPg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
