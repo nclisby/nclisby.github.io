@@ -45,10 +45,6 @@
             position: relative;
         }
 
-            <!-- font-size: clamp(1.2rem, 3.33333vw, 1.66666rem); -->
-            <!-- margin-bottom: 15px; -->
-            <!-- font-size: clamp(1.0rem, 2.77777vw, 1.388888rem); -->
-
         .header h1 {
             font-size: clamp(1.8rem, 5vw, 2.5rem);
             margin-bottom: 10px;
@@ -57,7 +53,6 @@
         }
 
         .header h2 {
-            <!-- font-size: clamp(1.8rem, 5vw, 2.5rem); -->
             font-size: clamp(1.2rem, 3.33333vw, 1.66666rem);
             margin-bottom: 5px;
             color: white;
@@ -302,7 +297,6 @@
     <div class="container">
         <div class="header">
             <!-- <h1><span style="color: white;">♫</span> Random Albums <span style="color: white;">🎲</span></h1> -->
-            <!-- <button id="randomBtn" class="btn" style="display: block; margin: 0 auto;"><h1><span style="color: white;">♫</span> Random Albums <span style="color: white;">🎲</span></h1></button> -->
             <button id="randomBtn" class="btn" style="display: block; margin: 0 auto;"><h2><span style="color: white;">♫</span> Random Albums <span style="color: white;">🎲</span></h2></button>
             <div class="menu-container">
                 <button id="menuToggle" class="menu-toggle">⋮</button>
@@ -598,9 +592,6 @@
             };
             
             // Keep the menu toggle as just dots
-            <!-- document.querySelector('h1').innerHTML = `<span style="color: white;">♫</span> Random ${typeNames[type]} <span style="color: white;">🎲</span>`; -->
-            <!-- randomBtn.innerHTML = `🎲 Get Random ${typeNames[type]}`; -->
-            <!-- randomBtn.innerHTML = `<h1><span style="color: white;">♫</span> Random ${typeNames[type]} <span style="color: white;">🎲</span></h1>`; -->
             randomBtn.innerHTML = `<h2><span style="color: white;">♫</span> Random ${typeNames[type]} <span style="color: white;">🎲</span></h2>`;
             
             // Close menu
