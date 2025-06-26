@@ -173,7 +173,7 @@
         .success {
             background: rgba(29, 185, 84, 0.1);
             border: 1px solid rgba(29, 185, 84, 0.3);
-            color: #1db954;
+            color: white;
         }
 
         @media (max-width: 768px) {
@@ -362,8 +362,10 @@
                 return;
             }
 
+            // Hide status when getting random albums
+            statusDiv.style.display = 'none';
+
             if (allAlbums.length < 5) {
-                showStatus(`You only have ${allAlbums.length} albums. Showing all of them!`, 'success');
                 displayAlbums(allAlbums);
                 return;
             }
