@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Random Albums - Spotify</title>
+    
+    <!-- PWA meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Random Albums">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1db954">
+    
+    <!-- PWA icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iMjAiIGZpbGw9IiMxZGI5NTQiLz4KPHN2ZyB4PSI0MCIgeT0iNDAiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IndoaXRlIj4KICA8cGF0aCBkPSJNMTIgM3Y5LjI4Yy0uNDctLjE3LS45Ny0uMjgtMS41LS0uMjhDOC41NyAxMiA3IDE0IDcgMTYuNXMxLjU3IDQuNSAzLjUgNC41czMuNS0yIDMuNS00LjVWN2g0VjNIMTJ6Ii8+Cjwvc3ZnPgo8L3N2Zz4=">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTIgM3Y5LjI4Yy0uNDctLjE3LS45Ny0uMjgtMS41LS4yOEM4LjU3IDEyIDcgMTQgNyAxNi41czEuNTcgNC41IDMuNSA0LjVzMy41LTIgMy41LTQuNVY3aDRWM0gxMnoiIGZpbGw9IiMxZGI5NTQiLz4KPC9zdmc+">
     <style>
         * {
             margin: 0;
@@ -32,10 +43,8 @@
         .header h1 {
             font-size: clamp(2rem, 5vw, 3rem);
             margin-bottom: 10px;
-            background: linear-gradient(45deg, #1db954, #1ed760);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
@@ -187,8 +196,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎵 Random Albums</h1>
-            <p>Discover forgotten gems from your Spotify library</p>
+            <h1><span style="color: white;">♫</span> Random Albums</h1>
         </div>
 
         <div class="auth-section">
@@ -373,7 +381,6 @@
             }
             
             displayAlbums(randomAlbums);
-            showStatus('Here are 5 random albums from your library!', 'success');
         }
 
         function displayAlbums(albums) {
