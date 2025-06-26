@@ -353,7 +353,12 @@
             const storedToken = sessionStorage.getItem('spotify_access_token');
             if (storedToken) {
                 accessToken = storedToken;
-                await handleSuccessfulAuth();
+                try {
+                    await handleSuccessfulAuth();
+                } catch (error) {
+                    // Token might be expired, reset to login state
+                    resetToLoginState();
+                }
                 return;
             }
 
@@ -442,7 +447,26 @@
                 await handleSuccessfulAuth();
             } catch (error) {
                 showStatus('Error connecting to Spotify: ' + error.message, 'error');
+                resetToLoginState();
             }
+        }
+
+        function resetToLoginState() {
+            // Clear stored data
+            accessToken = null;
+            sessionStorage.removeItem('spotify_access_token');
+            
+            // Reset UI
+            loginBtn.style.display = 'inline-block';
+            randomBtn.style.display = 'none';
+            
+            // Clear data arrays
+            allAlbums = [];
+            allPlaylists = [];
+            allArtists = [];
+            
+            // Clear display
+            albumsDiv.innerHTML = '';
         }
 
         async function handleSuccessfulAuth() {
@@ -457,6 +481,8 @@
                 showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
             } catch (error) {
                 showStatus('Error loading library: ' + error.message, 'error');
+                // Reset to login state on error
+                resetToLoginState();
             }
         }
 
