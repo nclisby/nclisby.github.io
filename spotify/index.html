@@ -290,7 +290,7 @@
     <div class="container">
         <div class="header">
             <!-- <h1><span style="color: white;">♫</span> Random Albums <span style="color: white;">🎲</span></h1> -->
-            <h1><button id="randomBtn" class="btn" style="display: none;"><span style="color: white;">♫</span> Random Albums <span style="color: white;">🎲</span></button></h1>
+            <button id="randomBtn" class="btn" style="display: none;"><h1><span style="color: white;">♫</span> Random Albums <span style="color: white;">🎲</span></h1></button>
             <div class="menu-container">
                 <button id="menuToggle" class="menu-toggle">⋮</button>
                 <div id="menuDropdown" class="menu-dropdown">
@@ -459,7 +459,7 @@
             
             // Reset UI
             loginBtn.style.display = 'inline-block';
-            randomBtn.style.display = 'none';
+            <!-- randomBtn.style.display = 'none'; -->
             
             // Clear data arrays
             allAlbums = [];
@@ -472,7 +472,7 @@
 
         async function handleSuccessfulAuth() {
             loginBtn.style.display = 'none';
-            randomBtn.style.display = 'inline-block';
+            <!-- randomBtn.style.display = 'inline-block'; -->
             
             showStatus('Connected to Spotify! Loading your library...', 'success');
             
@@ -586,7 +586,8 @@
             
             // Keep the menu toggle as just dots
             document.querySelector('h1').innerHTML = `<span style="color: white;">♫</span> Random ${typeNames[type]} <span style="color: white;">🎲</span>`;
-            randomBtn.innerHTML = `🎲 Get Random ${typeNames[type]}`;
+            <!-- randomBtn.innerHTML = `🎲 Get Random ${typeNames[type]}`; -->
+            randomBtn.innerHTML = `<h1><span style="color: white;">♫</span> Random ${typeNames[type]} <span style="color: white;">🎲</span></h1>`;
             
             // Close menu
             menuDropdown.classList.remove('show');
