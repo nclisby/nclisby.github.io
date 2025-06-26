@@ -244,16 +244,25 @@
                 .replace(/\//g, '_');
         }
 
-        // Check if user is returning from Spotify auth
+        // Check if user is returning from Spotify auth or has existing session
         window.addEventListener('load', async () => {
+            // First check if we have a stored access token
+            const storedToken = sessionStorage.getItem('spotify_access_token');
+            if (storedToken) {
+                accessToken = storedToken;
+                await handleSuccessfulAuth();
+                return;
+            }
+
+            // Otherwise check if returning from Spotify auth
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
             
             if (code) {
-                const codeVerifier = localStorage.getItem('code_verifier');
+                const codeVerifier = sessionStorage.getItem('code_verifier');
                 if (codeVerifier) {
                     await exchangeCodeForToken(code, codeVerifier);
-                    localStorage.removeItem('code_verifier');
+                    sessionStorage.removeItem('code_verifier');
                     // Clean up URL
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
@@ -270,7 +279,7 @@
             const codeChallenge = base64encode(hashed);
             
             // Store code verifier for later use
-            localStorage.setItem('code_verifier', codeVerifier);
+            sessionStorage.setItem('code_verifier', codeVerifier);
             
             const authUrl = 'https://accounts.spotify.com/authorize?' +
                 'client_id=' + CLIENT_ID +
@@ -307,6 +316,9 @@
 
                 const data = await response.json();
                 accessToken = data.access_token;
+                
+                // Store access token for session persistence
+                sessionStorage.setItem('spotify_access_token', accessToken);
                 
                 await handleSuccessfulAuth();
             } catch (error) {
