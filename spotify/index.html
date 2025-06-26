@@ -39,12 +39,12 @@
         }
 
         .header {
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
 
         .header h1 {
-            font-size: clamp(2rem, 5vw, 3rem);
-            margin-bottom: 10px;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            margin-bottom: 15px;
             color: white;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
@@ -102,19 +102,23 @@
 
         .albums-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .album-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 15px;
             transition: all 0.3s ease;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
         }
 
         .album-card:hover {
@@ -125,29 +129,29 @@
 
         .album-image {
             width: 100%;
-            max-width: 200px;
-            height: 200px;
+            max-width: 140px;
+            height: 140px;
             object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .album-title {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 5px;
-            line-height: 1.3;
+            margin-bottom: 4px;
+            line-height: 1.2;
         }
 
         .album-artist {
-            font-size: 1rem;
+            font-size: 0.85rem;
             opacity: 0.8;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
 
         .album-year {
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             opacity: 0.6;
         }
 
@@ -180,17 +184,31 @@
 
         @media (max-width: 768px) {
             .albums-container {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 15px;
+                gap: 12px;
+                max-width: 100%;
+                padding: 0 10px;
             }
             
             .album-card {
-                padding: 15px;
+                padding: 12px;
             }
             
             .btn {
-                padding: 12px 25px;
-                font-size: 1rem;
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+
+            .album-image {
+                max-width: 120px;
+                height: 120px;
+            }
+
+            .album-title {
+                font-size: 0.9rem;
+            }
+
+            .album-artist {
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -198,10 +216,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><span style="color: white;">♫</span> Random Albums</h1>
-        </div>
-
-        <div class="auth-section">
+            <h1><span style="color: white;">♫</span> Random Albums <span style="color: white;">🎲</span></h1>
             <button id="loginBtn" class="btn">Connect to Spotify</button>
             <button id="randomBtn" class="btn" style="display: none;">🎲 Get Random Albums</button>
         </div>
@@ -379,16 +394,13 @@
             // Hide status when getting random albums
             statusDiv.style.display = 'none';
 
-            if (allAlbums.length < 5) {
-                displayAlbums(allAlbums);
-                return;
-            }
-
-            // Get 5 random albums
+            const numAlbums = Math.min(4, allAlbums.length);
+            
+            // Get random albums
             const randomAlbums = [];
             const usedIndices = new Set();
             
-            while (randomAlbums.length < 5 && randomAlbums.length < allAlbums.length) {
+            while (randomAlbums.length < numAlbums) {
                 const randomIndex = Math.floor(Math.random() * allAlbums.length);
                 if (!usedIndices.has(randomIndex)) {
                     usedIndices.add(randomIndex);
