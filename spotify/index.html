@@ -668,6 +668,7 @@
                 } else {
                     // Get related artists from a few random followed artists
                     const randomArtists = allArtists.sort(() => 0.5 - Math.random()).slice(0, 3);
+                    console.log('Using seed artists:', randomArtists.map(a => a.name));
                     discoverData.relatedArtists = [];
                     
                     for (const artist of randomArtists) {
@@ -679,7 +680,9 @@
                             if (response.ok) {
                                 const data = await response.json();
                                 // Add up to 3 related artists per seed artist
-                                discoverData.relatedArtists.push(...data.artists.slice(0, 3));
+                                const relatedToAdd = data.artists.slice(0, 3);
+                                discoverData.relatedArtists.push(...relatedToAdd);
+                                console.log(`Found ${relatedToAdd.length} related artists for ${artist.name}`);
                             }
                         } catch (error) {
                             console.error('Error fetching related artists:', error);
@@ -695,6 +698,7 @@
                         }
                         return false;
                     });
+                    console.log('Total unique related artists:', discoverData.relatedArtists.length);
                 }
                 
                 // Get new releases
@@ -706,6 +710,7 @@
                     if (newReleasesResponse.ok) {
                         const data = await newReleasesResponse.json();
                         discoverData.newReleases = data.albums.items || [];
+                        console.log('New releases loaded:', discoverData.newReleases.length);
                     }
                 } catch (error) {
                     console.error('Error fetching new releases:', error);
@@ -720,6 +725,7 @@
                     if (featuredResponse.ok) {
                         const data = await featuredResponse.json();
                         discoverData.featuredPlaylists = data.playlists.items || [];
+                        console.log('Featured playlists loaded:', discoverData.featuredPlaylists.length);
                     }
                 } catch (error) {
                     console.error('Error fetching featured playlists:', error);
@@ -804,24 +810,30 @@
                 // For discover mode, show a mix of content
                 const items = [];
                 
-                // Get 1-2 related artists
-                const relatedCount = Math.min(2, discoverData.relatedArtists.length);
-                if (relatedCount > 0) {
+                // Get exactly 2 recommended artists
+                if (discoverData.relatedArtists.length > 0) {
                     const shuffledRelated = [...discoverData.relatedArtists].sort(() => 0.5 - Math.random());
-                    items.push(...shuffledRelated.slice(0, relatedCount).map(item => ({ ...item, discoverType: 'artist' })));
+                    const artistCount = Math.min(2, shuffledRelated.length);
+                    items.push(...shuffledRelated.slice(0, artistCount).map(item => ({ ...item, discoverType: 'artist' })));
                 }
                 
-                // Get 1 new release
+                // Get exactly 1 featured playlist
+                if (discoverData.featuredPlaylists.length > 0) {
+                    const randomPlaylist = discoverData.featuredPlaylists[Math.floor(Math.random() * discoverData.featuredPlaylists.length)];
+                    items.push({ ...randomPlaylist, discoverType: 'playlist' });
+                }
+                
+                // Get exactly 1 new release
                 if (discoverData.newReleases.length > 0) {
                     const randomRelease = discoverData.newReleases[Math.floor(Math.random() * discoverData.newReleases.length)];
                     items.push({ ...randomRelease, discoverType: 'album' });
                 }
                 
-                // Get 1 featured playlist
-                if (discoverData.featuredPlaylists.length > 0) {
-                    const randomPlaylist = discoverData.featuredPlaylists[Math.floor(Math.random() * discoverData.featuredPlaylists.length)];
-                    items.push({ ...randomPlaylist, discoverType: 'playlist' });
-                }
+                console.log('Discover items to display:', {
+                    artists: items.filter(i => i.discoverType === 'artist').length,
+                    playlists: items.filter(i => i.discoverType === 'playlist').length,
+                    albums: items.filter(i => i.discoverType === 'album').length
+                });
                 
                 if (items.length === 0) {
                     showStatus('No discover content available. Try loading again.', 'error');
@@ -831,9 +843,8 @@
                 // Hide status when showing items
                 statusDiv.style.display = 'none';
                 
-                // Shuffle the items
-                const shuffledItems = items.sort(() => 0.5 - Math.random());
-                displayItems(shuffledItems);
+                // Don't shuffle - show in order: artists, playlist, album
+                displayItems(items);
                 return;
             }
             
