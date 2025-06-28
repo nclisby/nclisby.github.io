@@ -345,10 +345,12 @@
         }
 
         async function loadDiscoverData() {
+            console.log('loadDiscoverData called');
             setLoadingState(true);
             showStatus('Loading discover content...', 'success');
             
             try {
+                console.log('Starting to load discover data...');
                 // Small delay to ensure UI updates
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
@@ -526,9 +528,9 @@
         // Menu functionality
         menuToggle.addEventListener('click', toggleMenu);
         
-        menuDropdown.addEventListener('click', (e) => {
+        menuDropdown.addEventListener('click', async (e) => {
             if (e.target.classList.contains('menu-item') && !isLoading) {
-                selectMenuType(e.target.dataset.type);
+                await selectMenuType(e.target.dataset.type);
             }
         });
         
@@ -732,7 +734,7 @@
             }
         }
 
-        function selectMenuType(type) {
+        async function selectMenuType(type) {
             currentType = type;
             
             // Update active menu item
@@ -764,7 +766,8 @@
             // Load discover data if needed, otherwise show random items
             if (type === 'discover') {
                 if (Object.values(discoverData).every(arr => arr.length === 0)) {
-                    loadDiscoverData();
+                    console.log('Loading discover data...');
+                    await loadDiscoverData();
                 } else {
                     // If discover data already loaded, show items
                     getRandomItems();
