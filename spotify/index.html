@@ -683,6 +683,8 @@
                                 const relatedToAdd = data.artists.slice(0, 3);
                                 discoverData.relatedArtists.push(...relatedToAdd);
                                 console.log(`Found ${relatedToAdd.length} related artists for ${artist.name}`);
+                            } else {
+                                console.error(`Related artists request failed for ${artist.name}:`, response.status, response.statusText);
                             }
                         } catch (error) {
                             console.error('Error fetching related artists:', error);
@@ -699,6 +701,52 @@
                         return false;
                     });
                     console.log('Total unique related artists:', discoverData.relatedArtists.length);
+                    
+                    // If no related artists found, try using recommendations endpoint
+                    if (discoverData.relatedArtists.length === 0 && allArtists.length > 0) {
+                        console.log('Trying recommendations endpoint as fallback...');
+                        try {
+                            // Get up to 5 random artists as seeds
+                            const seedArtists = allArtists.sort(() => 0.5 - Math.random()).slice(0, 5);
+                            const seedIds = seedArtists.map(a => a.id).join(',');
+                            
+                            const recoResponse = await fetch(`https://api.spotify.com/v1/recommendations?seed_artists=${seedIds}&limit=20`, {
+                                headers: { 'Authorization': 'Bearer ' + accessToken }
+                            });
+                            
+                            if (recoResponse.ok) {
+                                const data = await recoResponse.json();
+                                // Extract unique artists from the recommended tracks
+                                const artistMap = new Map();
+                                data.tracks.forEach(track => {
+                                    track.artists.forEach(artist => {
+                                        if (!artistMap.has(artist.id)) {
+                                            artistMap.set(artist.id, artist);
+                                        }
+                                    });
+                                });
+                                
+                                // Get full artist details for the first few
+                                const uniqueArtistIds = Array.from(artistMap.keys()).slice(0, 10);
+                                for (const artistId of uniqueArtistIds) {
+                                    try {
+                                        const artistResponse = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
+                                            headers: { 'Authorization': 'Bearer ' + accessToken }
+                                        });
+                                        if (artistResponse.ok) {
+                                            const artistData = await artistResponse.json();
+                                            discoverData.relatedArtists.push(artistData);
+                                        }
+                                    } catch (err) {
+                                        console.error('Error fetching artist details:', err);
+                                    }
+                                }
+                                console.log('Found artists via recommendations:', discoverData.relatedArtists.length);
+                            }
+                        } catch (error) {
+                            console.error('Error using recommendations endpoint:', error);
+                        }
+                    }
                 }
                 
                 // Get new releases
@@ -716,9 +764,10 @@
                     console.error('Error fetching new releases:', error);
                 }
                 
-                // Get featured playlists
+                // Get featured playlists with country parameter
                 try {
-                    const featuredResponse = await fetch('https://api.spotify.com/v1/browse/featured-playlists?limit=20', {
+                    // Try to get featured playlists for the user's market
+                    const featuredResponse = await fetch('https://api.spotify.com/v1/browse/featured-playlists?limit=20&country=US', {
                         headers: { 'Authorization': 'Bearer ' + accessToken }
                     });
                     
@@ -726,6 +775,17 @@
                         const data = await featuredResponse.json();
                         discoverData.featuredPlaylists = data.playlists.items || [];
                         console.log('Featured playlists loaded:', discoverData.featuredPlaylists.length);
+                    } else {
+                        console.error('Featured playlists response:', featuredResponse.status, featuredResponse.statusText);
+                        // Try without country parameter
+                        const fallbackResponse = await fetch('https://api.spotify.com/v1/browse/featured-playlists?limit=20', {
+                            headers: { 'Authorization': 'Bearer ' + accessToken }
+                        });
+                        if (fallbackResponse.ok) {
+                            const data = await fallbackResponse.json();
+                            discoverData.featuredPlaylists = data.playlists.items || [];
+                            console.log('Featured playlists loaded (fallback):', discoverData.featuredPlaylists.length);
+                        }
                     }
                 } catch (error) {
                     console.error('Error fetching featured playlists:', error);
