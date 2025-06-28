@@ -16,7 +16,7 @@
     
     <!-- PWA icons -->
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iMjAiIGZpbGw9IiMxZGI5NTQiLz4KPHN2ZyB4PSI0MCIgeT0iNDAiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IndoaXRlIj4KICA8cGF0aCBkPSJNMTIgM3Y5LjI4Yy0uNDctLjE3LS45Ny0uMjgtMS41LS0uMjhDOC41NyAxMiA3IDE0IDcgMTYuNXMxLjU3IDQuNSAzLjUgNC41czMuNS0yIDMuNS00LjVWN2g0VjNIMTJ6Ii8+Cjwvc3ZnPgo8L3N2Zz4=">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTIgM3Y5LjI4Yy0uNDctLjE3LS45Ny0uMjgtMS41LS4yOEM4LjU3IDEyIDcgMTQgNyAxNi41czEuNTcgNC41IDMuNSA0LjVzMy41LTIgMy41LTQuNVY3aDRWM0gxMnoiIGZpbGw9IiMxZGI5NTQiLz4KPC9zdmc+">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTIgM3Y5LjI4Yy0uNDctLjE3LS45Ny0uMjgtMS41LS0uMjhDOC41NyAxMiA3IDE0IDcgMTYuNXMxLjU3IDQuNSAzLjUgNC41czMuNS0yIDMuNS00LjVWN2g0VjNIMTJ6IiBmaWxsPSIjMWRiOTU0Ii8+Cjwvc3ZnPg==">
     <style>
         * {
             margin: 0;
@@ -101,6 +101,12 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
+        .menu-toggle:disabled {
+            background: rgba(100, 100, 100, 0.2);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
         .menu-dropdown {
             position: absolute;
             top: 100%;
@@ -134,6 +140,12 @@
         .menu-item.active {
             background: rgba(29, 185, 84, 0.3);
             color: #1ed760;
+        }
+
+        .menu-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
         }
 
         .menu-item:first-child {
@@ -187,6 +199,7 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+            opacity: 0.6;
         }
 
         #randomBtn {
@@ -366,6 +379,7 @@
         let allPlaylists = [];
         let allArtists = [];
         let currentType = 'albums';
+        let isLoading = false;
 
         // DOM elements
         const loginBtn = document.getElementById('loginBtn');
@@ -433,7 +447,7 @@
         menuToggle.addEventListener('click', toggleMenu);
         
         menuDropdown.addEventListener('click', (e) => {
-            if (e.target.classList.contains('menu-item')) {
+            if (e.target.classList.contains('menu-item') && !isLoading) {
                 selectMenuType(e.target.dataset.type);
             }
         });
@@ -532,7 +546,25 @@
             }
         }
 
+        function setLoadingState(loading) {
+            isLoading = loading;
+            
+            // Disable/enable buttons
+            randomBtn.disabled = loading;
+            menuToggle.disabled = loading;
+            
+            // Disable/enable menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                if (loading) {
+                    item.classList.add('disabled');
+                } else {
+                    item.classList.remove('disabled');
+                }
+            });
+        }
+
         async function loadAllData() {
+            setLoadingState(true);
             showStatus('Loading albums...', 'success');
             
             // Load albums
@@ -604,11 +636,15 @@
             } catch (error) {
                 console.error('Error loading data:', error);
                 throw error;
+            } finally {
+                setLoadingState(false);
             }
         }
 
         function toggleMenu() {
-            menuDropdown.classList.toggle('show');
+            if (!isLoading) {
+                menuDropdown.classList.toggle('show');
+            }
         }
 
         function selectMenuType(type) {
@@ -629,7 +665,7 @@
                 'artists': 'Artists'
             };
             
-            // Keep the menu toggle as just dots
+            // Update button text
             randomBtn.innerHTML = `<h2><span style="color: white;">♫</span> Random ${typeNames[type]} <span style="color: white;">🎲</span></h2>`;
             
             // Close menu
@@ -638,6 +674,9 @@
             // Clear current display
             albumsDiv.innerHTML = '';
             statusDiv.style.display = 'none';
+            
+            // Immediately show random items
+            getRandomItems();
         }
 
         function getRandomItems() {
