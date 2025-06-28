@@ -101,12 +101,6 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
-        .menu-toggle:disabled {
-            background: rgba(100, 100, 100, 0.2);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
         .menu-dropdown {
             position: absolute;
             top: 100%;
@@ -140,12 +134,6 @@
         .menu-item.active {
             background: rgba(29, 185, 84, 0.3);
             color: #1ed760;
-        }
-
-        .menu-item.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
         }
 
         .menu-item:first-child {
@@ -199,7 +187,6 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
-            opacity: 0.6;
         }
 
         #randomBtn {
@@ -357,7 +344,6 @@
                         <div class="menu-item active" data-type="albums">Albums</div>
                         <div class="menu-item" data-type="playlists">Playlists</div>
                         <div class="menu-item" data-type="artists">Artists</div>
-                        <div class="menu-item" data-type="discover">Discover</div>
                     </div>
                 </div>
             </div>
@@ -379,13 +365,7 @@
         let allAlbums = [];
         let allPlaylists = [];
         let allArtists = [];
-        let discoverData = {
-            relatedArtists: [],
-            newReleases: [],
-            featuredPlaylists: []
-        };
         let currentType = 'albums';
-        let isLoading = false;
 
         // DOM elements
         const loginBtn = document.getElementById('loginBtn');
@@ -452,9 +432,9 @@
         // Menu functionality
         menuToggle.addEventListener('click', toggleMenu);
         
-        menuDropdown.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('menu-item') && !isLoading) {
-                await selectMenuType(e.target.dataset.type);
+        menuDropdown.addEventListener('click', (e) => {
+            if (e.target.classList.contains('menu-item')) {
+                selectMenuType(e.target.dataset.type);
             }
         });
         
@@ -531,11 +511,6 @@
             allAlbums = [];
             allPlaylists = [];
             allArtists = [];
-            discoverData = {
-                relatedArtists: [],
-                newReleases: [],
-                featuredPlaylists: []
-            };
             
             // Clear display
             albumsDiv.innerHTML = '';
@@ -557,25 +532,7 @@
             }
         }
 
-        function setLoadingState(loading) {
-            isLoading = loading;
-            
-            // Disable/enable buttons
-            randomBtn.disabled = loading;
-            menuToggle.disabled = loading;
-            
-            // Disable/enable menu items
-            document.querySelectorAll('.menu-item').forEach(item => {
-                if (loading) {
-                    item.classList.add('disabled');
-                } else {
-                    item.classList.remove('disabled');
-                }
-            });
-        }
-
         async function loadAllData() {
-            setLoadingState(true);
             showStatus('Loading albums...', 'success');
             
             // Load albums
@@ -647,176 +604,14 @@
             } catch (error) {
                 console.error('Error loading data:', error);
                 throw error;
-            } finally {
-                setLoadingState(false);
-            }
-        }
-
-        async function loadDiscoverData() {
-            console.log('loadDiscoverData called');
-            setLoadingState(true);
-            showStatus('Loading discover content...', 'success');
-            
-            try {
-                console.log('Starting to load discover data...');
-                // Small delay to ensure UI updates
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                // Check if we have artists to get recommendations from
-                if (allArtists.length === 0) {
-                    showStatus('No followed artists found. Loading featured content only...', 'success');
-                } else {
-                    // Get related artists from a few random followed artists
-                    const randomArtists = allArtists.sort(() => 0.5 - Math.random()).slice(0, 3);
-                    console.log('Using seed artists:', randomArtists.map(a => a.name));
-                    discoverData.relatedArtists = [];
-                    
-                    for (const artist of randomArtists) {
-                        try {
-                            const response = await fetch(`https://api.spotify.com/v1/artists/${artist.id}/related-artists`, {
-                                headers: { 'Authorization': 'Bearer ' + accessToken }
-                            });
-                            
-                            if (response.ok) {
-                                const data = await response.json();
-                                // Add up to 3 related artists per seed artist
-                                const relatedToAdd = data.artists.slice(0, 3);
-                                discoverData.relatedArtists.push(...relatedToAdd);
-                                console.log(`Found ${relatedToAdd.length} related artists for ${artist.name}`);
-                            } else {
-                                console.error(`Related artists request failed for ${artist.name}:`, response.status, response.statusText);
-                            }
-                        } catch (error) {
-                            console.error('Error fetching related artists:', error);
-                        }
-                    }
-                    
-                    // Remove duplicates
-                    const uniqueIds = new Set();
-                    discoverData.relatedArtists = discoverData.relatedArtists.filter(artist => {
-                        if (!uniqueIds.has(artist.id)) {
-                            uniqueIds.add(artist.id);
-                            return true;
-                        }
-                        return false;
-                    });
-                    console.log('Total unique related artists:', discoverData.relatedArtists.length);
-                    
-                    // If no related artists found, try using recommendations endpoint
-                    if (discoverData.relatedArtists.length === 0 && allArtists.length > 0) {
-                        console.log('Trying recommendations endpoint as fallback...');
-                        try {
-                            // Get up to 5 random artists as seeds
-                            const seedArtists = allArtists.sort(() => 0.5 - Math.random()).slice(0, 5);
-                            const seedIds = seedArtists.map(a => a.id).join(',');
-                            
-                            const recoResponse = await fetch(`https://api.spotify.com/v1/recommendations?seed_artists=${seedIds}&limit=20`, {
-                                headers: { 'Authorization': 'Bearer ' + accessToken }
-                            });
-                            
-                            if (recoResponse.ok) {
-                                const data = await recoResponse.json();
-                                // Extract unique artists from the recommended tracks
-                                const artistMap = new Map();
-                                data.tracks.forEach(track => {
-                                    track.artists.forEach(artist => {
-                                        if (!artistMap.has(artist.id)) {
-                                            artistMap.set(artist.id, artist);
-                                        }
-                                    });
-                                });
-                                
-                                // Get full artist details for the first few
-                                const uniqueArtistIds = Array.from(artistMap.keys()).slice(0, 10);
-                                for (const artistId of uniqueArtistIds) {
-                                    try {
-                                        const artistResponse = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
-                                            headers: { 'Authorization': 'Bearer ' + accessToken }
-                                        });
-                                        if (artistResponse.ok) {
-                                            const artistData = await artistResponse.json();
-                                            discoverData.relatedArtists.push(artistData);
-                                        }
-                                    } catch (err) {
-                                        console.error('Error fetching artist details:', err);
-                                    }
-                                }
-                                console.log('Found artists via recommendations:', discoverData.relatedArtists.length);
-                            }
-                        } catch (error) {
-                            console.error('Error using recommendations endpoint:', error);
-                        }
-                    }
-                }
-                
-                // Get new releases
-                try {
-                    const newReleasesResponse = await fetch('https://api.spotify.com/v1/browse/new-releases?limit=20', {
-                        headers: { 'Authorization': 'Bearer ' + accessToken }
-                    });
-                    
-                    if (newReleasesResponse.ok) {
-                        const data = await newReleasesResponse.json();
-                        discoverData.newReleases = data.albums.items || [];
-                        console.log('New releases loaded:', discoverData.newReleases.length);
-                    }
-                } catch (error) {
-                    console.error('Error fetching new releases:', error);
-                }
-                
-                // Get featured playlists with country parameter
-                try {
-                    // Try to get featured playlists for the user's market
-                    const featuredResponse = await fetch('https://api.spotify.com/v1/browse/featured-playlists?limit=20&country=US', {
-                        headers: { 'Authorization': 'Bearer ' + accessToken }
-                    });
-                    
-                    if (featuredResponse.ok) {
-                        const data = await featuredResponse.json();
-                        discoverData.featuredPlaylists = data.playlists.items || [];
-                        console.log('Featured playlists loaded:', discoverData.featuredPlaylists.length);
-                    } else {
-                        console.error('Featured playlists response:', featuredResponse.status, featuredResponse.statusText);
-                        // Try without country parameter
-                        const fallbackResponse = await fetch('https://api.spotify.com/v1/browse/featured-playlists?limit=20', {
-                            headers: { 'Authorization': 'Bearer ' + accessToken }
-                        });
-                        if (fallbackResponse.ok) {
-                            const data = await fallbackResponse.json();
-                            discoverData.featuredPlaylists = data.playlists.items || [];
-                            console.log('Featured playlists loaded (fallback):', discoverData.featuredPlaylists.length);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error fetching featured playlists:', error);
-                }
-                
-                const totalItems = discoverData.relatedArtists.length + 
-                                 discoverData.newReleases.length + 
-                                 discoverData.featuredPlaylists.length;
-                
-                if (totalItems > 0) {
-                    showStatus(`Discover content loaded! Found ${discoverData.relatedArtists.length} related artists, ${discoverData.newReleases.length} new releases, and ${discoverData.featuredPlaylists.length} featured playlists. Click to explore!`, 'success');
-                    // Automatically show discover items after loading
-                    setTimeout(() => getRandomItems(), 500);
-                } else {
-                    showStatus('Could not load discover content. Please try again.', 'error');
-                }
-            } catch (error) {
-                console.error('Error loading discover data:', error);
-                showStatus('Error loading discover content: ' + error.message, 'error');
-            } finally {
-                setLoadingState(false);
             }
         }
 
         function toggleMenu() {
-            if (!isLoading) {
-                menuDropdown.classList.toggle('show');
-            }
+            menuDropdown.classList.toggle('show');
         }
 
-        async function selectMenuType(type) {
+        function selectMenuType(type) {
             currentType = type;
             
             // Update active menu item
@@ -831,12 +626,11 @@
             const typeNames = {
                 'albums': 'Albums',
                 'playlists': 'Playlists', 
-                'artists': 'Artists',
-                'discover': 'Discover'
+                'artists': 'Artists'
             };
             
             // Keep the menu toggle as just dots
-            randomBtn.innerHTML = `<h2><span style="color: white;">♫</span> ${type === 'discover' ? '' : 'Random '}${typeNames[type]} <span style="color: white;">🎲</span></h2>`;
+            randomBtn.innerHTML = `<h2><span style="color: white;">♫</span> Random ${typeNames[type]} <span style="color: white;">🎲</span></h2>`;
             
             // Close menu
             menuDropdown.classList.remove('show');
@@ -844,70 +638,9 @@
             // Clear current display
             albumsDiv.innerHTML = '';
             statusDiv.style.display = 'none';
-            
-            // Load discover data if needed, otherwise show random items
-            if (type === 'discover') {
-                if (Object.values(discoverData).every(arr => arr.length === 0)) {
-                    console.log('Loading discover data...');
-                    await loadDiscoverData();
-                } else {
-                    // If discover data already loaded, show items
-                    getRandomItems();
-                }
-            } else {
-                // For regular types, immediately show random items
-                getRandomItems();
-            }
         }
 
-        async function getRandomItems() {
-            if (currentType === 'discover') {
-                // Check if discover data needs to be loaded
-                if (Object.values(discoverData).every(arr => arr.length === 0)) {
-                    await loadDiscoverData();
-                }
-                
-                // For discover mode, show a mix of content
-                const items = [];
-                
-                // Get exactly 2 recommended artists
-                if (discoverData.relatedArtists.length > 0) {
-                    const shuffledRelated = [...discoverData.relatedArtists].sort(() => 0.5 - Math.random());
-                    const artistCount = Math.min(2, shuffledRelated.length);
-                    items.push(...shuffledRelated.slice(0, artistCount).map(item => ({ ...item, discoverType: 'artist' })));
-                }
-                
-                // Get exactly 1 featured playlist
-                if (discoverData.featuredPlaylists.length > 0) {
-                    const randomPlaylist = discoverData.featuredPlaylists[Math.floor(Math.random() * discoverData.featuredPlaylists.length)];
-                    items.push({ ...randomPlaylist, discoverType: 'playlist' });
-                }
-                
-                // Get exactly 1 new release
-                if (discoverData.newReleases.length > 0) {
-                    const randomRelease = discoverData.newReleases[Math.floor(Math.random() * discoverData.newReleases.length)];
-                    items.push({ ...randomRelease, discoverType: 'album' });
-                }
-                
-                console.log('Discover items to display:', {
-                    artists: items.filter(i => i.discoverType === 'artist').length,
-                    playlists: items.filter(i => i.discoverType === 'playlist').length,
-                    albums: items.filter(i => i.discoverType === 'album').length
-                });
-                
-                if (items.length === 0) {
-                    showStatus('No discover content available. Try loading again.', 'error');
-                    return;
-                }
-                
-                // Hide status when showing items
-                statusDiv.style.display = 'none';
-                
-                // Don't shuffle - show in order: artists, playlist, album
-                displayItems(items);
-                return;
-            }
-            
+        function getRandomItems() {
             const currentData = {
                 'albums': allAlbums,
                 'playlists': allPlaylists,
@@ -948,28 +681,7 @@
                 
                 let imageUrl, title, subtitle, url, releaseYear = '';
                 
-                // Handle discover items
-                if (item.discoverType) {
-                    if (item.discoverType === 'artist') {
-                        imageUrl = item.images?.[0]?.url;
-                        title = item.name;
-                        subtitle = item.genres?.slice(0, 2).join(', ') || 'Recommended Artist';
-                        url = item.external_urls.spotify;
-                        releaseYear = `${item.followers?.total?.toLocaleString() || '0'} followers`;
-                    } else if (item.discoverType === 'album') {
-                        imageUrl = item.images?.[0]?.url;
-                        title = item.name;
-                        subtitle = item.artists?.map(artist => artist.name).join(', ') || 'Various Artists';
-                        url = item.external_urls.spotify;
-                        releaseYear = item.release_date ? `New Release • ${new Date(item.release_date).getFullYear()}` : 'New Release';
-                    } else if (item.discoverType === 'playlist') {
-                        imageUrl = item.images?.[0]?.url;
-                        title = item.name;
-                        subtitle = item.description || 'Featured Playlist';
-                        url = item.external_urls.spotify;
-                        releaseYear = 'Featured Playlist';
-                    }
-                } else if (currentType === 'albums') {
+                if (currentType === 'albums') {
                     const album = item.album;
                     imageUrl = album.images?.[0]?.url;
                     title = album.name;
@@ -992,11 +704,6 @@
                 
                 if (!imageUrl) {
                     imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE0MCIgdmlld0JveD0iMCAwIDE0MCAxNDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjcwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIj5ObyBJbWFnZTwvdGV4dD4KPC9zdmc+';
-                }
-                
-                // Truncate long descriptions for playlists
-                if (subtitle && subtitle.length > 50) {
-                    subtitle = subtitle.substring(0, 47) + '...';
                 }
                 
                 card.onclick = () => window.open(url, '_blank');
