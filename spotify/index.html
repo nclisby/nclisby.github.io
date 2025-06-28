@@ -346,8 +346,11 @@
 
         async function loadDiscoverData() {
             setLoadingState(true);
+            showStatus('Loading discover content...', 'success');
+            
             try {
-                showStatus('Loading discover content...', 'success');
+                // Small delay to ensure UI updates
+                await new Promise(resolve => setTimeout(resolve, 100));
                 
                 // Get related artists from a few random followed artists
                 const randomArtists = allArtists.sort(() => 0.5 - Math.random()).slice(0, 3);
@@ -758,9 +761,17 @@
             albumsDiv.innerHTML = '';
             statusDiv.style.display = 'none';
             
-            // Load discover data if needed
-            if (type === 'discover' && Object.values(discoverData).every(arr => arr.length === 0)) {
-                loadDiscoverData();
+            // Load discover data if needed, otherwise show random items
+            if (type === 'discover') {
+                if (Object.values(discoverData).every(arr => arr.length === 0)) {
+                    loadDiscoverData();
+                } else {
+                    // If discover data already loaded, show items
+                    getRandomItems();
+                }
+            } else {
+                // For regular types, immediately show random items
+                getRandomItems();
             }
         }
 
