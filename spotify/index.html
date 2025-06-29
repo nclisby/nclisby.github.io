@@ -423,17 +423,30 @@
                 timestamp: Date.now()
             };
             try {
-                localStorage.setItem('spotify_library_cache', JSON.stringify(cacheData));
+                const dataString = JSON.stringify(cacheData);
+                console.log('Saving cache data, size:', dataString.length, 'bytes');
+                console.log('Cache counts being saved:', cacheData.counts);
+                localStorage.setItem('spotify_library_cache', dataString);
+                
+                // Verify it was saved
+                const savedData = localStorage.getItem('spotify_library_cache');
+                console.log('Cache saved successfully?', savedData !== null);
             } catch (e) {
                 console.error('Failed to save cache:', e);
+                if (e.name === 'QuotaExceededError') {
+                    console.error('localStorage is full!');
+                }
             }
         }
 
         function loadCacheData() {
             try {
                 const cached = localStorage.getItem('spotify_library_cache');
+                console.log('Raw cached data exists?', cached !== null);
                 if (cached) {
-                    return JSON.parse(cached);
+                    const parsed = JSON.parse(cached);
+                    console.log('Successfully parsed cache');
+                    return parsed;
                 }
             } catch (e) {
                 console.error('Failed to load cache:', e);
@@ -441,7 +454,7 @@
             return null;
         }
 
-        async function getLibraryCounts() {
+        async function getLibraryCounts(cachedData) {
             try {
                 // Get album count
                 const albumResponse = await fetch('https://api.spotify.com/v1/me/albums?limit=1', {
@@ -469,9 +482,7 @@
                 const playlistData = await playlistResponse.json();
                 const playlistCount = playlistData.total || 0;
 
-                // Get artist count (this is trickier as there's no total)
-                // We'll use the cached count if available, otherwise we'll load all
-                const cachedData = loadCacheData();
+                // Get artist count from cache if available
                 let artistCount = cachedData ? cachedData.counts.artists : -1;
 
                 console.log('Library counts from API:', { albums: albumCount, playlists: playlistCount, artists: artistCount });
@@ -614,27 +625,35 @@
         async function handleSuccessfulAuth() {
             loginBtn.style.display = 'none';
             
+            // Load cache FIRST before any API calls
+            const cachedData = loadCacheData();
+            console.log('Cached data loaded at start:', cachedData);
+            
             showStatus('Connected to Spotify! Checking library...', 'success');
             
             try {
-                // Check if we have cached data and if it's still valid
-                const cachedData = loadCacheData();
-                console.log('Cached data:', cachedData);
+                if (!cachedData) {
+                    // No cache, load everything
+                    showStatus('Loading library for the first time...', 'success');
+                    await loadAllData();
+                    saveCacheData();
+                    showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
+                    return;
+                }
                 
-                const currentCounts = await getLibraryCounts();
+                // We have cache, check if it's still valid
+                const currentCounts = await getLibraryCounts(cachedData);
                 console.log('Current counts:', currentCounts);
-                console.log('Cached counts:', cachedData?.counts);
+                console.log('Cached counts:', cachedData.counts);
                 
                 // Check if artists cache is older than 24 hours
-                const artistsCacheExpired = cachedData ? 
-                    (Date.now() - cachedData.timestamp) > (24 * 60 * 60 * 1000) : true;
+                const artistsCacheExpired = (Date.now() - cachedData.timestamp) > (24 * 60 * 60 * 1000);
                 
                 console.log('Artists cache expired?', artistsCacheExpired);
-                console.log('Albums match?', cachedData?.counts.albums === currentCounts.albums);
-                console.log('Playlists match?', cachedData?.counts.playlists === currentCounts.playlists);
+                console.log('Albums match?', cachedData.counts.albums === currentCounts.albums);
+                console.log('Playlists match?', cachedData.counts.playlists === currentCounts.playlists);
                 
-                if (cachedData && 
-                    cachedData.counts.albums === currentCounts.albums &&
+                if (cachedData.counts.albums === currentCounts.albums &&
                     cachedData.counts.playlists === currentCounts.playlists &&
                     !artistsCacheExpired) {
                     
@@ -648,8 +667,7 @@
                     const ageDisplay = ageHours > 0 ? `${ageHours} hours` : `${ageMinutes} minutes`;
                     showStatus(`Using cached library (${ageDisplay} old): ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
                     
-                } else if (cachedData && 
-                    cachedData.counts.albums === currentCounts.albums &&
+                } else if (cachedData.counts.albums === currentCounts.albums &&
                     cachedData.counts.playlists === currentCounts.playlists &&
                     artistsCacheExpired) {
                     
@@ -664,12 +682,10 @@
                     showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
                     
                 } else {
-                    // Library has changed or no cache, reload everything
-                    const reason = !cachedData ? 'Loading library for the first time...' : 'Library has changed, loading fresh data...';
-                    showStatus(reason, 'success');
+                    // Library has changed, reload everything
+                    showStatus('Library has changed, loading fresh data...', 'success');
                     await loadAllData();
                     saveCacheData();
-                    const total = allAlbums.length + allPlaylists.length + allArtists.length;
                     showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
                 }
             } catch (error) {
