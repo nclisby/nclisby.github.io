@@ -447,6 +447,12 @@
                 const albumResponse = await fetch('https://api.spotify.com/v1/me/albums?limit=1', {
                     headers: { 'Authorization': 'Bearer ' + accessToken }
                 });
+                
+                if (!albumResponse.ok) {
+                    console.error('Album count request failed:', albumResponse.status);
+                    throw new Error('Failed to get album count');
+                }
+                
                 const albumData = await albumResponse.json();
                 const albumCount = albumData.total || 0;
 
@@ -454,6 +460,12 @@
                 const playlistResponse = await fetch('https://api.spotify.com/v1/me/playlists?limit=1', {
                     headers: { 'Authorization': 'Bearer ' + accessToken }
                 });
+                
+                if (!playlistResponse.ok) {
+                    console.error('Playlist count request failed:', playlistResponse.status);
+                    throw new Error('Failed to get playlist count');
+                }
+                
                 const playlistData = await playlistResponse.json();
                 const playlistCount = playlistData.total || 0;
 
@@ -461,6 +473,8 @@
                 // We'll use the cached count if available, otherwise we'll load all
                 const cachedData = loadCacheData();
                 let artistCount = cachedData ? cachedData.counts.artists : -1;
+
+                console.log('Library counts from API:', { albums: albumCount, playlists: playlistCount, artists: artistCount });
 
                 return {
                     albums: albumCount,
@@ -605,11 +619,19 @@
             try {
                 // Check if we have cached data and if it's still valid
                 const cachedData = loadCacheData();
+                console.log('Cached data:', cachedData);
+                
                 const currentCounts = await getLibraryCounts();
+                console.log('Current counts:', currentCounts);
+                console.log('Cached counts:', cachedData?.counts);
                 
                 // Check if artists cache is older than 24 hours
                 const artistsCacheExpired = cachedData ? 
                     (Date.now() - cachedData.timestamp) > (24 * 60 * 60 * 1000) : true;
+                
+                console.log('Artists cache expired?', artistsCacheExpired);
+                console.log('Albums match?', cachedData?.counts.albums === currentCounts.albums);
+                console.log('Playlists match?', cachedData?.counts.playlists === currentCounts.playlists);
                 
                 if (cachedData && 
                     cachedData.counts.albums === currentCounts.albums &&
@@ -651,6 +673,7 @@
                     showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
                 }
             } catch (error) {
+                console.error('Error in handleSuccessfulAuth:', error);
                 showStatus('Error loading library: ' + error.message, 'error');
                 // Reset to login state on error
                 resetToLoginState();
