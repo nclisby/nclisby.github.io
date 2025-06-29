@@ -409,6 +409,70 @@
                 .replace(/\//g, '_');
         }
 
+        // Cache functions
+        function saveCacheData() {
+            const cacheData = {
+                albums: allAlbums,
+                playlists: allPlaylists,
+                artists: allArtists,
+                counts: {
+                    albums: allAlbums.length,
+                    playlists: allPlaylists.length,
+                    artists: allArtists.length
+                },
+                timestamp: Date.now()
+            };
+            try {
+                localStorage.setItem('spotify_library_cache', JSON.stringify(cacheData));
+            } catch (e) {
+                console.error('Failed to save cache:', e);
+            }
+        }
+
+        function loadCacheData() {
+            try {
+                const cached = localStorage.getItem('spotify_library_cache');
+                if (cached) {
+                    return JSON.parse(cached);
+                }
+            } catch (e) {
+                console.error('Failed to load cache:', e);
+            }
+            return null;
+        }
+
+        async function getLibraryCounts() {
+            try {
+                // Get album count
+                const albumResponse = await fetch('https://api.spotify.com/v1/me/albums?limit=1', {
+                    headers: { 'Authorization': 'Bearer ' + accessToken }
+                });
+                const albumData = await albumResponse.json();
+                const albumCount = albumData.total || 0;
+
+                // Get playlist count
+                const playlistResponse = await fetch('https://api.spotify.com/v1/me/playlists?limit=1', {
+                    headers: { 'Authorization': 'Bearer ' + accessToken }
+                });
+                const playlistData = await playlistResponse.json();
+                const playlistCount = playlistData.total || 0;
+
+                // Get artist count (this is trickier as there's no total)
+                // We'll use the cached count if available, otherwise we'll load all
+                const cachedData = loadCacheData();
+                let artistCount = cachedData ? cachedData.counts.artists : -1;
+
+                return {
+                    albums: albumCount,
+                    playlists: playlistCount,
+                    artists: artistCount
+                };
+            } catch (error) {
+                console.error('Error getting library counts:', error);
+                return { albums: -1, playlists: -1, artists: -1 };
+            }
+        }
+
         // Check if user is returning from Spotify auth or has existing session
         window.addEventListener('load', async () => {
             // First check if we have a stored access token
@@ -526,6 +590,9 @@
             allPlaylists = [];
             allArtists = [];
             
+            // Clear cache
+            localStorage.removeItem('spotify_library_cache');
+            
             // Clear display
             albumsDiv.innerHTML = '';
         }
@@ -533,12 +600,56 @@
         async function handleSuccessfulAuth() {
             loginBtn.style.display = 'none';
             
-            showStatus('Connected to Spotify! Loading your library...', 'success');
+            showStatus('Connected to Spotify! Checking library...', 'success');
             
             try {
-                await loadAllData();
-                const total = allAlbums.length + allPlaylists.length + allArtists.length;
-                showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
+                // Check if we have cached data and if it's still valid
+                const cachedData = loadCacheData();
+                const currentCounts = await getLibraryCounts();
+                
+                // Check if artists cache is older than 24 hours
+                const artistsCacheExpired = cachedData ? 
+                    (Date.now() - cachedData.timestamp) > (24 * 60 * 60 * 1000) : true;
+                
+                if (cachedData && 
+                    cachedData.counts.albums === currentCounts.albums &&
+                    cachedData.counts.playlists === currentCounts.playlists &&
+                    !artistsCacheExpired) {
+                    
+                    // Use fully cached data
+                    allAlbums = cachedData.albums;
+                    allPlaylists = cachedData.playlists;
+                    allArtists = cachedData.artists;
+                    
+                    const ageMinutes = Math.floor((Date.now() - cachedData.timestamp) / 60000);
+                    const ageHours = Math.floor(ageMinutes / 60);
+                    const ageDisplay = ageHours > 0 ? `${ageHours} hours` : `${ageMinutes} minutes`;
+                    showStatus(`Using cached library (${ageDisplay} old): ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
+                    
+                } else if (cachedData && 
+                    cachedData.counts.albums === currentCounts.albums &&
+                    cachedData.counts.playlists === currentCounts.playlists &&
+                    artistsCacheExpired) {
+                    
+                    // Albums and playlists unchanged but artists expired - reload only artists
+                    allAlbums = cachedData.albums;
+                    allPlaylists = cachedData.playlists;
+                    
+                    showStatus('Refreshing artists (24 hour update)...', 'success');
+                    await loadArtistsOnly();
+                    saveCacheData();
+                    
+                    showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
+                    
+                } else {
+                    // Library has changed or no cache, reload everything
+                    const reason = !cachedData ? 'Loading library for the first time...' : 'Library has changed, loading fresh data...';
+                    showStatus(reason, 'success');
+                    await loadAllData();
+                    saveCacheData();
+                    const total = allAlbums.length + allPlaylists.length + allArtists.length;
+                    showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
+                }
             } catch (error) {
                 showStatus('Error loading library: ' + error.message, 'error');
                 // Reset to login state on error
@@ -635,6 +746,37 @@
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
+                throw error;
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        async function loadArtistsOnly() {
+            setLoadingState(true);
+            
+            try {
+                // Load followed artists
+                allArtists = [];
+                let after = null;
+                
+                while (true) {
+                    const url = `https://api.spotify.com/v1/me/following?type=artist&limit=50${after ? '&after=' + after : ''}`;
+                    const response = await fetch(url, {
+                        headers: { 'Authorization': 'Bearer ' + accessToken }
+                    });
+                    
+                    if (!response.ok) break;
+                    
+                    const data = await response.json();
+                    allArtists.push(...data.artists.items);
+                    
+                    if (data.artists.items.length < 50) break;
+                    after = data.artists.cursors?.after;
+                    if (!after) break;
+                }
+            } catch (error) {
+                console.error('Error loading artists:', error);
                 throw error;
             } finally {
                 setLoadingState(false);
