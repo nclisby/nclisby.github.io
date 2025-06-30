@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -430,8 +430,9 @@
             });
         }
 
-        async function saveCacheData() {
+        async function saveCacheData(userId) {
             const cacheData = {
+                userId: userId,  // Store the user ID in the cache
                 albums: allAlbums,
                 playlists: allPlaylists,
                 artists: allArtists,
@@ -448,11 +449,11 @@
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);
                 
-                // Clear old data and save new
+                // Clear everything and save new data
                 await store.clear();
                 await store.put(cacheData, 'libraryData');
                 
-                console.log('Cache saved to IndexedDB successfully');
+                console.log('Cache saved to IndexedDB for user:', userId);
                 console.log('Cache counts saved:', cacheData.counts);
                 
                 db.close();
@@ -473,6 +474,9 @@
                     request.onsuccess = () => {
                         const data = request.result;
                         console.log('Cache loaded from IndexedDB:', data ? 'Found' : 'Not found');
+                        if (data?.userId) {
+                            console.log('Cache belongs to user:', data.userId);
+                        }
                         db.close();
                         resolve(data || null);
                     };
@@ -662,9 +666,6 @@
             allPlaylists = [];
             allArtists = [];
             
-            // Clear cache
-            await clearCache();
-            
             // Clear display
             albumsDiv.innerHTML = '';
         }
@@ -672,23 +673,45 @@
         async function handleSuccessfulAuth() {
             loginBtn.style.display = 'none';
             
-            // Load cache FIRST before any API calls
+            showStatus('Connected to Spotify! Identifying user...', 'success');
+            
+            // Get current user ID first
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                showStatus('Error identifying user', 'error');
+                await resetToLoginState();
+                return;
+            }
+            
+            // Load existing cache (if any)
             const cachedData = await loadCacheData();
-            console.log('Cached data loaded at start:', cachedData);
+            
+            // Check if cache exists and belongs to a different user
+            if (cachedData && cachedData.userId !== userId) {
+                console.log('Different user detected. Previous:', cachedData.userId, 'Current:', userId);
+                showStatus('Different user detected. Loading fresh library...', 'success');
+                
+                // Clear cache and load everything fresh
+                await clearCache();
+                await loadAllData();
+                await saveCacheData(userId);
+                showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
+                return;
+            }
             
             showStatus('Connected to Spotify! Checking library...', 'success');
             
             try {
                 if (!cachedData) {
-                    // No cache, load everything
+                    // No cache at all, load everything
                     showStatus('Loading library for the first time...', 'success');
                     await loadAllData();
-                    await saveCacheData();
+                    await saveCacheData(userId);
                     showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
                     return;
                 }
                 
-                // We have cache, check if it's still valid
+                // Same user, check if cache is still valid
                 const currentCounts = await getLibraryCounts(cachedData);
                 console.log('Current counts:', currentCounts);
                 console.log('Cached counts:', cachedData.counts);
@@ -724,7 +747,7 @@
                     
                     showStatus('Refreshing artists (24 hour update)...', 'success');
                     await loadArtistsOnly();
-                    await saveCacheData();
+                    await saveCacheData(userId);
                     
                     showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
                     
@@ -732,7 +755,7 @@
                     // Library has changed, reload everything
                     showStatus('Library has changed, loading fresh data...', 'success');
                     await loadAllData();
-                    await saveCacheData();
+                    await saveCacheData(userId);
                     showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
                 }
             } catch (error) {
