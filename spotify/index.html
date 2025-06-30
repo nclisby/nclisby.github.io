@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -668,6 +668,25 @@
             
             // Clear display
             albumsDiv.innerHTML = '';
+        }
+
+        async function getCurrentUserId() {
+            try {
+                const response = await fetch('https://api.spotify.com/v1/me', {
+                    headers: { 'Authorization': 'Bearer ' + accessToken }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get user profile');
+                }
+                
+                const userData = await response.json();
+                console.log('Current user:', userData.display_name || userData.id);
+                return userData.id;
+            } catch (error) {
+                console.error('Error getting user ID:', error);
+                return null;
+            }
         }
 
         async function handleSuccessfulAuth() {
