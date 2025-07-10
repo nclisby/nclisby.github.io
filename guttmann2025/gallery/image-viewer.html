@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .viewer-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            max-width: 100%;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #f5f5f5;
+            border-color: #999;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .image-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        .image-container img {
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        .image-info {
+            text-align: center;
+            padding: 10px 0;
+            color: #666;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-buttons {
+                justify-content: center;
+            }
+            
+            button {
+                padding: 12px 16px;
+                font-size: 16px;
+            }
+            
+            .viewer-container {
+                padding: 10px;
+            }
+            
+            .image-info {
+                font-size: 12px;
+                padding: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-container">
+        <div class="controls">
+            <button onclick="backToGallery()">← Back to Gallery</button>
+            <div class="nav-buttons">
+                <button id="prevBtn" onclick="navigate(-1)">← Previous</button>
+                <button id="nextBtn" onclick="navigate(1)">Next →</button>
+            </div>
+            <button id="downloadBtn" onclick="downloadImage()">Download</button>
+        </div>
+        
+        <div class="image-container">
+            <img id="mainImage" src="" alt="">
+        </div>
+        
+        <div class="image-info">
+            <span id="imageInfo"></span>
+        </div>
+    </div>
+    
+    <script>
+        const images = ["PXL_20250701_001117477.jpg", "PXL_20250701_001120405.jpg", "PXL_20250701_001125838.jpg", "PXL_20250701_001134768.jpg", "PXL_20250701_001138782.jpg", "PXL_20250701_001148847.jpg", "PXL_20250701_003352564.jpg", "PXL_20250701_003357167.jpg", "PXL_20250701_003358600.jpg", "PXL_20250701_003402161.jpg", "PXL_20250701_003412328.jpg", "PXL_20250701_023433535.jpg", "PXL_20250701_023506305.jpg", "PXL_20250701_084537961.jpg", "PXL_20250701_105313733.jpg", "PXL_20250701_105321759.jpg", "Zoom_participants.png"];
+        const imageFolderName = 'images';
+        let currentIndex = 0;
+        
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        
+        function calculateImageSize() {
+            const img = document.getElementById('mainImage');
+            const container = document.querySelector('.image-container');
+            const controls = document.querySelector('.controls');
+            const info = document.querySelector('.image-info');
+            
+            // Calculate available space
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+            const controlsHeight = controls.offsetHeight;
+            const infoHeight = info.offsetHeight;
+            const padding = 40; // Account for container padding
+            
+            const availableHeight = windowHeight - controlsHeight - infoHeight - padding - 20; // Extra margin
+            const availableWidth = windowWidth - padding;
+            
+            // Wait for image to load to get natural dimensions
+            if (img.complete && img.naturalWidth !== 0) {
+                const naturalWidth = img.naturalWidth;
+                const naturalHeight = img.naturalHeight;
+                const imageRatio = naturalWidth / naturalHeight;
+                const containerRatio = availableWidth / availableHeight;
+                
+                let newWidth, newHeight;
+                
+                if (imageRatio > containerRatio) {
+                    // Image is wider relative to container
+                    newWidth = Math.min(naturalWidth, availableWidth);
+                    newHeight = newWidth / imageRatio;
+                    
+                    // Check if height fits
+                    if (newHeight > availableHeight) {
+                        newHeight = availableHeight;
+                        newWidth = newHeight * imageRatio;
+                    }
+                } else {
+                    // Image is taller relative to container
+                    newHeight = Math.min(naturalHeight, availableHeight);
+                    newWidth = newHeight * imageRatio;
+                    
+                    // Check if width fits
+                    if (newWidth > availableWidth) {
+                        newWidth = availableWidth;
+                        newHeight = newWidth / imageRatio;
+                    }
+                }
+                
+                img.style.width = newWidth + 'px';
+                img.style.height = newHeight + 'px';
+            }
+        }
+        
+        function updateImage() {
+            const img = document.getElementById('mainImage');
+            const imagePath = imageFolderName + '/' + images[currentIndex];
+            
+            img.onload = calculateImageSize;
+            img.src = imagePath;
+            img.alt = images[currentIndex];
+            
+            document.getElementById('imageInfo').textContent = 
+                `Image ${currentIndex + 1} of ${images.length}: ${images[currentIndex]}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === images.length - 1;
+            
+            // Update download button
+            document.getElementById('downloadBtn').onclick = function() {
+                downloadImage(imagePath, images[currentIndex]);
+            };
+        }
+        
+        function navigate(direction) {
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < images.length) {
+                currentIndex = newIndex;
+                updateImage();
+                // Update URL without page reload
+                const url = new URL(window.location);
+                url.searchParams.set('img', currentIndex);
+                window.history.pushState({}, '', url);
+            }
+        }
+        
+        function backToGallery() {
+            window.location.href = 'index.html';
+        }
+        
+        function downloadImage(imagePath, filename) {
+            const link = document.createElement('a');
+            link.href = imagePath;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') navigate(-1);
+            if (e.key === 'ArrowRight') navigate(1);
+            if (e.key === 'Escape') backToGallery();
+        });
+        
+        // Touch/swipe navigation for mobile
+        let touchStartX = null;
+        let touchStartY = null;
+        
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        document.addEventListener('touchend', function(e) {
+            if (!touchStartX || !touchStartY) return;
+            
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            
+            // Check if horizontal swipe is more significant than vertical
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Minimum swipe distance threshold (50px)
+                if (Math.abs(deltaX) > 50) {
+                    if (deltaX > 0) {
+                        // Swipe right - go to previous
+                        navigate(-1);
+                    } else {
+                        // Swipe left - go to next
+                        navigate(1);
+                    }
+                }
+            }
+            
+            touchStartX = null;
+            touchStartY = null;
+        }, { passive: true });
+        
+        // Recalculate on window resize
+        window.addEventListener('resize', calculateImageSize);
+        
+        // Initialize
+        const imgParam = getQueryParam('img');
+        if (imgParam !== null) {
+            const idx = parseInt(imgParam);
+            if (!isNaN(idx) && idx >= 0 && idx < images.length) {
+                currentIndex = idx;
+            }
+        }
+        updateImage();
+    </script>
+</body>
+</html>
