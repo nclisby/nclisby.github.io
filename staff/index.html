@@ -6,6 +6,17 @@
   <title>Mathematics staff at Swinburne</title>
 <!-- Declare canonical link for search engines -->
   <link rel="canonical" href="https://clisby.net/staff/" />
+  <script>
+      const canonical = "/staff/";
+      const path = location.pathname;
+
+      if (path.endsWith("/index.html") || path === "/staff") {
+        const target = canonical + location.search + location.hash;
+        if (location.pathname !== canonical) {
+          location.replace(target);
+        }
+      }
+  </script>
   <style>
     body {
       font-family: sans-serif;
