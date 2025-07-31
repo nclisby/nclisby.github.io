@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bootstrap Sampling Tool</title>
+    <script>
+    (function () {
+      const path = location.pathname;
+
+      // Check if user explicitly requested index.html (case-insensitive)
+      if (/\/index\.html$/i.test(path)) {
+        // Strip index.html, keep trailing slash if in root
+        const newPath = path.replace(/index\.html$/i, '');
+        const target = newPath + location.search + location.hash;
+        location.replace(target);
+      }
+    })();
+    </script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         body {

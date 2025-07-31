@@ -3,6 +3,19 @@
 <head>
     <title>Maia Clisby de la Piedad's homepage</title>
     <link rel="canonical" href="/" />
+    <script>
+    (function () {
+      const path = location.pathname;
+
+      // Check if user explicitly requested index.html (case-insensitive)
+      if (/\/index\.html$/i.test(path)) {
+        // Strip index.html, keep trailing slash if in root
+        const newPath = path.replace(/index\.html$/i, '');
+        const target = newPath + location.search + location.hash;
+        location.replace(target);
+      }
+    })();
+    </script>
     <meta name="description" content="Homepage of Maia Clisby de la
     Piedad."> 
     <link rel="stylesheet" type="text/css" href="css/maia.css">
