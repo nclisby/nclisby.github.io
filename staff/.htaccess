@@ -1,11 +1,9 @@
-# Enable rewrite engine
 RewriteEngine On
 
-# Redirect /staff/index.html → /staff/
-RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s+index\.html[\s?] [NC]
+# Redirect /staff/index.html (when explicitly requested) to /staff/
+RewriteCond %{THE_REQUEST} /index\.html[\s?] [NC]
 RewriteRule ^index\.html$ ./ [R=301,L]
 
-# Redirect /staff (no slash) → /staff/
+# Redirect /staff (no slash) to /staff/
 RewriteCond %{REQUEST_URI} ^/staff$ [NC]
 RewriteRule ^$ ./ [R=301,L]
-
