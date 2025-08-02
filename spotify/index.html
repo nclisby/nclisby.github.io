@@ -356,7 +356,6 @@
                     <div id="menuDropdown" class="menu-dropdown">
                         <div class="menu-item active" data-type="albums">Albums</div>
                         <div class="menu-item" data-type="playlists">Playlists</div>
-                        <div class="menu-item" data-type="artists">Artists</div>
                     </div>
                 </div>
             </div>
@@ -372,12 +371,11 @@
         // Spotify Web API with PKCE (Authorization Code Flow)
         const CLIENT_ID = '7ca477aacf084c47b4416df28157c7b5';
         const REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
-        const SCOPES = 'user-library-read user-follow-read playlist-read-private playlist-read-collaborative';
+        const SCOPES = 'user-library-read playlist-read-private playlist-read-collaborative';
 
         let accessToken = null;
         let allAlbums = [];
         let allPlaylists = [];
-        let allArtists = [];
         let currentType = 'albums';
         let isLoading = false;
 
@@ -432,14 +430,12 @@
 
         async function saveCacheData(userId) {
             const cacheData = {
-                userId: userId,  // Store the user ID in the cache
+                userId: userId,
                 albums: allAlbums,
                 playlists: allPlaylists,
-                artists: allArtists,
                 counts: {
                     albums: allAlbums.length,
-                    playlists: allPlaylists.length,
-                    artists: allArtists.length
+                    playlists: allPlaylists.length
                 },
                 timestamp: Date.now()
             };
@@ -533,19 +529,15 @@
                 const playlistData = await playlistResponse.json();
                 const playlistCount = playlistData.total || 0;
 
-                // Get artist count from cache if available
-                let artistCount = cachedData ? cachedData.counts.artists : -1;
-
-                console.log('Library counts from API:', { albums: albumCount, playlists: playlistCount, artists: artistCount });
+                console.log('Library counts from API:', { albums: albumCount, playlists: playlistCount });
 
                 return {
                     albums: albumCount,
-                    playlists: playlistCount,
-                    artists: artistCount
+                    playlists: playlistCount
                 };
             } catch (error) {
                 console.error('Error getting library counts:', error);
-                return { albums: -1, playlists: -1, artists: -1 };
+                return { albums: -1, playlists: -1 };
             }
         }
 
@@ -664,7 +656,6 @@
             // Clear data arrays
             allAlbums = [];
             allPlaylists = [];
-            allArtists = [];
             
             // Clear display
             albumsDiv.innerHTML = '';
@@ -710,11 +701,13 @@
                 console.log('Different user detected. Previous:', cachedData.userId, 'Current:', userId);
                 showStatus('Different user detected. Loading fresh library...', 'success');
                 
-                // Clear cache and load everything fresh
+                // Different user - need to load everything fresh
+                setLoadingState(true);
                 await clearCache();
                 await loadAllData();
                 await saveCacheData(userId);
-                showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
+                setLoadingState(false);
+                showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists. Click the button to start!`, 'success');
                 return;
             }
             
@@ -722,113 +715,86 @@
                 if (!cachedData) {
                     // No cache at all, load everything
                     showStatus('Loading library for the first time...', 'success');
+                    setLoadingState(true);
                     await loadAllData();
                     await saveCacheData(userId);
-                    showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists. Click the button to start!`, 'success');
+                    setLoadingState(false);
+                    showStatus(`Found ${allAlbums.length} albums, ${allPlaylists.length} playlists. Click the button to start!`, 'success');
                     return;
                 }
                 
                 // Same user with cache - IMMEDIATELY load cached data so app is usable
                 allAlbums = cachedData.albums;
                 allPlaylists = cachedData.playlists;
-                allArtists = cachedData.artists;
                 
                 const ageMinutes = Math.floor((Date.now() - cachedData.timestamp) / 60000);
                 const ageHours = Math.floor(ageMinutes / 60);
                 const ageDisplay = ageHours > 0 ? `${ageHours} hours` : `${ageMinutes} minutes`;
-                showStatus(`Ready! Using cached library (${ageDisplay} old): ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists`, 'success');
+                showStatus(`Ready! Using cached library (${ageDisplay} old): ${allAlbums.length} albums, ${allPlaylists.length} playlists`, 'success');
                 
-                // Now check for updates in the background
+                // Check for updates in the background
                 setTimeout(async () => {
                     try {
                         const currentCounts = await getLibraryCounts(cachedData);
                         console.log('Background check - Current counts:', currentCounts);
                         console.log('Background check - Cached counts:', cachedData.counts);
                         
-                        const artistsCacheExpired = (Date.now() - cachedData.timestamp) > (24 * 60 * 60 * 1000);
                         const albumsChanged = cachedData.counts.albums !== currentCounts.albums;
                         const playlistsChanged = cachedData.counts.playlists !== currentCounts.playlists;
                         
-                        if (!albumsChanged && !playlistsChanged && !artistsCacheExpired) {
-                            // Everything is up to date, no action needed
+                        if (!albumsChanged && !playlistsChanged) {
                             console.log('Cache is fully up to date');
                             return;
                         }
                         
-                        // Something needs updating
-                        if (albumsChanged || playlistsChanged) {
-                            // Major changes - reload everything in background
-                            showStatus('Library changes detected, updating in background...', 'success');
-                            const newAlbums = [];
-                            const newPlaylists = [];
-                            const newArtists = [];
-                            
-                            // Load fresh data into temporary arrays
-                            let offset = 0;
-                            const limit = 50;
-                            
-                            // Load albums if changed
-                            if (albumsChanged) {
-                                while (true) {
-                                    const response = await fetch(`https://api.spotify.com/v1/me/albums?limit=${limit}&offset=${offset}`, {
-                                        headers: { 'Authorization': 'Bearer ' + accessToken }
-                                    });
-                                    if (!response.ok) break;
-                                    const data = await response.json();
-                                    newAlbums.push(...data.items);
-                                    if (data.items.length < limit) break;
-                                    offset += limit;
-                                }
-                            } else {
-                                newAlbums.push(...allAlbums);
-                            }
-                            
-                            // Load playlists if changed
-                            if (playlistsChanged) {
-                                offset = 0;
-                                while (true) {
-                                    const response = await fetch(`https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${offset}`, {
-                                        headers: { 'Authorization': 'Bearer ' + accessToken }
-                                    });
-                                    if (!response.ok) break;
-                                    const data = await response.json();
-                                    newPlaylists.push(...data.items);
-                                    if (data.items.length < limit) break;
-                                    offset += limit;
-                                }
-                            } else {
-                                newPlaylists.push(...allPlaylists);
-                            }
-                            
-                            // Always reload artists if albums/playlists changed
-                            let after = null;
+                        // Something changed - reload in background
+                        showStatus('Library changes detected, updating in background...', 'success');
+                        const newAlbums = [];
+                        const newPlaylists = [];
+                        
+                        // Load fresh data into temporary arrays
+                        let offset = 0;
+                        const limit = 50;
+                        
+                        // Load albums if changed
+                        if (albumsChanged) {
                             while (true) {
-                                const url = `https://api.spotify.com/v1/me/following?type=artist&limit=50${after ? '&after=' + after : ''}`;
-                                const response = await fetch(url, {
+                                const response = await fetch(`https://api.spotify.com/v1/me/albums?limit=${limit}&offset=${offset}`, {
                                     headers: { 'Authorization': 'Bearer ' + accessToken }
                                 });
                                 if (!response.ok) break;
                                 const data = await response.json();
-                                newArtists.push(...data.artists.items);
-                                if (data.artists.items.length < 50) break;
-                                after = data.artists.cursors?.after;
-                                if (!after) break;
+                                newAlbums.push(...data.items);
+                                if (data.items.length < limit) break;
+                                offset += limit;
                             }
-                            
-                            // Update arrays and save
-                            allAlbums = newAlbums;
-                            allPlaylists = newPlaylists;
-                            allArtists = newArtists;
-                            await saveCacheData(userId);
-                            showStatus(`Library updated! ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists`, 'success');
-                            
-                        } else if (artistsCacheExpired) {
-                            // Just artists need updating
-                            showStatus('Updating artists (24 hour refresh)...', 'success');
-                            await loadArtistsOnly();
-                            await saveCacheData(userId);
-                            showStatus(`Artists updated! ${allAlbums.length} albums, ${allPlaylists.length} playlists, ${allArtists.length} artists`, 'success');
+                        } else {
+                            newAlbums.push(...allAlbums);
                         }
+                        
+                        // Load playlists if changed
+                        if (playlistsChanged) {
+                            offset = 0;
+                            while (true) {
+                                const response = await fetch(`https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${offset}`, {
+                                    headers: { 'Authorization': 'Bearer ' + accessToken }
+                                });
+                                if (!response.ok) break;
+                                const data = await response.json();
+                                newPlaylists.push(...data.items);
+                                if (data.items.length < limit) break;
+                                offset += limit;
+                            }
+                        } else {
+                            newPlaylists.push(...allPlaylists);
+                        }
+                        
+                        // Update arrays and save
+                        allAlbums = newAlbums;
+                        allPlaylists = newPlaylists;
+                        await saveCacheData(userId);
+                        showStatus(`Library updated! ${allAlbums.length} albums, ${allPlaylists.length} playlists`, 'success');
+                        
                     } catch (error) {
                         console.error('Error during background update:', error);
                         // Don't show error to user - they can continue using cached data
@@ -861,7 +827,6 @@
         }
 
         async function loadAllData() {
-            setLoadingState(true);
             showStatus('Loading albums...', 'success');
             
             // Load albums
@@ -908,64 +873,9 @@
                     if (data.items.length < limit) break;
                     offset += limit;
                 }
-
-                showStatus('Loading artists...', 'success');
-
-                // Load followed artists
-                allArtists = [];
-                let after = null;
-                
-                while (true) {
-                    const url = `https://api.spotify.com/v1/me/following?type=artist&limit=50${after ? '&after=' + after : ''}`;
-                    const response = await fetch(url, {
-                        headers: { 'Authorization': 'Bearer ' + accessToken }
-                    });
-                    
-                    if (!response.ok) break;
-                    
-                    const data = await response.json();
-                    allArtists.push(...data.artists.items);
-                    
-                    if (data.artists.items.length < 50) break;
-                    after = data.artists.cursors?.after;
-                    if (!after) break;
-                }
             } catch (error) {
                 console.error('Error loading data:', error);
                 throw error;
-            } finally {
-                setLoadingState(false);
-            }
-        }
-
-        async function loadArtistsOnly() {
-            setLoadingState(true);
-            
-            try {
-                // Load followed artists
-                allArtists = [];
-                let after = null;
-                
-                while (true) {
-                    const url = `https://api.spotify.com/v1/me/following?type=artist&limit=50${after ? '&after=' + after : ''}`;
-                    const response = await fetch(url, {
-                        headers: { 'Authorization': 'Bearer ' + accessToken }
-                    });
-                    
-                    if (!response.ok) break;
-                    
-                    const data = await response.json();
-                    allArtists.push(...data.artists.items);
-                    
-                    if (data.artists.items.length < 50) break;
-                    after = data.artists.cursors?.after;
-                    if (!after) break;
-                }
-            } catch (error) {
-                console.error('Error loading artists:', error);
-                throw error;
-            } finally {
-                setLoadingState(false);
             }
         }
 
@@ -989,8 +899,7 @@
             // Update title and button text
             const typeNames = {
                 'albums': 'Albums',
-                'playlists': 'Playlists', 
-                'artists': 'Artists'
+                'playlists': 'Playlists'
             };
             
             // Update button text
@@ -1010,8 +919,7 @@
         function getRandomItems() {
             const currentData = {
                 'albums': allAlbums,
-                'playlists': allPlaylists,
-                'artists': allArtists
+                'playlists': allPlaylists
             }[currentType];
             
             if (currentData.length === 0) {
@@ -1061,12 +969,6 @@
                     subtitle = `by ${item.owner.display_name}`;
                     url = item.external_urls.spotify;
                     releaseYear = `${item.tracks.total} tracks`;
-                } else if (currentType === 'artists') {
-                    imageUrl = item.images?.[0]?.url;
-                    title = item.name;
-                    subtitle = item.genres.slice(0, 2).join(', ') || 'Artist';
-                    url = item.external_urls.spotify;
-                    releaseYear = `${item.followers.total.toLocaleString()} followers`;
                 }
                 
                 if (!imageUrl) {
