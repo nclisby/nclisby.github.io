@@ -698,6 +698,9 @@
             const userId = await getCurrentUserId();
             if (!userId) {
                 showStatus('Error identifying user', 'error');
+                //Added following line - cache removed to hopefully fix problem
+                //with new user.
+                await clearCache();
                 await resetToLoginState();
                 return;
             }
