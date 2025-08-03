@@ -698,9 +698,6 @@
             const userId = await getCurrentUserId();
             if (!userId) {
                 showStatus('Error identifying user', 'error');
-                //Added following line - cache removed to hopefully fix problem
-                //with new user.
-                await clearCache();
                 await resetToLoginState();
                 return;
             }
@@ -841,6 +838,9 @@
             } catch (error) {
                 console.error('Error in handleSuccessfulAuth:', error);
                 showStatus('Error loading library: ' + error.message, 'error');
+                //Added following line - cache removed to hopefully fix problem
+                //with new user.
+                await clearCache();
                 // Reset to login state on error
                 await resetToLoginState();
             }
