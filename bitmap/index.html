@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bit Interleaving Function Visualizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input[type="range"] {
+            width: 150px;
+            cursor: pointer;
+        }
+        .resolution-display {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+        select {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #333;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        select:hover {
+            border-color: #764ba2;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .plot-wrapper {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .plot-title {
+            text-align: center;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        #surface-plot {
+            width: 100%;
+            height: 500px;
+        }
+        #heatmap-plot {
+            width: 100%;
+            height: 450px;
+        }
+        .info-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .info-box h3 {
+            color: #444;
+            margin-top: 0;
+        }
+        .info-box p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .formula {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bit Interleaving Function Visualizer</h1>
+        <p class="subtitle">f(x, y) = interleave(binary(x), binary(y))</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="resolution">Resolution</label>
+                <select id="resolution">
+                    <option value="32">33×33 (2^5 + 1)</option>
+                    <option value="64" selected>65×65 (2^6 + 1)</option>
+                    <option value="128">129×129 (2^7 + 1)</option>
+                    <option value="256">257×257 (2^8 + 1)</option>
+                    <option value="512">513×513 (2^9 + 1)</option>
+                    <option value="1024">1025×1025 (2^10 + 1)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="colorscale">Color Scheme</label>
+                <select id="colorscale">
+                    <option value="Viridis">Viridis</option>
+                    <option value="Plasma">Plasma</option>
+                    <option value="Inferno">Inferno</option>
+                    <option value="Rainbow">Rainbow</option>
+                    <option value="Jet">Jet</option>
+                    <option value="Hot">Hot</option>
+                    <option value="Cool">Cool</option>
+                    <option value="Portland">Portland</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="precision">Bit Precision</label>
+                <input type="range" id="precision" min="4" max="20" value="12" step="2">
+                <span class="resolution-display" id="precisionDisplay">12 bits</span>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading" style="display: none;">Calculating...</div>
+        
+        <div class="plot-wrapper">
+            <div class="plot-title">3D Surface Plot</div>
+            <div id="surface-plot"></div>
+        </div>
+        
+        <div class="plot-wrapper">
+            <div class="plot-title">2D Heatmap</div>
+            <div id="heatmap-plot"></div>
+        </div>
+        
+        <div class="debug-info" id="debug"></div>
+        
+        <div class="info-box">
+            <h3>About the Bit Interleaving Function</h3>
+            <p>This function maps points from the unit square [0,1]×[0,1] to the unit interval [0,1] by interleaving the binary digits of the input coordinates.</p>
+            <div class="formula">
+                Given: x = 0.x₁x₂x₃x₄... and y = 0.y₁y₂y₃y₄...<br>
+                Output: z = 0.x₁y₁x₂y₂x₃y₃...
+            </div>
+            <p><strong>Key Properties:</strong></p>
+            <ul>
+                <li>The function creates a fractal-like, self-similar surface</li>
+                <li>It's discontinuous at dyadic rationals (numbers with terminating binary expansions)</li>
+                <li>The mapping is measure-preserving but not one-to-one</li>
+                <li>Related to Morton encoding (Z-order) used in spatial indexing</li>
+            </ul>
+            <p><strong>Visualization Notes:</strong> The jagged, step-like patterns you see are characteristic of this function. Try adjusting the resolution and bit precision to see different levels of detail. Higher bit precision gives more accurate representations but may show more discontinuities.</p>
+        </div>
+    </div>
+
+    <script>
+        // Bit interleaving function - Fixed version
+        function bitInterleave(x, y, precision) {
+            // Clamp inputs to [0, 1)
+            x = Math.max(0, Math.min(0.9999999, x));
+            y = Math.max(0, Math.min(0.9999999, y));
+            
+            // For x=1 or y=1, handle specially
+            if (x >= 0.9999999) x = 0.9999999;
+            if (y >= 0.9999999) y = 0.9999999;
+            
+            let result = 0;
+            let bitPosition = 0;
+            
+            // Process each bit
+            for (let i = 0; i < precision; i++) {
+                // Double x and y, extract integer part as bit
+                x *= 2;
+                y *= 2;
+                
+                const xBit = Math.floor(x);
+                const yBit = Math.floor(y);
+                
+                // Remove integer part
+                x -= xBit;
+                y -= yBit;
+                
+                // Interleave: x bit goes to even position, y bit to odd position
+                result += xBit * Math.pow(2, -(2*i + 1));
+                result += yBit * Math.pow(2, -(2*i + 2));
+            }
+            
+            return result;
+        }
+        
+        // Alternative implementation using integer arithmetic
+        function bitInterleaveInt(x, y, precision) {
+            // Handle edge cases
+            if (x >= 1) x = 0.9999999;
+            if (y >= 1) y = 0.9999999;
+            if (x < 0) x = 0;
+            if (y < 0) y = 0;
+            
+            // Scale to integers
+            const scale = Math.pow(2, precision);
+            const xInt = Math.floor(x * scale);
+            const yInt = Math.floor(y * scale);
+            
+            let result = 0;
+            
+            // Interleave bits
+            for (let i = 0; i < precision; i++) {
+                const mask = 1 << (precision - 1 - i);
+                const xBit = (xInt & mask) ? 1 : 0;
+                const yBit = (yInt & mask) ? 1 : 0;
+                
+                result = result * 4 + xBit * 2 + yBit;
+            }
+            
+            // Scale back to [0,1]
+            return result / Math.pow(4, precision);
+        }
+        
+        function generateSurfaceData(resolution, precision) {
+            const xVals = [];
+            const yVals = [];
+            const zVals = [];
+            
+            // Generate grid points
+            for (let i = 0; i <= resolution; i++) {
+                xVals.push(i / resolution);
+            }
+            for (let j = 0; j <= resolution; j++) {
+                yVals.push(j / resolution);
+            }
+            
+            // Generate z values as 2D array
+            for (let j = 0; j <= resolution; j++) {
+                const zRow = [];
+                for (let i = 0; i <= resolution; i++) {
+                    const xVal = xVals[i];
+                    const yVal = yVals[j];
+                    // Use the integer version for better accuracy
+                    const zVal = bitInterleaveInt(xVal, yVal, precision);
+                    zRow.push(zVal);
+                }
+                zVals.push(zRow);
+            }
+            
+            // Debug information
+            const gridPoints = resolution + 1;
+            const powerOf2 = Math.log2(resolution);
+            const testVal = bitInterleaveInt(0.5, 0.5, precision);
+            const minZ = Math.min(...zVals.flat());
+            const maxZ = Math.max(...zVals.flat());
+            
+            const debugInfo = `Grid: ${gridPoints}×${gridPoints} (2^${powerOf2.toFixed(0)} + 1), ` +
+                            `Precision: ${precision} bits, ` +
+                            `Test (0.5, 0.5) → ${testVal.toFixed(6)}, ` +
+                            `Range: [${minZ.toFixed(6)}, ${maxZ.toFixed(6)}]`;
+            document.getElementById('debug').textContent = debugInfo;
+            
+            // Additional debug
+            console.log('Data generated:', {
+                xLength: xVals.length,
+                yLength: yVals.length,
+                zRows: zVals.length,
+                zCols: zVals[0].length,
+                sample: zVals[Math.floor(resolution/2)][Math.floor(resolution/2)]
+            });
+            
+            return { x: xVals, y: yVals, z: zVals };
+        }
+        
+        function updatePlots() {
+            const resolution = parseInt(document.getElementById('resolution').value);
+            const precision = parseInt(document.getElementById('precision').value);
+            const colorscale = document.getElementById('colorscale').value;
+            
+            document.getElementById('precisionDisplay').textContent = `${precision} bits`;
+            
+            console.log('Updating plots with:', { resolution, precision, colorscale });
+            
+            // Show loading indicator for large resolutions
+            if (resolution > 256) {
+                document.getElementById('loading').style.display = 'block';
+            }
+            
+            // Use setTimeout to allow the loading indicator to appear
+            setTimeout(() => {
+                const data = generateSurfaceData(resolution, precision);
+                
+                // 3D Surface Plot
+                const surfaceTrace = {
+                    x: data.x,
+                    y: data.y,
+                    z: data.z,
+                    type: 'surface',
+                    colorscale: colorscale,
+                    showscale: true,
+                    colorbar: {
+                        title: 'f(x,y)',
+                        titleside: 'right',
+                        tickmode: 'linear',
+                        tick0: 0,
+                        dtick: 0.2,
+                        len: 0.9,
+                        thickness: 20
+                    },
+                    contours: {
+                        z: {
+                            show: true,
+                            usecolormap: true,
+                            highlightcolor: "#42f462",
+                            project: { z: true }
+                        }
+                    },
+                    lighting: {
+                        ambient: 0.7,
+                        diffuse: 0.8,
+                        specular: 0.5,
+                        roughness: 0.5
+                    }
+                };
+                
+                const surfaceLayout = {
+                    scene: {
+                        xaxis: { 
+                            title: 'x', 
+                            range: [0, 1],
+                            showgrid: true,
+                            gridcolor: '#ddd'
+                        },
+                        yaxis: { 
+                            title: 'y', 
+                            range: [0, 1],
+                            showgrid: true,
+                            gridcolor: '#ddd'
+                        },
+                        zaxis: { 
+                            title: 'f(x,y)', 
+                            range: [0, 1],
+                            showgrid: true,
+                            gridcolor: '#ddd'
+                        },
+                        camera: {
+                            eye: { x: 1.5, y: 1.5, z: 1.5 }
+                        },
+                        aspectmode: 'cube',
+                        bgcolor: '#f8f8f8'
+                    },
+                    margin: { l: 0, r: 0, t: 0, b: 0 }
+                };
+                
+                // 2D Heatmap
+                const heatmapTrace = {
+                    x: data.x,
+                    y: data.y,
+                    z: data.z,
+                    type: 'heatmap',
+                    colorscale: colorscale,
+                    showscale: true,
+                    colorbar: {
+                        title: 'f(x,y)',
+                        titleside: 'right',
+                        tickmode: 'linear',
+                        tick0: 0,
+                        dtick: 0.2,
+                        len: 0.9,
+                        thickness: 20
+                    },
+                    hovertemplate: 'x: %{x:.3f}<br>y: %{y:.3f}<br>f(x,y): %{z:.6f}<extra></extra>'
+                };
+                
+                const heatmapLayout = {
+                    xaxis: { 
+                        title: 'x', 
+                        range: [0, 1],
+                        constrain: 'domain',
+                        showgrid: true
+                    },
+                    yaxis: { 
+                        title: 'y', 
+                        range: [0, 1],
+                        scaleanchor: 'x',
+                        scaleratio: 1,
+                        showgrid: true
+                    },
+                    margin: { l: 60, r: 60, t: 20, b: 60 }
+                };
+                
+                const config = {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false,
+                    modeBarButtonsToRemove: ['pan2d', 'select2d', 'lasso2d', 'resetScale2d', 'toggleSpikelines']
+                };
+                
+                // Force complete redraw by purging first
+                Plotly.purge('surface-plot');
+                Plotly.purge('heatmap-plot');
+                
+                // Then create new plots
+                Plotly.newPlot('surface-plot', [surfaceTrace], surfaceLayout, config);
+                Plotly.newPlot('heatmap-plot', [heatmapTrace], heatmapLayout, config);
+                
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+            }, 10);
+        }
+        
+        // Test the bit interleaving function
+        console.log("Test cases (using integer method):");
+        console.log("f(0, 0) =", bitInterleaveInt(0, 0, 12));
+        console.log("f(1, 1) =", bitInterleaveInt(1, 1, 12));
+        console.log("f(0.5, 0.5) =", bitInterleaveInt(0.5, 0.5, 12));
+        console.log("f(0.25, 0.75) =", bitInterleaveInt(0.25, 0.75, 12));
+        console.log("f(0.5, 0) =", bitInterleaveInt(0.5, 0, 12), "should be 0.333...");
+        console.log("f(0, 0.5) =", bitInterleaveInt(0, 0.5, 12), "should be 0.666...");
+        
+        // Event listeners - ensuring they trigger updates
+        document.getElementById('resolution').addEventListener('change', function() {
+            console.log('Resolution changed to:', this.value);
+            updatePlots();
+        });
+        
+        document.getElementById('precision').addEventListener('input', function() {
+            console.log('Precision changed to:', this.value);
+            updatePlots();
+        });
+        
+        document.getElementById('colorscale').addEventListener('change', function() {
+            console.log('Colorscale changed to:', this.value);
+            updatePlots();
+        });
+        
+        // Initial plot
+        updatePlots();
+    </script>
+</body>
+</html>
