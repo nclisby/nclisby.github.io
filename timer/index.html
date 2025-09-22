@@ -245,7 +245,6 @@
             seconds = 0;
             isRunning = false;
             isPaused = false;
-            updateDisplay();
             
             continueBtn.style.display = 'none';
             resetBtn.style.display = 'none';
@@ -270,6 +269,8 @@
                     incrementDigit(digit.dataset.pos);
                 });
             });
+            
+            updateDisplay();
         }
 
         function playChime() {
