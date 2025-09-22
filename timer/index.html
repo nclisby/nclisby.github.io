@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Countdown Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        body.times-up {
+            background: #ffb3ba;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5vh;
+            padding: 20px;
+        }
+
+        #buttons {
+            display: flex;
+            gap: 3vw;
+            min-height: 10vh;
+            align-items: center;
+        }
+
+        button {
+            font-size: min(8vw, 8vh);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            padding: 2vh 4vw;
+            background: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #timer {
+            font-size: min(20vw, 20vh);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .digit {
+            cursor: pointer;
+            display: inline-block;
+            min-width: 0.6em;
+            text-align: center;
+        }
+
+        .digit:hover {
+            background: #f0f0f0;
+        }
+
+        .colon {
+            cursor: default;
+        }
+
+        .colon:hover {
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="buttons">
+            <button id="startBtn">Start</button>
+            <button id="pauseBtn" style="display:none">Pause</button>
+            <button id="continueBtn" style="display:none">Continue</button>
+            <button id="resetBtn" style="display:none">Reset</button>
+        </div>
+        <div id="timer">
+            <span class="digit" data-pos="h">0</span>
+            <span class="colon">:</span>
+            <span class="digit" data-pos="m1">0</span>
+            <span class="digit" data-pos="m2">0</span>
+            <span class="colon">:</span>
+            <span class="digit" data-pos="s1">0</span>
+            <span class="digit" data-pos="s2">0</span>
+        </div>
+    </div>
+
+    <script>
+        let hours = 0;
+        let minutes = 0;
+        let seconds = 0;
+        let intervalId = null;
+        let isRunning = false;
+        let isPaused = false;
+        let audioContext = null;
+        let oscillator = null;
+        let gainNode = null;
+
+        const timerDiv = document.getElementById('timer');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const continueBtn = document.getElementById('continueBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        function updateDisplay() {
+            const digits = timerDiv.querySelectorAll('.digit');
+            digits[0].textContent = hours;
+            digits[1].textContent = Math.floor(minutes / 10);
+            digits[2].textContent = minutes % 10;
+            digits[3].textContent = Math.floor(seconds / 10);
+            digits[4].textContent = seconds % 10;
+        }
+
+        function incrementDigit(pos) {
+            if (isRunning || isPaused) return;
+            
+            switch(pos) {
+                case 'h':
+                    hours = (hours + 1) % 10;
+                    break;
+                case 'm1':
+                    const m1 = Math.floor(minutes / 10);
+                    minutes = ((m1 + 1) % 6) * 10 + (minutes % 10);
+                    break;
+                case 'm2':
+                    minutes = Math.floor(minutes / 10) * 10 + ((minutes % 10 + 1) % 10);
+                    break;
+                case 's1':
+                    const s1 = Math.floor(seconds / 10);
+                    seconds = ((s1 + 1) % 6) * 10 + (seconds % 10);
+                    break;
+                case 's2':
+                    seconds = Math.floor(seconds / 10) * 10 + ((seconds % 10 + 1) % 10);
+                    break;
+            }
+            updateDisplay();
+        }
+
+        // Click handlers for digits
+        timerDiv.querySelectorAll('.digit').forEach(digit => {
+            digit.addEventListener('click', (e) => {
+                e.stopPropagation();
+                incrementDigit(digit.dataset.pos);
+            });
+        });
+
+        // Keyboard input
+        document.addEventListener('keydown', (e) => {
+            if (isRunning || isPaused) return;
+            
+            const key = parseInt(e.key);
+            if (!isNaN(key)) {
+                // Push digits from right to left
+                const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                const s2 = key;
+                const s1 = seconds % 10;
+                const m2 = Math.floor(seconds / 10);
+                const m1 = minutes % 10;
+                const h = Math.floor(minutes / 10);
+                
+                // Cap hours at 9
+                hours = Math.min(h, 9);
+                minutes = m1 * 10 + m2;
+                seconds = s1 * 10 + s2;
+                
+                updateDisplay();
+            }
+        });
+
+        function startTimer() {
+            if (hours === 0 && minutes === 0 && seconds === 0) return;
+            
+            isRunning = true;
+            isPaused = false;
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'block';
+            
+            intervalId = setInterval(() => {
+                if (seconds > 0) {
+                    seconds--;
+                } else if (minutes > 0) {
+                    minutes--;
+                    seconds = 59;
+                } else if (hours > 0) {
+                    hours--;
+                    minutes = 59;
+                    seconds = 59;
+                } else {
+                    // Timer reached zero
+                    clearInterval(intervalId);
+                    isRunning = false;
+                    timesUp();
+                    return;
+                }
+                updateDisplay();
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(intervalId);
+            isPaused = true;
+            isRunning = false;
+            pauseBtn.style.display = 'none';
+            continueBtn.style.display = 'block';
+            resetBtn.style.display = 'block';
+        }
+
+        function continueTimer() {
+            isPaused = false;
+            continueBtn.style.display = 'none';
+            resetBtn.style.display = 'none';
+            pauseBtn.style.display = 'block';
+            startTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(intervalId);
+            hours = 0;
+            minutes = 0;
+            seconds = 0;
+            isRunning = false;
+            isPaused = false;
+            updateDisplay();
+            
+            continueBtn.style.display = 'none';
+            resetBtn.style.display = 'none';
+            pauseBtn.style.display = 'none';
+            startBtn.style.display = 'block';
+            
+            document.body.classList.remove('times-up');
+            timerDiv.innerHTML = `
+                <span class="digit" data-pos="h">0</span>
+                <span class="colon">:</span>
+                <span class="digit" data-pos="m1">0</span>
+                <span class="digit" data-pos="m2">0</span>
+                <span class="colon">:</span>
+                <span class="digit" data-pos="s1">0</span>
+                <span class="digit" data-pos="s2">0</span>
+            `;
+            
+            // Re-attach click handlers
+            timerDiv.querySelectorAll('.digit').forEach(digit => {
+                digit.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    incrementDigit(digit.dataset.pos);
+                });
+            });
+        }
+
+        function playChime() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Create a pleasant chime sound
+            oscillator = audioContext.createOscillator();
+            gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 800;
+            
+            // Modulate frequency for a more pleasant sound
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.5);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.1, audioContext.currentTime + 0.5);
+            
+            oscillator.start();
+        }
+
+        function stopChime() {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+        }
+
+        function timesUp() {
+            document.body.classList.add('times-up');
+            timerDiv.innerHTML = `<span style="font-size: min(12vw, 12vh)">Time's up!</span>`;
+            pauseBtn.style.display = 'none';
+            playChime();
+            
+            // Click anywhere to stop and reset
+            const stopHandler = () => {
+                stopChime();
+                resetTimer();
+                document.body.removeEventListener('click', stopHandler);
+            };
+            
+            setTimeout(() => {
+                document.body.addEventListener('click', stopHandler);
+            }, 100);
+        }
+
+        // Button event listeners
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        continueBtn.addEventListener('click', continueTimer);
+        resetBtn.addEventListener('click', resetTimer);
+    </script>
+</body>
+</html>
