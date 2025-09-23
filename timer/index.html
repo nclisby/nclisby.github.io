@@ -78,7 +78,7 @@
             text-align: center;
         }
 
-        .digit:hover {
+        .digit.active:hover {
             background: #f0f0f0;
         }
 
@@ -134,6 +134,15 @@
             digits[2].textContent = minutes % 10;
             digits[3].textContent = Math.floor(seconds / 10);
             digits[4].textContent = seconds % 10;
+            
+            // Add or remove 'active' class based on timer state
+            digits.forEach(digit => {
+                if (!isRunning && !isPaused) {
+                    digit.classList.add('active');
+                } else {
+                    digit.classList.remove('active');
+                }
+            });
         }
 
         function incrementDigit(pos) {
@@ -171,6 +180,23 @@
 
         // Keyboard input
         document.addEventListener('keydown', (e) => {
+            // Handle Enter and Space for timer control
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault(); // Prevent space from scrolling
+                
+                if (!isRunning && !isPaused) {
+                    // Start the timer
+                    startTimer();
+                } else if (isRunning && !isPaused) {
+                    // Pause the timer
+                    pauseTimer();
+                } else if (isPaused) {
+                    // Continue the timer
+                    continueTimer();
+                }
+                return;
+            }
+            
             if (isRunning || isPaused) return;
             
             const key = parseInt(e.key);
@@ -253,13 +279,13 @@
             
             document.body.classList.remove('times-up');
             timerDiv.innerHTML = `
-                <span class="digit" data-pos="h">0</span>
+                <span class="digit active" data-pos="h">0</span>
                 <span class="colon">:</span>
-                <span class="digit" data-pos="m1">0</span>
-                <span class="digit" data-pos="m2">0</span>
+                <span class="digit active" data-pos="m1">0</span>
+                <span class="digit active" data-pos="m2">0</span>
                 <span class="colon">:</span>
-                <span class="digit" data-pos="s1">0</span>
-                <span class="digit" data-pos="s2">0</span>
+                <span class="digit active" data-pos="s1">0</span>
+                <span class="digit active" data-pos="s2">0</span>
             `;
             
             // Re-attach click handlers
