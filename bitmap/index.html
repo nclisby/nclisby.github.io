@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bit Interleaving Function Visualizer</title>
+    <title>Bit Interleaving Function Visualiser</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
     <style>
         body {
@@ -142,7 +142,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Bit Interleaving Function Visualizer</h1>
+        <h1>Bit Interleaving Function Visualiser</h1>
         <p class="subtitle">f(x, y) = interleave(binary(x), binary(y))</p>
         
         <div class="controls">
@@ -154,11 +154,10 @@
                     <option value="128">129×129 (2^7 + 1)</option>
                     <option value="256">257×257 (2^8 + 1)</option>
                     <option value="512">513×513 (2^9 + 1)</option>
-                    <option value="1024">1025×1025 (2^10 + 1)</option>
                 </select>
             </div>
             <div class="control-group">
-                <label for="colorscale">Color Scheme</label>
+                <label for="colorscale">Colour Scheme</label>
                 <select id="colorscale">
                     <option value="Viridis">Viridis</option>
                     <option value="Plasma">Plasma</option>
@@ -170,11 +169,7 @@
                     <option value="Portland">Portland</option>
                 </select>
             </div>
-            <div class="control-group">
-                <label for="precision">Bit Precision</label>
-                <input type="range" id="precision" min="4" max="20" value="12" step="2">
-                <span class="resolution-display" id="precisionDisplay">12 bits</span>
-            </div>
+
         </div>
         
         <div class="loading" id="loading" style="display: none;">Calculating...</div>
@@ -200,12 +195,10 @@
             </div>
             <p><strong>Key Properties:</strong></p>
             <ul>
-                <li>The function creates a fractal-like, self-similar surface</li>
-                <li>It's discontinuous at dyadic rationals (numbers with terminating binary expansions)</li>
-                <li>The mapping is measure-preserving but not one-to-one</li>
-                <li>Related to Morton encoding (Z-order) used in spatial indexing</li>
+                <li>The function creates a fractal-like, self-similar surface.</li>
+                <li>Although there are some subtleties due to the behaviour of special cases, this map can be used to demonstrate that [0,1]×[0,1] has the same cardinality as [0,1].</li>
             </ul>
-            <p><strong>Visualization Notes:</strong> The jagged, step-like patterns you see are characteristic of this function. Try adjusting the resolution and bit precision to see different levels of detail. Higher bit precision gives more accurate representations but may show more discontinuities.</p>
+            <p><strong>Visualisation Notes:</strong> The jagged, step-like patterns you see are characteristic of this function. Try adjusting the resolution to see different levels of detail.</p>
         </div>
     </div>
 
@@ -302,8 +295,9 @@
             const gridPoints = resolution + 1;
             const powerOf2 = Math.log2(resolution);
             const testVal = bitInterleaveInt(0.5, 0.5, precision);
-            const minZ = Math.min(...zVals.flat());
-            const maxZ = Math.max(...zVals.flat());
+            const flat = zVals.flat();
+            const minZ = flat.reduce((a, b) => Math.min(a, b), Infinity);
+            const maxZ = flat.reduce((a, b) => Math.max(a, b), -Infinity);
             
             const debugInfo = `Grid: ${gridPoints}×${gridPoints} (2^${powerOf2.toFixed(0)} + 1), ` +
                             `Precision: ${precision} bits, ` +
@@ -325,10 +319,8 @@
         
         function updatePlots() {
             const resolution = parseInt(document.getElementById('resolution').value);
-            const precision = parseInt(document.getElementById('precision').value);
+            const precision = 16;
             const colorscale = document.getElementById('colorscale').value;
-            
-            document.getElementById('precisionDisplay').textContent = `${precision} bits`;
             
             console.log('Updating plots with:', { resolution, precision, colorscale });
             
@@ -395,7 +387,7 @@
                             gridcolor: '#ddd'
                         },
                         camera: {
-                            eye: { x: 1.5, y: 1.5, z: 1.5 }
+                            eye: { x: -1.5, y: -1.5, z: 1.5 }
                         },
                         aspectmode: 'cube',
                         bgcolor: '#f8f8f8'
@@ -475,12 +467,7 @@
             updatePlots();
         });
         
-        document.getElementById('precision').addEventListener('input', function() {
-            console.log('Precision changed to:', this.value);
-            updatePlots();
-        });
-        
-        document.getElementById('colorscale').addEventListener('change', function() {
+document.getElementById('colorscale').addEventListener('change', function() {
             console.log('Colorscale changed to:', this.value);
             updatePlots();
         });
