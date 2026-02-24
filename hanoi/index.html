@@ -174,6 +174,108 @@
             background-color: #f0f0f0;
         }
         
+        #helpOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+        
+        #helpDialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(54, 69, 79, 0.95);
+            border: 2px solid #00BFFF;
+            border-radius: 10px;
+            padding: 25px 30px;
+            text-align: left;
+            display: none;
+            z-index: 1000;
+            max-width: 420px;
+            width: 85%;
+        }
+        
+        #helpDialog h2 {
+            color: #00BFFF;
+            margin: 0 0 12px 0;
+            text-align: center;
+            font-size: 22px;
+        }
+        
+        #helpDialog h3 {
+            color: #00BFFF;
+            margin: 14px 0 6px 0;
+            font-size: 15px;
+        }
+        
+        #helpDialog p {
+            color: white;
+            font-size: 14px;
+            margin: 6px 0;
+            line-height: 1.4;
+        }
+        
+        #helpDialog .help-goal {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        #helpDialog .help-tip {
+            margin-top: 14px;
+            color: #ccc;
+            font-size: 13px;
+        }
+        
+        #helpDialog table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        #helpDialog td {
+            color: white;
+            font-size: 14px;
+            padding: 4px 0;
+        }
+        
+        #helpDialog td:first-child {
+            width: 110px;
+            white-space: nowrap;
+        }
+        
+        #helpDialog kbd {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 1px 7px;
+            font-family: monospace;
+            font-size: 14px;
+            color: white;
+        }
+        
+        #helpCloseBtn {
+            display: block;
+            margin: 18px auto 0;
+            padding: 10px 40px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: none;
+            background-color: white;
+            color: black;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #helpCloseBtn:hover {
+            background-color: #f0f0f0;
+        }
+        
         @media (max-width: 768px) {
             #controls {
                 padding: 0 10px;
@@ -211,7 +313,9 @@
                 <option value="8">8 Rings</option>
                 <option value="9">9 Rings</option>
                 <option value="10">10 Rings</option>
-                <option value="clear" disabled>──────────</option>
+                <option value="sep1" disabled>──────────</option>
+                <option value="help">Help</option>
+                <option value="sep2" disabled>──────────</option>
                 <option value="clear-records">Clear Records</option>
             </select>
         </div>
@@ -221,6 +325,21 @@
             <p>Are you sure you want to clear all record scores?</p>
             <button id="confirmYes">Yes</button>
             <button id="confirmNo">No</button>
+        </div>
+        <div id="helpOverlay"></div>
+        <div id="helpDialog">
+            <h2>Tower of Hanoi</h2>
+            <p class="help-goal">Move all rings from the left spindle to either of the other two spindles. A larger ring cannot be placed on top of a smaller ring.</p>
+            <h3>Mouse / Touch</h3>
+            <p>Click or tap a spindle to select it, then click or tap another spindle to move the top ring.</p>
+            <h3>Keyboard</h3>
+            <table>
+                <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Select left, middle, or right spindle</td></tr>
+                <tr><td><kbd>R</kbd></td><td>Reset the current game</td></tr>
+                <tr><td><kbd>H</kbd> or <kbd>?</kbd></td><td>Show this help</td></tr>
+            </table>
+            <p class="help-tip">Press two different numbers to move a ring (e.g. <kbd>1</kbd> <kbd>3</kbd>). Press the same number twice to cancel.</p>
+            <button id="helpCloseBtn">OK</button>
         </div>
     </div>
 
@@ -236,6 +355,9 @@
         const confirmOverlay = document.getElementById('confirmOverlay');
         const confirmYes = document.getElementById('confirmYes');
         const confirmNo = document.getElementById('confirmNo');
+        const helpDialog = document.getElementById('helpDialog');
+        const helpOverlay = document.getElementById('helpOverlay');
+        const helpCloseBtn = document.getElementById('helpCloseBtn');
         
         // Mobile detection
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
@@ -274,7 +396,7 @@
         // Load best records from localStorage
         function loadBestRecords() {
             try {
-                const stored = localStorage.getItem('towersOfHanoiBestRecords');
+                const stored = localStorage.getItem('towerOfHanoiBestRecords');
                 if (stored) {
                     bestRecords = JSON.parse(stored);
                 }
@@ -287,7 +409,7 @@
         // Save best records to localStorage
         function saveBestRecords() {
             try {
-                localStorage.setItem('towersOfHanoiBestRecords', JSON.stringify(bestRecords));
+                localStorage.setItem('towerOfHanoiBestRecords', JSON.stringify(bestRecords));
             } catch (e) {
                 console.error('Failed to save best records:', e);
             }
@@ -637,14 +759,28 @@
                 confirmOverlay.style.display = 'block';
                 // Reset selector to current ring count
                 sizeSelector.value = numRings.toString();
+            } else if (e.target.value === 'help') {
+                openHelpDialog();
+                sizeSelector.value = numRings.toString();
             } else if (!isNaN(parseInt(e.target.value))) {
                 initGame();
             }
+            sizeSelector.blur();
         });
         
         function closeConfirmDialog() {
             confirmDialog.style.display = 'none';
             confirmOverlay.style.display = 'none';
+        }
+        
+        function openHelpDialog() {
+            helpDialog.style.display = 'block';
+            helpOverlay.style.display = 'block';
+        }
+        
+        function closeHelpDialog() {
+            helpDialog.style.display = 'none';
+            helpOverlay.style.display = 'none';
         }
         
         confirmYes.addEventListener('click', (e) => {
@@ -676,11 +812,79 @@
                 closeConfirmDialog();
             }
         });
+        helpCloseBtn.addEventListener('click', closeHelpDialog);
+        helpOverlay.addEventListener('click', closeHelpDialog);
         window.addEventListener('resize', () => {
             resizeCanvas();
             draw();
         });
         
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+
+            // Escape closes any open dialog
+            if (key === 'Escape') {
+                if (helpDialog.style.display === 'block') {
+                    closeHelpDialog();
+                    return;
+                }
+                if (confirmDialog.style.display === 'block') {
+                    closeConfirmDialog();
+                    return;
+                }
+            }
+
+            // Enter/Space closes help dialog when it's open
+            if ((key === 'Enter' || key === ' ') && helpDialog.style.display === 'block') {
+                e.preventDefault();
+                closeHelpDialog();
+                return;
+            }
+
+            // Block game keys while a dialog is open
+            if (confirmDialog.style.display === 'block') return;
+            if (helpDialog.style.display === 'block') return;
+
+            // H or ? opens help
+            if (key === 'h' || key === 'H' || key === '?') {
+                openHelpDialog();
+                return;
+            }
+
+            // R resets the game
+            if (key === 'r' || key === 'R') {
+                initGame();
+                return;
+            }
+
+            if (isAnimating || isComplete) return;
+
+            if (key === '1' || key === '2' || key === '3') {
+                const spindleIndex = parseInt(key) - 1;
+
+                if (selectedSpindle === null) {
+                    // First key press - select source spindle if it has rings
+                    if (spindles[spindleIndex].length > 0) {
+                        selectedSpindle = spindleIndex;
+                        draw();
+                    }
+                } else {
+                    // Second key press
+                    if (spindleIndex === selectedSpindle) {
+                        // Same spindle - cancel selection
+                        selectedSpindle = null;
+                        draw();
+                    } else {
+                        // Different spindle - attempt move
+                        attemptMove(selectedSpindle, spindleIndex);
+                        selectedSpindle = null;
+                        draw();
+                    }
+                }
+            }
+        });
+
         // Prevent default touch behaviors
         document.addEventListener('touchmove', (e) => {
             e.preventDefault();
