@@ -150,9 +150,9 @@
                 <label for="resolution">Resolution</label>
                 <select id="resolution">
                     <option value="32">33×33 (2^5 + 1)</option>
-                    <option value="64" selected>65×65 (2^6 + 1)</option>
+                    <option value="64">65×65 (2^6 + 1)</option>
                     <option value="128">129×129 (2^7 + 1)</option>
-                    <option value="256">257×257 (2^8 + 1)</option>
+                    <option value="256" selected>257×257 (2^8 + 1)</option>
                     <option value="512">513×513 (2^9 + 1)</option>
                     <option value="1024">1025×1025 (2^10 + 1)</option>
                     <option value="2048">2049×2049 (2^11 + 1)</option>
@@ -354,12 +354,18 @@
                     },
                     contours: {
                         z: {
-                            show: true,
-                            usecolormap: true,
-                            highlightcolor: "#42f462",
-                            project: { z: true }
+                            show: false,
+                            project: { z: false }
                         }
                     },
+//                    contours: {
+//                        z: {
+//                            show: true,
+//                            usecolormap: true,
+//                            highlightcolor: "#42f462",
+//                            project: { z: true }
+//                        }
+//                    },
                     lighting: {
                         ambient: 0.7,
                         diffuse: 0.8,
@@ -370,26 +376,11 @@
                 
                 const surfaceLayout = {
                     scene: {
-                        xaxis: { 
-                            title: 'x', 
-                            range: [0, 1],
-                            showgrid: true,
-                            gridcolor: '#ddd'
-                        },
-                        yaxis: { 
-                            title: 'y', 
-                            range: [0, 1],
-                            showgrid: true,
-                            gridcolor: '#ddd'
-                        },
-                        zaxis: { 
-                            title: 'f(x,y)', 
-                            range: [0, 1],
-                            showgrid: true,
-                            gridcolor: '#ddd'
-                        },
+                        xaxis: { title: 'x', range: [0, 1], dtick: 0.125, showgrid: true, gridcolor: '#ddd' },
+                        yaxis: { title: 'y', range: [0, 1], dtick: 0.125, showgrid: true, gridcolor: '#ddd' },
+                        zaxis: { title: 'f(x,y)', range: [0, 1], dtick: 0.125, showgrid: true, gridcolor: '#ddd' },
                         camera: {
-                            eye: { x: -1.5, y: -1.5, z: 1.5 }
+                            eye: { x: -1.85, y: -1.0, z: 0.6 }
                         },
                         aspectmode: 'cube',
                         bgcolor: '#f8f8f8'
