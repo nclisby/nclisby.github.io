@@ -154,6 +154,8 @@
                     <option value="128">129×129 (2^7 + 1)</option>
                     <option value="256">257×257 (2^8 + 1)</option>
                     <option value="512">513×513 (2^9 + 1)</option>
+                    <option value="1024">1025×1025 (2^10 + 1)</option>
+                    <option value="2048">2049×2049 (2^11 + 1)</option>
                 </select>
             </div>
             <div class="control-group">
@@ -453,13 +455,13 @@
         }
         
         // Test the bit interleaving function
-        console.log("Test cases (using integer method):");
-        console.log("f(0, 0) =", bitInterleaveInt(0, 0, 12));
-        console.log("f(1, 1) =", bitInterleaveInt(1, 1, 12));
-        console.log("f(0.5, 0.5) =", bitInterleaveInt(0.5, 0.5, 12));
-        console.log("f(0.25, 0.75) =", bitInterleaveInt(0.25, 0.75, 12));
-        console.log("f(0.5, 0) =", bitInterleaveInt(0.5, 0, 12), "should be 0.333...");
-        console.log("f(0, 0.5) =", bitInterleaveInt(0, 0.5, 12), "should be 0.666...");
+        // console.log("Test cases (using integer method):");
+        // console.log("f(0, 0) =", bitInterleaveInt(0, 0, 12));
+        // console.log("f(1, 1) =", bitInterleaveInt(1, 1, 12));
+        // console.log("f(0.5, 0.5) =", bitInterleaveInt(0.5, 0.5, 12));
+        // console.log("f(0.25, 0.75) =", bitInterleaveInt(0.25, 0.75, 12));
+        // console.log("f(0.5, 0) =", bitInterleaveInt(0.5, 0, 12), "should be 0.333...");
+        // console.log("f(0, 0.5) =", bitInterleaveInt(0, 0.5, 12), "should be 0.666...");
         
         // Event listeners - ensuring they trigger updates
         document.getElementById('resolution').addEventListener('change', function() {
