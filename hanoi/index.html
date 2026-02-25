@@ -367,6 +367,24 @@
         let GAME_CENTER_X, GAME_CENTER_Y;
         let ANIM_ZONE;
 
+        // Animation parameters
+        const ANIM_PAUSE_TIME = 0.07;       // seconds to pause at each turning point
+        const ANIM_MAX_TRAVEL_TIME = 0.15;  // seconds for the longest possible move
+        let animSpeed = 0;                   // pixels per second (computed on resize)
+
+        // Animation state
+        let animRing = null;       // { size, width, fromSpindle, toSpindle, valid }
+        let animX = 0;             // current pixel position of animating ring
+        let animY = 0;
+        let animPhase = 0;         // 0=up, 1=pause, 2=across, 3=pause, 4=down
+        let animProgress = 0;      // progress within current phase (0..1 for motion, 0..pauseTime for pauses)
+        let animStartX = 0;        // start/end positions for current phase
+        let animStartY = 0;
+        let animEndX = 0;
+        let animEndY = 0;
+        let animPrevTime = 0;
+        let animCallback = null;   // called when animation completes
+
         // Load best records from localStorage
         function loadBestRecords() {
             try {
@@ -519,6 +537,17 @@
             GAME_CENTER_Y = CONTROLS_HEIGHT + marginTop
                           + Math.max(0, leftover / 2)
                           + ANIM_ZONE + SPINDLE_HEIGHT + BASE_HEIGHT / 2;
+
+            // --- Compute animation speed --------------------------------
+            // Maximum travel = up full stack + across 2 spacings + down full stack
+            // where full stack = distance from bottom ring pos to above-spindle pos
+            const baseTop = GAME_CENTER_Y - BASE_HEIGHT / 2;
+            const bottomRingY = baseTop - (RING_HEIGHT + RING_GAP) + RING_GAP - RING_HEIGHT * 0.2;
+            const aboveSpindleY = baseTop - SPINDLE_HEIGHT - RING_HEIGHT * 1.5;
+            const maxVertical = bottomRingY - aboveSpindleY;
+            const maxHorizontal = 2 * SPINDLE_SPACING;
+            const maxDistance = 2 * maxVertical + maxHorizontal;
+            animSpeed = maxDistance / ANIM_MAX_TRAVEL_TIME;
         }
 
         // Initialize game
@@ -623,6 +652,187 @@
                     ctx.fillText(ringSize.toString(), x, y + RING_HEIGHT / 2);
                 }
             }
+            
+            // Draw animating ring on top of everything
+            if (isAnimating && animRing) {
+                const ringWidth = animRing.width;
+                const y = animY;
+                const x = animX;
+                
+                ctx.fillStyle = RING_COLOR;
+                ctx.fillRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
+                
+                ctx.strokeStyle = '#CC9900';
+                ctx.lineWidth = Math.max(1, RING_HEIGHT * 0.08);
+                ctx.strokeRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
+                
+                ctx.fillStyle = '#CC9900';
+                ctx.font = `bold ${Math.max(8, Math.floor(RING_HEIGHT * 0.6))}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(animRing.size.toString(), x, y + RING_HEIGHT / 2);
+            }
+        }
+
+        // --- Animation helpers ------------------------------------------
+
+        // Get the X pixel position of a spindle
+        function spindleX(spindleIndex) {
+            return GAME_CENTER_X + (spindleIndex - 1) * SPINDLE_SPACING;
+        }
+
+        // Get the Y position (top edge) of ring at stack position j on a spindle
+        function ringY(j) {
+            const baseTop = GAME_CENTER_Y - BASE_HEIGHT / 2;
+            const ringStep = RING_HEIGHT + RING_GAP;
+            return baseTop - (j + 1) * ringStep + RING_GAP - RING_HEIGHT * 0.2;
+        }
+
+        // Get the Y position above the spindle (half ring height gap)
+        function aboveSpindleY() {
+            const baseTop = GAME_CENTER_Y - BASE_HEIGHT / 2;
+            return baseTop - SPINDLE_HEIGHT - RING_HEIGHT * 1.5;
+        }
+
+        // Get ring width for a given ring size
+        function ringWidthForSize(size) {
+            if (numRings === 1) return MAX_RING_WIDTH;
+            return MIN_RING_WIDTH + (size - 1) * ((MAX_RING_WIDTH - MIN_RING_WIDTH) / (numRings - 1));
+        }
+
+        // --- Animation engine -------------------------------------------
+
+        function startAnimation(fromSpindle, toSpindle, isValid, onComplete) {
+            const fromRings = spindles[fromSpindle];
+            const ringSize = fromRings[fromRings.length - 1];
+            const ringWidth = ringWidthForSize(ringSize);
+            const fromStackPos = fromRings.length - 1;
+
+            // Remove ring from source during animation
+            fromRings.pop();
+
+            // Compute target stack position
+            let toStackPos = 0;
+            if (isValid) {
+                toStackPos = spindles[toSpindle].length;
+            }
+
+            // Positions
+            const startXPos = spindleX(fromSpindle);
+            const startYPos = ringY(fromStackPos);
+            const topY      = aboveSpindleY();
+            const endXPos   = isValid ? spindleX(toSpindle) : startXPos;
+            const endYPos   = isValid ? ringY(toStackPos)   : startYPos;
+
+            animRing = {
+                size: ringSize,
+                width: ringWidth,
+                fromSpindle: fromSpindle,
+                toSpindle: toSpindle,
+                valid: isValid,
+                // Store positions for each phase
+                startX: startXPos,
+                startY: startYPos,
+                topY: topY,
+                endX: endXPos,
+                endY: endYPos
+            };
+
+            animX = startXPos;
+            animY = startYPos;
+            animPhase = 0;  // start moving up
+            animProgress = 0;
+            animCallback = onComplete;
+            isAnimating = true;
+
+            // Set up first phase (move up)
+            animStartX = startXPos;
+            animStartY = startYPos;
+            animEndX   = startXPos;
+            animEndY   = topY;
+
+            animPrevTime = performance.now();
+            requestAnimationFrame(animationStep);
+        }
+
+        function animationStep(timestamp) {
+            if (!isAnimating) return;
+
+            const dt = (timestamp - animPrevTime) / 1000; // seconds
+            animPrevTime = timestamp;
+
+            if (animPhase === 0 || animPhase === 2 || animPhase === 4) {
+                // Motion phase
+                const dx = animEndX - animStartX;
+                const dy = animEndY - animStartY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 0.5) {
+                    // Zero-distance phase, skip
+                    animX = animEndX;
+                    animY = animEndY;
+                    advancePhase();
+                } else {
+                    const phaseDuration = dist / animSpeed;
+                    animProgress += dt;
+
+                    if (animProgress >= phaseDuration) {
+                        animX = animEndX;
+                        animY = animEndY;
+                        advancePhase();
+                    } else {
+                        const t = animProgress / phaseDuration;
+                        animX = animStartX + dx * t;
+                        animY = animStartY + dy * t;
+                    }
+                }
+            } else if (animPhase === 1 || animPhase === 3) {
+                // Pause phase
+                animProgress += dt;
+                if (animProgress >= ANIM_PAUSE_TIME) {
+                    advancePhase();
+                }
+            }
+
+            draw();
+            if (isAnimating) {
+                requestAnimationFrame(animationStep);
+            }
+        }
+
+        function advancePhase() {
+            animPhase++;
+            animProgress = 0;
+
+            if (animPhase === 1) {
+                // Pause at top of source
+                // (animX, animY already at top)
+            } else if (animPhase === 2) {
+                // Move across
+                animStartX = animX;
+                animStartY = animY;
+                animEndX   = animRing.endX;
+                animEndY   = animRing.topY;
+            } else if (animPhase === 3) {
+                // Pause at top of destination
+            } else if (animPhase === 4) {
+                // Move down
+                animStartX = animX;
+                animStartY = animY;
+                animEndX   = animRing.endX;
+                animEndY   = animRing.endY;
+            } else {
+                // Animation complete
+                finishAnimation();
+            }
+        }
+
+        function finishAnimation() {
+            isAnimating = false;
+            const callback = animCallback;
+            animRing = null;
+            animCallback = null;
+            if (callback) callback();
         }
 
         // Handle clicks and touches
@@ -665,46 +875,73 @@
                 }
             } else {
                 if (clickedSpindle !== selectedSpindle) {
-                    attemptMove(selectedSpindle, clickedSpindle);
+                    const from = selectedSpindle;
+                    selectedSpindle = null;
+                    draw();  // clear selection highlight before animation
+                    attemptMove(from, clickedSpindle);
+                } else {
+                    selectedSpindle = null;
+                    draw();
                 }
-                selectedSpindle = null;
-                draw();
             }
         }
 
-        // Attempt to move a ring
+        // Attempt to move a ring (with animation)
         function attemptMove(from, to) {
             if (spindles[from].length === 0) return;
             
             const ring = spindles[from][spindles[from].length - 1];
-            
-            if (spindles[to].length === 0 || spindles[to][spindles[to].length - 1] > ring) {
+            const isValid = spindles[to].length === 0 || spindles[to][spindles[to].length - 1] > ring;
+
+            // Start timer on first valid move
+            if (!timerStarted && isValid) {
+                timerStarted = true;
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1);
+            }
+
+            // Record the move and check completion BEFORE animation
+            let completed = false;
+            if (isValid) {
+                // Temporarily push ring onto destination to check completion
                 spindles[from].pop();
                 spindles[to].push(ring);
                 moveCount++;
                 updateMoveCounter();
-                
-                if (!timerStarted) {
-                    timerStarted = true;
-                    startTime = Date.now();
-                    timerInterval = setInterval(updateTimer, 1);
-                }
-                
+
                 if (checkCompletion()) {
+                    completed = true;
                     isComplete = true;
                     completionTime = Date.now() - startTime;
                     clearInterval(timerInterval);
-                    
+
                     timerDisplay.textContent = formatTime(completionTime);
                     if (displayedBestTime !== null) {
                         timerDisplay.textContent += ` (${formatTime(displayedBestTime)})`;
                     }
-                    
-                    message.style.opacity = '1';
+                }
+
+                // Remove ring again so the animation can handle it visually
+                spindles[to].pop();
+                spindles[from].push(ring);
+                // Temporarily clear isComplete so input blocking works via isAnimating
+                if (completed) isComplete = false;
+            }
+
+            startAnimation(from, to, isValid, function() {
+                if (isValid) {
+                    spindles[to].push(ring);
+                    if (completed) {
+                        isComplete = true;
+                        message.style.opacity = '1';
+                    }
+                } else {
+                    // Invalid move: put ring back
+                    spindles[from].push(ring);
                 }
                 
                 draw();
-            }
+            });
         }
 
         // Check if puzzle is complete
@@ -917,9 +1154,10 @@
                         selectedSpindle = null;
                         draw();
                     } else {
-                        attemptMove(selectedSpindle, spindleIndex);
+                        const from = selectedSpindle;
                         selectedSpindle = null;
-                        draw();
+                        draw();  // clear selection highlight before animation
+                        attemptMove(from, spindleIndex);
                     }
                 }
             }
