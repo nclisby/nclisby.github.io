@@ -368,8 +368,14 @@
         let ANIM_ZONE;
 
         // Animation parameters
-        const ANIM_PAUSE_TIME = 0.07;       // seconds to pause at each turning point
-        const ANIM_MAX_TRAVEL_TIME = 0.15;  // seconds for the longest possible move
+        // Want shortest animation time that still looks intelligible.
+        // Difficult tradeoffs 0.07 + 0.15 looks good, but when playing on the
+        // phone sometimes I'll make moves while the animation is active.
+        // 0.04 + 0.10 works well
+        // 0.03 + 0.08 works well
+        // 0.02 + 0.06 - for me, this is a bit fast
+        const ANIM_PAUSE_TIME = 0.03;       // seconds to pause at each turning point
+        const ANIM_MAX_TRAVEL_TIME = 0.08;  // seconds for the longest possible move
         let animSpeed = 0;                   // pixels per second (computed on resize)
 
         // Animation state
@@ -443,9 +449,15 @@
             const ref = Math.min(vw, vh);
             const uiScale = Math.max(0.55, Math.min(1.4, ref / 700));
 
-            const controlsFontSize = Math.round(16 * uiScale);
-            const controlsPad      = Math.round(10 * uiScale);
-            const statsFont        = Math.round(24 * uiScale);
+            // Controls need to be readable on phones — use a higher
+            // minimum scale, and bias toward viewport width so text
+            // doesn't shrink too much in portrait mode.
+            const ctrlRef = Math.max(vw, ref);
+            const ctrlScale = Math.max(0.75, Math.min(1.4, ctrlRef / 700));
+
+            const controlsFontSize = Math.round(16 * ctrlScale);
+            const controlsPad      = Math.round(10 * ctrlScale);
+            const statsFont        = Math.round(24 * ctrlScale);
 
             resetBtn.style.fontSize        = controlsFontSize + 'px';
             resetBtn.style.padding         = controlsPad + 'px';
@@ -454,8 +466,8 @@
             moveCounterDisplay.style.fontSize = statsFont + 'px';
             timerDisplay.style.fontSize       = statsFont + 'px';
 
-            const ctrlPadV = Math.round(10 * uiScale);
-            const ctrlPadH = Math.round(20 * uiScale);
+            const ctrlPadV = Math.round(10 * ctrlScale);
+            const ctrlPadH = Math.round(20 * ctrlScale);
             controlsBar.style.padding = ctrlPadV + 'px ' + ctrlPadH + 'px';
             CONTROLS_HEIGHT = controlsBar.offsetHeight;
 
