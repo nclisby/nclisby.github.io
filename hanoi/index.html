@@ -365,6 +365,7 @@
         let BASE_HEIGHT, BASE_WIDTH;
         let CONTROLS_HEIGHT;
         let GAME_CENTER_X, GAME_CENTER_Y;
+        let ANIM_ZONE;
 
         // Load best records from localStorage
         function loadBestRecords() {
@@ -396,15 +397,22 @@
         // ─── Fluid layout engine ───────────────────────────────────────
         //
         // Fills as much of the viewport as possible while keeping
-        // the game-area aspect ratio between 1:1 and 2:1 (W : H).
+        // the game-area aspect ratio between 3:1 and 5:4 (W : H).
         //
         //   W = total width  (left edge of left base → right edge of right base)
-        //   H = total height (bottom of base → top of spindle)
+        //   H = total height (bottom of base to top of spindle)
         //
-        //   Constraints:  H >= W/2   and   H <= W
+        //   Constraints:  H >= W/3   and   H <= 4*W/5
         //
-        // Everything — spindle sizes, ring sizes, fonts, controls bar —
-        // is derived from the computed W and H.
+        // Ring sizes, base sizes, and spacing are all derived from W
+        // and H exactly as before.  The only additions:
+        //
+        //   1. The drawn spindle is shortened so it only extends half
+        //      a ring height above where the topmost ring would sit.
+        //
+        //   2. Above the (shortened) spindle there is an animation
+        //      zone of 1.5 × RING_HEIGHT.  The whole image is then
+        //      vertically centred in the remaining space.
         // ────────────────────────────────────────────────────────────────
 
         function resizeCanvas() {
@@ -450,34 +458,26 @@
             //   H >= W/3    (not too wide / short)
             //   H <= 4*W/5  (not too narrow / tall)
             //
-            // The rendered height is slightly taller than H because the
-            // base extends below the spindle centre:
-            //   renderedH = H + BASE_HEIGHT/2 = H + (0.09·H)/2 = H · 1.045
-            // We must ensure renderedH fits within availH.
+            // renderedH = H · 1.045 (base overhang), must fit in availH.
             const RENDERED_FACTOR = 1.045;
             const maxH = availH / RENDERED_FACTOR;
 
             let W, H;
 
-            // Start by trying to use all available space
             W = availW;
             H = Math.min(availH, maxH);
 
-            // Apply aspect constraints
-            if (H > 4 * W / 5) H = 4 * W / 5;   // cap: not too tall
+            if (H > 4 * W / 5) H = 4 * W / 5;
             if (H < W / 3) {
-                // Too wide for the height — shrink W
                 W = 3 * H;
             }
 
-            // If H still exceeds maxH after clamping, scale down
             if (H > maxH) {
                 const scale = maxH / H;
                 W *= scale;
                 H *= scale;
             }
 
-            // If W exceeds availW, scale down
             if (W > availW) {
                 const scale = availW / W;
                 W *= scale;
@@ -485,46 +485,40 @@
             }
 
             // --- Derive all game dimensions from W and H ---------------
-            //
-            // Layout:  W = 3·baseW + 2·gap,  gap = 0.06·baseW
-            //          W = 3.12 · baseW  →  baseW = W / 3.12
-            //
-            // The draw() function renders:
-            //   - spindle top at    centerY - SPINDLE_HEIGHT/2
-            //   - base bottom at    centerY + SPINDLE_HEIGHT/2 + BASE_HEIGHT/2
-            //
-            // So the total rendered height is SPINDLE_HEIGHT + BASE_HEIGHT/2.
-            // We need this to fit within availH, not just H.
-            //
             BASE_WIDTH      = W / 3.12;
             const gap       = 0.06 * BASE_WIDTH;
             SPINDLE_SPACING = BASE_WIDTH + gap;
 
             BASE_HEIGHT     = H * 0.09;
-            SPINDLE_HEIGHT  = H;
             SPINDLE_WIDTH   = Math.max(4, BASE_WIDTH * 0.08);
 
             MAX_RING_WIDTH  = BASE_WIDTH * 0.88;
             MIN_RING_WIDTH  = Math.max(MAX_RING_WIDTH * 0.25, SPINDLE_WIDTH * 2.5);
 
-            // Ring height: sized so 10 rings stack comfortably
-            RING_HEIGHT     = Math.max(4, (SPINDLE_HEIGHT - BASE_HEIGHT) * 0.08);
+            RING_HEIGHT     = Math.max(4, (H - BASE_HEIGHT) * 0.08);
             RING_GAP        = RING_HEIGHT * 0.05;
 
-            // --- Centre the game area below the controls bar -----------
-            // The visual extent runs from (centerY - H/2) at the top
-            // to (centerY + H/2 + BASE_HEIGHT/2) at the bottom.
-            // Total rendered height = H + BASE_HEIGHT/2.
-            // Centre this rendered height within availH.
-            const renderedH = SPINDLE_HEIGHT + BASE_HEIGHT / 2;
+            // Full layout height H is used for ring/base sizing (unchanged).
+            // But the drawn spindle is shorter: just enough for the ring
+            // stack plus half a ring height cap above the top ring.
+            const ringStackH = numRings * (RING_HEIGHT + RING_GAP);
+            SPINDLE_HEIGHT   = ringStackH + RING_HEIGHT * 1.0;
+
+            ANIM_ZONE = 1.5 * RING_HEIGHT;
+
+            // --- Vertically centre the visible game area ---------------
+            // GAME_CENTER_Y = the vertical position of the base centre.
+            //
+            // Above base centre: BASE_HEIGHT/2 + SPINDLE_HEIGHT + ANIM_ZONE
+            // Below base centre: BASE_HEIGHT/2
+            // Total visible:     BASE_HEIGHT + SPINDLE_HEIGHT + ANIM_ZONE
+            const visibleH = BASE_HEIGHT + SPINDLE_HEIGHT + ANIM_ZONE;
+            const leftover = availH - visibleH;
+
             GAME_CENTER_X = vw / 2;
             GAME_CENTER_Y = CONTROLS_HEIGHT + marginTop
-                          + renderedH / 2;  // top of spindle at marginTop below controls
-            // But we want it centred, so shift down by half the leftover space:
-            const leftover = availH - renderedH;
-            GAME_CENTER_Y = CONTROLS_HEIGHT + marginTop
-                          + leftover / 2
-                          + SPINDLE_HEIGHT / 2;
+                          + Math.max(0, leftover / 2)
+                          + ANIM_ZONE + SPINDLE_HEIGHT + BASE_HEIGHT / 2;
         }
 
         // Initialize game
@@ -558,6 +552,7 @@
             
             updateTimer();
             updateMoveCounter();
+            resizeCanvas();
             draw();
         }
 
@@ -566,24 +561,28 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             const centerX = GAME_CENTER_X;
+            // centerY = vertical position of the base centre (spindle bottom)
             const centerY = GAME_CENTER_Y;
             
             if (isComplete) {
-                const messageY = centerY - (SPINDLE_HEIGHT * 2/3);
+                // Place message in the animation zone above the spindles
+                const messageY = centerY - SPINDLE_HEIGHT - ANIM_ZONE * 0.5;
                 message.style.left = centerX + 'px';
                 message.style.top = messageY + 'px';
             }
             
             for (let i = 0; i < 3; i++) {
                 const x = centerX + (i - 1) * SPINDLE_SPACING;
+                const baseTop = centerY - BASE_HEIGHT / 2;
                 
-                // Draw base
+                // Draw base (centred on centerY)
                 ctx.fillStyle = BASE_COLOR;
-                ctx.fillRect(x - BASE_WIDTH/2, centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT/2, BASE_WIDTH, BASE_HEIGHT);
+                ctx.fillRect(x - BASE_WIDTH/2, centerY - BASE_HEIGHT/2, BASE_WIDTH, BASE_HEIGHT);
                 
-                // Draw spindle (stop at the base)
+                // Draw spindle upward from base top
+                const spindleTop = baseTop - SPINDLE_HEIGHT;
                 ctx.fillStyle = SPINDLE_COLOR;
-                ctx.fillRect(x - SPINDLE_WIDTH/2, centerY - SPINDLE_HEIGHT/2, SPINDLE_WIDTH, SPINDLE_HEIGHT - BASE_HEIGHT/2);
+                ctx.fillRect(x - SPINDLE_WIDTH/2, spindleTop, SPINDLE_WIDTH, SPINDLE_HEIGHT);
                 
                 // Highlight selected spindle
                 if (selectedSpindle === i) {
@@ -592,20 +591,23 @@
                     const pad = Math.max(3, BASE_WIDTH * 0.02);
                     ctx.strokeRect(
                         x - BASE_WIDTH/2 - pad,
-                        centerY - SPINDLE_HEIGHT/2 - pad,
+                        spindleTop - pad,
                         BASE_WIDTH + 2 * pad,
                         SPINDLE_HEIGHT + BASE_HEIGHT + 2 * pad
                     );
                 }
                 
-                // Draw rings
+                // Draw rings (stacking upward from base top)
                 const rings = spindles[i];
                 for (let j = 0; j < rings.length; j++) {
                     const ringSize = rings[j];
                     const ringWidth = numRings === 1
                         ? MAX_RING_WIDTH
                         : MIN_RING_WIDTH + (ringSize - 1) * ((MAX_RING_WIDTH - MIN_RING_WIDTH) / (numRings - 1));
-                    const y = centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT - j * (RING_HEIGHT + RING_GAP) - RING_HEIGHT + RING_HEIGHT * 0.25;
+                    // Ring j sits with its bottom edge at baseTop - (j+1)*ringStep
+                    // but nudged down slightly (0.25 * RING_HEIGHT) so rings nestle together
+                    const ringStep = RING_HEIGHT + RING_GAP;
+                    const y = baseTop - (j + 1) * ringStep + RING_GAP - RING_HEIGHT * 0.2;
                     
                     ctx.fillStyle = RING_COLOR;
                     ctx.fillRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
@@ -714,7 +716,7 @@
                 
                 const centerX = GAME_CENTER_X;
                 const centerY = GAME_CENTER_Y;
-                const messageY = centerY - (SPINDLE_HEIGHT * 2/3);
+                const messageY = centerY - SPINDLE_HEIGHT - ANIM_ZONE * 0.5;
                 
                 message.style.left = centerX + 'px';
                 message.style.top = messageY + 'px';
