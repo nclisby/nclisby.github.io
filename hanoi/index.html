@@ -55,18 +55,15 @@
         
         #controls {
             position: absolute;
-            top: 20px;
+            top: 0;
             width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 30px;
             box-sizing: border-box;
         }
         
         #resetBtn {
-            padding: 10px;
-            font-size: 16px;
             border-radius: 5px;
             border: none;
             background-color: white;
@@ -79,22 +76,18 @@
         }
         
         #moveCounter {
-            font-size: 24px;
             font-weight: bold;
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
         
         #timer {
-            font-size: 24px;
             font-weight: bold;
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
         
         #sizeSelector {
-            padding: 10px;
-            font-size: 16px;
             border-radius: 5px;
             border: none;
             background-color: white;
@@ -106,13 +99,13 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 36px;
             font-weight: bold;
             color: #00BFFF;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             opacity: 0;
             transition: opacity 0.5s;
             pointer-events: none;
+            white-space: nowrap;
         }
         
         #confirmDialog {
@@ -275,25 +268,6 @@
         #helpCloseBtn:hover {
             background-color: #f0f0f0;
         }
-        
-        @media (max-width: 768px) {
-            #controls {
-                padding: 0 10px;
-            }
-            
-            #moveCounter, #timer {
-                font-size: 18px;
-            }
-            
-            #resetBtn, #sizeSelector {
-                font-size: 14px;
-                padding: 8px;
-            }
-            
-            #message {
-                font-size: 30px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -358,6 +332,7 @@
         const helpDialog = document.getElementById('helpDialog');
         const helpOverlay = document.getElementById('helpOverlay');
         const helpCloseBtn = document.getElementById('helpCloseBtn');
+        const controlsBar = document.getElementById('controls');
         
         // Mobile detection
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
@@ -377,22 +352,20 @@
         let displayedBestTime = null;
         let displayedBestMoves = null;
 
-        // Visual constants
-        const SPINDLE_WIDTH = 20;
-        let SPINDLE_HEIGHT = 300;
+        // Visual constants (colours only — all dimensions set by resizeCanvas)
         const SPINDLE_COLOR = '#FF0000';
         const BASE_COLOR = '#000000';
         const RING_COLOR = '#ffff77';
-        const RING_COLOR_RGB = {r: 255, g: 215, b: 0}; // Canary yellow in RGB
-        const WHITE_RGB = {r: 255, g: 255, b: 255}; // White in RGB
-        let RING_HEIGHT = 30;
-        let RING_GAP = RING_HEIGHT * 0.05;
-        let MIN_RING_WIDTH = 60;
-        let MAX_RING_WIDTH = 210;
-        let SPINDLE_SPACING = 300;
-        let BASE_HEIGHT = 40;
-        let BASE_WIDTH = 250;
-        
+        const RING_COLOR_RGB = {r: 255, g: 215, b: 0};
+        const WHITE_RGB = {r: 255, g: 255, b: 255};
+
+        // Layout dimensions (computed by resizeCanvas)
+        let SPINDLE_WIDTH, SPINDLE_HEIGHT, RING_HEIGHT, RING_GAP;
+        let MIN_RING_WIDTH, MAX_RING_WIDTH, SPINDLE_SPACING;
+        let BASE_HEIGHT, BASE_WIDTH;
+        let CONTROLS_HEIGHT;
+        let GAME_CENTER_X, GAME_CENTER_Y;
+
         // Load best records from localStorage
         function loadBestRecords() {
             try {
@@ -420,45 +393,138 @@
             return bestRecords[numRings] || { moves: null, time: null };
         }
 
-        // Set canvas size
+        // ─── Fluid layout engine ───────────────────────────────────────
+        //
+        // Fills as much of the viewport as possible while keeping
+        // the game-area aspect ratio between 1:1 and 2:1 (W : H).
+        //
+        //   W = total width  (left edge of left base → right edge of right base)
+        //   H = total height (bottom of base → top of spindle)
+        //
+        //   Constraints:  H >= W/2   and   H <= W
+        //
+        // Everything — spindle sizes, ring sizes, fonts, controls bar —
+        // is derived from the computed W and H.
+        // ────────────────────────────────────────────────────────────────
+
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            // Calculate maximum base width to prevent overlap
-            const minSpacing = 10; // Minimum gap between bases
-            const availableWidth = canvas.width - 60; // Leave some margin
-            const maxBaseWidth = Math.floor((availableWidth - 2 * minSpacing) / 3);
-            
-            // Adjust visual constants based on screen size
-            if (maxBaseWidth < 250) {
-                BASE_WIDTH = Math.max(100, maxBaseWidth); // Minimum base width of 100
-                MAX_RING_WIDTH = BASE_WIDTH * 210 / 250;
-                MIN_RING_WIDTH = Math.max(40, MAX_RING_WIDTH / 4);
-                SPINDLE_SPACING = BASE_WIDTH + minSpacing;
-            } else {
-                BASE_WIDTH = 250;
-                MAX_RING_WIDTH = 210;
-                MIN_RING_WIDTH = 60;
-                SPINDLE_SPACING = 300;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            canvas.width = vw;
+            canvas.height = vh;
+
+            // --- Scale the controls bar --------------------------------
+            const ref = Math.min(vw, vh);
+            const uiScale = Math.max(0.55, Math.min(1.4, ref / 700));
+
+            const controlsFontSize = Math.round(16 * uiScale);
+            const controlsPad      = Math.round(10 * uiScale);
+            const statsFont        = Math.round(24 * uiScale);
+
+            resetBtn.style.fontSize        = controlsFontSize + 'px';
+            resetBtn.style.padding         = controlsPad + 'px';
+            sizeSelector.style.fontSize    = controlsFontSize + 'px';
+            sizeSelector.style.padding     = controlsPad + 'px';
+            moveCounterDisplay.style.fontSize = statsFont + 'px';
+            timerDisplay.style.fontSize       = statsFont + 'px';
+
+            const ctrlPadV = Math.round(10 * uiScale);
+            const ctrlPadH = Math.round(20 * uiScale);
+            controlsBar.style.padding = ctrlPadV + 'px ' + ctrlPadH + 'px';
+            CONTROLS_HEIGHT = controlsBar.offsetHeight;
+
+            // Message font
+            message.style.fontSize = Math.round(36 * uiScale) + 'px';
+
+            // --- Available rectangle below the controls bar ------------
+            const marginSide   = Math.max(8, Math.round(Math.min(vw, vh) * 0.02));
+            const marginTop    = Math.max(8, Math.round(Math.min(vw, vh) * 0.015));
+            const marginBottom = Math.max(12, Math.round(Math.min(vw, vh) * 0.03));
+
+            const availW = vw - 2 * marginSide;
+            const availH = vh - CONTROLS_HEIGHT - marginTop - marginBottom;
+
+            if (availW <= 0 || availH <= 0) return;
+
+            // --- Determine game W and H with aspect constraints --------
+            //   H >= W/3    (not too wide / short)
+            //   H <= 4*W/5  (not too narrow / tall)
+            //
+            // The rendered height is slightly taller than H because the
+            // base extends below the spindle centre:
+            //   renderedH = H + BASE_HEIGHT/2 = H + (0.09·H)/2 = H · 1.045
+            // We must ensure renderedH fits within availH.
+            const RENDERED_FACTOR = 1.045;
+            const maxH = availH / RENDERED_FACTOR;
+
+            let W, H;
+
+            // Start by trying to use all available space
+            W = availW;
+            H = Math.min(availH, maxH);
+
+            // Apply aspect constraints
+            if (H > 4 * W / 5) H = 4 * W / 5;   // cap: not too tall
+            if (H < W / 3) {
+                // Too wide for the height — shrink W
+                W = 3 * H;
             }
-            
-            // Vertical scaling for landscape mode
-            const availableHeight = canvas.height - 120; // Account for controls and margins
-            const maxSpindleHeight = availableHeight * 0.7; // Use 70% of available height
-            
-            if (maxSpindleHeight < 300) {
-                SPINDLE_HEIGHT = Math.max(150, maxSpindleHeight);
-                // Scale ring height proportionally
-                RING_HEIGHT = Math.max(12, Math.floor(SPINDLE_HEIGHT / 10 * 0.8));
-                RING_GAP = RING_HEIGHT * 0.05;
-                BASE_HEIGHT = Math.max(20, Math.floor(SPINDLE_HEIGHT / 7.5));
-            } else {
-                SPINDLE_HEIGHT = 300;
-                RING_HEIGHT = 24;
-                RING_GAP = RING_HEIGHT * 0.05;
-                BASE_HEIGHT = 40;
+
+            // If H still exceeds maxH after clamping, scale down
+            if (H > maxH) {
+                const scale = maxH / H;
+                W *= scale;
+                H *= scale;
             }
+
+            // If W exceeds availW, scale down
+            if (W > availW) {
+                const scale = availW / W;
+                W *= scale;
+                H *= scale;
+            }
+
+            // --- Derive all game dimensions from W and H ---------------
+            //
+            // Layout:  W = 3·baseW + 2·gap,  gap = 0.06·baseW
+            //          W = 3.12 · baseW  →  baseW = W / 3.12
+            //
+            // The draw() function renders:
+            //   - spindle top at    centerY - SPINDLE_HEIGHT/2
+            //   - base bottom at    centerY + SPINDLE_HEIGHT/2 + BASE_HEIGHT/2
+            //
+            // So the total rendered height is SPINDLE_HEIGHT + BASE_HEIGHT/2.
+            // We need this to fit within availH, not just H.
+            //
+            BASE_WIDTH      = W / 3.12;
+            const gap       = 0.06 * BASE_WIDTH;
+            SPINDLE_SPACING = BASE_WIDTH + gap;
+
+            BASE_HEIGHT     = H * 0.09;
+            SPINDLE_HEIGHT  = H;
+            SPINDLE_WIDTH   = Math.max(4, BASE_WIDTH * 0.08);
+
+            MAX_RING_WIDTH  = BASE_WIDTH * 0.88;
+            MIN_RING_WIDTH  = Math.max(MAX_RING_WIDTH * 0.25, SPINDLE_WIDTH * 2.5);
+
+            // Ring height: sized so 10 rings stack comfortably
+            RING_HEIGHT     = Math.max(4, (SPINDLE_HEIGHT - BASE_HEIGHT) * 0.08);
+            RING_GAP        = RING_HEIGHT * 0.05;
+
+            // --- Centre the game area below the controls bar -----------
+            // The visual extent runs from (centerY - H/2) at the top
+            // to (centerY + H/2 + BASE_HEIGHT/2) at the bottom.
+            // Total rendered height = H + BASE_HEIGHT/2.
+            // Centre this rendered height within availH.
+            const renderedH = SPINDLE_HEIGHT + BASE_HEIGHT / 2;
+            GAME_CENTER_X = vw / 2;
+            GAME_CENTER_Y = CONTROLS_HEIGHT + marginTop
+                          + renderedH / 2;  // top of spindle at marginTop below controls
+            // But we want it centred, so shift down by half the leftover space:
+            const leftover = availH - renderedH;
+            GAME_CENTER_Y = CONTROLS_HEIGHT + marginTop
+                          + leftover / 2
+                          + SPINDLE_HEIGHT / 2;
         }
 
         // Initialize game
@@ -469,7 +535,6 @@
             }
             spindles = [[], [], []];
             
-            // Place all rings on first spindle
             for (let i = numRings; i > 0; i--) {
                 spindles[0].push(i);
             }
@@ -482,7 +547,6 @@
             isComplete = false;
             message.style.opacity = '0';
             
-            // Update displayed best records for the new game
             const best = getBestRecord();
             displayedBestTime = best.time;
             displayedBestMoves = best.moves;
@@ -501,17 +565,15 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2 + 30;
+            const centerX = GAME_CENTER_X;
+            const centerY = GAME_CENTER_Y;
             
-            // Update message position if complete
             if (isComplete) {
                 const messageY = centerY - (SPINDLE_HEIGHT * 2/3);
                 message.style.left = centerX + 'px';
                 message.style.top = messageY + 'px';
             }
             
-            // Draw spindles and bases
             for (let i = 0; i < 3; i++) {
                 const x = centerX + (i - 1) * SPINDLE_SPACING;
                 
@@ -526,28 +588,34 @@
                 // Highlight selected spindle
                 if (selectedSpindle === i) {
                     ctx.strokeStyle = '#4169E1';
-                    ctx.lineWidth = 3;
-                    ctx.strokeRect(x - BASE_WIDTH/2 - 5, centerY - SPINDLE_HEIGHT/2 - 5, BASE_WIDTH + 10, SPINDLE_HEIGHT + BASE_HEIGHT + 10);
+                    ctx.lineWidth = Math.max(2, SPINDLE_WIDTH * 0.15);
+                    const pad = Math.max(3, BASE_WIDTH * 0.02);
+                    ctx.strokeRect(
+                        x - BASE_WIDTH/2 - pad,
+                        centerY - SPINDLE_HEIGHT/2 - pad,
+                        BASE_WIDTH + 2 * pad,
+                        SPINDLE_HEIGHT + BASE_HEIGHT + 2 * pad
+                    );
                 }
                 
                 // Draw rings
                 const rings = spindles[i];
                 for (let j = 0; j < rings.length; j++) {
                     const ringSize = rings[j];
-                    const ringWidth = MIN_RING_WIDTH + (ringSize - 1) * ((MAX_RING_WIDTH - MIN_RING_WIDTH) / (numRings - 1));
+                    const ringWidth = numRings === 1
+                        ? MAX_RING_WIDTH
+                        : MIN_RING_WIDTH + (ringSize - 1) * ((MAX_RING_WIDTH - MIN_RING_WIDTH) / (numRings - 1));
                     const y = centerY + SPINDLE_HEIGHT/2 - BASE_HEIGHT - j * (RING_HEIGHT + RING_GAP) - RING_HEIGHT + RING_HEIGHT * 0.25;
                     
                     ctx.fillStyle = RING_COLOR;
                     ctx.fillRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
                     
-                    // Add border to rings
                     ctx.strokeStyle = '#CC9900';
-                    ctx.lineWidth = 2;
+                    ctx.lineWidth = Math.max(1, RING_HEIGHT * 0.08);
                     ctx.strokeRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
                     
-                    // Add ring number in the center
                     ctx.fillStyle = '#CC9900';
-                    ctx.font = `bold ${Math.floor(RING_HEIGHT * 0.6)}px Arial`;
+                    ctx.font = `bold ${Math.max(8, Math.floor(RING_HEIGHT * 0.6))}px Arial`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(ringSize.toString(), x, y + RING_HEIGHT / 2);
@@ -565,21 +633,18 @@
             let x, y;
             
             if (event.type === 'touchstart' || event.type === 'touchend') {
-                // For touch events
                 const touch = event.changedTouches[0];
                 x = touch.clientX - rect.left;
                 y = touch.clientY - rect.top;
             } else {
-                // For mouse events
                 x = event.clientX - rect.left;
                 y = event.clientY - rect.top;
             }
             
-            const centerX = canvas.width / 2;
+            const centerX = GAME_CENTER_X;
             
-            // Determine which spindle was clicked/touched
             let clickedSpindle = null;
-            const touchBuffer = isMobile ? 20 : 0; // Larger touch target on mobile
+            const touchBuffer = isMobile ? 20 : 0;
             
             for (let i = 0; i < 3; i++) {
                 const spindleX = centerX + (i - 1) * SPINDLE_SPACING;
@@ -592,13 +657,11 @@
             if (clickedSpindle === null) return;
             
             if (selectedSpindle === null) {
-                // First click - select source spindle if it has rings
                 if (spindles[clickedSpindle].length > 0) {
                     selectedSpindle = clickedSpindle;
                     draw();
                 }
             } else {
-                // Second click - attempt move
                 if (clickedSpindle !== selectedSpindle) {
                     attemptMove(selectedSpindle, clickedSpindle);
                 }
@@ -613,28 +676,23 @@
             
             const ring = spindles[from][spindles[from].length - 1];
             
-            // Check if move is valid
             if (spindles[to].length === 0 || spindles[to][spindles[to].length - 1] > ring) {
-                // Valid move
                 spindles[from].pop();
                 spindles[to].push(ring);
                 moveCount++;
                 updateMoveCounter();
                 
-                // Start timer on first move
                 if (!timerStarted) {
                     timerStarted = true;
                     startTime = Date.now();
                     timerInterval = setInterval(updateTimer, 1);
                 }
                 
-                // Check for completion
                 if (checkCompletion()) {
                     isComplete = true;
                     completionTime = Date.now() - startTime;
                     clearInterval(timerInterval);
                     
-                    // Update timer one final time with exact completion time and keep showing old record
                     timerDisplay.textContent = formatTime(completionTime);
                     if (displayedBestTime !== null) {
                         timerDisplay.textContent += ` (${formatTime(displayedBestTime)})`;
@@ -649,23 +707,19 @@
 
         // Check if puzzle is complete
         function checkCompletion() {
-            // Puzzle is complete if all rings are on spindle 1 or 2 (not the starting spindle 0)
             const isCompleted = (spindles[1].length === numRings || spindles[2].length === numRings);
             
             if (isCompleted && !isComplete) {
-                // Capture completion time only once
                 completionTime = Date.now() - startTime;
                 
-                // Position message over middle spindle, 2/3 up
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2 + 30;
+                const centerX = GAME_CENTER_X;
+                const centerY = GAME_CENTER_Y;
                 const messageY = centerY - (SPINDLE_HEIGHT * 2/3);
                 
                 message.style.left = centerX + 'px';
                 message.style.top = messageY + 'px';
                 message.style.transform = 'translate(-50%, -50%)';
                 
-                // Check for new records
                 const elapsed = completionTime;
                 const best = getBestRecord();
                 let newTimeRecord = false;
@@ -679,7 +733,6 @@
                     newMoveRecord = true;
                 }
                 
-                // Update records if needed
                 if (newTimeRecord || newMoveRecord) {
                     if (!bestRecords[numRings]) {
                         bestRecords[numRings] = { moves: null, time: null };
@@ -695,7 +748,6 @@
                     saveBestRecords();
                 }
                 
-                // Set appropriate message
                 if (newTimeRecord && newMoveRecord) {
                     message.textContent = 'New record time and move count!';
                 } else if (newTimeRecord) {
@@ -754,10 +806,8 @@
         });
         sizeSelector.addEventListener('change', (e) => {
             if (e.target.value === 'clear-records') {
-                // Show confirmation dialog
                 confirmDialog.style.display = 'block';
                 confirmOverlay.style.display = 'block';
-                // Reset selector to current ring count
                 sizeSelector.value = numRings.toString();
             } else if (e.target.value === 'help') {
                 openHelpDialog();
@@ -785,16 +835,13 @@
         
         confirmYes.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Clear all records
             bestRecords = {};
             saveBestRecords();
             closeConfirmDialog();
             
-            // Update display to remove the record indicators
             updateTimer();
             updateMoveCounter();
             
-            // Show confirmation message
             message.textContent = 'All records cleared!';
             message.style.opacity = '1';
             setTimeout(() => {
@@ -823,7 +870,6 @@
         document.addEventListener('keydown', (e) => {
             const key = e.key;
 
-            // Escape closes any open dialog
             if (key === 'Escape') {
                 if (helpDialog.style.display === 'block') {
                     closeHelpDialog();
@@ -835,24 +881,20 @@
                 }
             }
 
-            // Enter/Space closes help dialog when it's open
             if ((key === 'Enter' || key === ' ') && helpDialog.style.display === 'block') {
                 e.preventDefault();
                 closeHelpDialog();
                 return;
             }
 
-            // Block game keys while a dialog is open
             if (confirmDialog.style.display === 'block') return;
             if (helpDialog.style.display === 'block') return;
 
-            // H or ? opens help
             if (key === 'h' || key === 'H' || key === '?') {
                 openHelpDialog();
                 return;
             }
 
-            // R resets the game
             if (key === 'r' || key === 'R') {
                 initGame();
                 return;
@@ -864,19 +906,15 @@
                 const spindleIndex = parseInt(key) - 1;
 
                 if (selectedSpindle === null) {
-                    // First key press - select source spindle if it has rings
                     if (spindles[spindleIndex].length > 0) {
                         selectedSpindle = spindleIndex;
                         draw();
                     }
                 } else {
-                    // Second key press
                     if (spindleIndex === selectedSpindle) {
-                        // Same spindle - cancel selection
                         selectedSpindle = null;
                         draw();
                     } else {
-                        // Different spindle - attempt move
                         attemptMove(selectedSpindle, spindleIndex);
                         selectedSpindle = null;
                         draw();
@@ -894,7 +932,6 @@
         loadBestRecords();
         resizeCanvas();
         
-        // Set initial displayed best records
         const initialBest = getBestRecord();
         displayedBestTime = initialBest.time;
         displayedBestMoves = initialBest.moves;
