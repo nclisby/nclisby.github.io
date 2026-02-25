@@ -369,13 +369,11 @@
 
         // Animation parameters
         // Want shortest animation time that still looks intelligible.
-        // Difficult tradeoffs 0.07 + 0.15 looks good, but when playing on the
-        // phone sometimes I'll make moves while the animation is active.
-        // 0.04 + 0.10 works well
-        // 0.03 + 0.08 works well
-        // 0.02 + 0.06 - for me, this is a bit fast
-        const ANIM_PAUSE_TIME = 0.03;       // seconds to pause at each turning point
-        const ANIM_MAX_TRAVEL_TIME = 0.08;  // seconds for the longest possible move
+        // Do not want to interfere with gameplay.
+        // 0.01 + 0.06 - probably about as fast as seems reasonable
+        // pause is beneficial, even when it is short
+        const ANIM_PAUSE_TIME = 0.01;       // seconds to pause at each turning point
+        const ANIM_MAX_TRAVEL_TIME = 0.06;  // seconds to go from one side to the other.
         let animSpeed = 0;                   // pixels per second (computed on resize)
 
         // Animation state
@@ -559,7 +557,15 @@
             const maxVertical = bottomRingY - aboveSpindleY;
             const maxHorizontal = 2 * SPINDLE_SPACING;
             const maxDistance = 2 * maxVertical + maxHorizontal;
+            // Original approach - based on total distance
             animSpeed = maxDistance / ANIM_MAX_TRAVEL_TIME;
+            // New approach - just horizontal distance, which is independent of
+            // the number of rings.
+            // I had noticed that it seemed very fast with lots of rings, and
+            // honestly it is harder to make moves quickly in this case, and so
+            // the actual time of the animation can be longer without impeding game
+            // play.
+            animSpeed = maxHorizontal / ANIM_MAX_TRAVEL_TIME;
         }
 
         // Initialize game
