@@ -302,14 +302,16 @@
         <div id="helpDialog">
             <h2>Tower of Hanoi</h2>
             <p>Move all rings from the left spindle to either of the other two spindles. A larger ring cannot be placed on top of a smaller ring.</p>
-            <p>More information available at <a href="https://en.wikipedia.org/wiki/Tower_of_Hanoi" target="_blank" rel="noopener noreferrer">Wikipedia</a>.</p>
+            <p>More information available at the <a
+                href="https://en.wikipedia.org/wiki/Tower_of_Hanoi"
+                target="_blank" rel="noopener noreferrer">Wikipedia</a> page.</p>
             <h3>Mouse / Touch</h3>
             <p>Click or tap a spindle to select it, then click or tap another spindle to move the top ring.</p>
             <h3>Keyboard</h3>
             <table>
                 <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Select left, middle, or right spindle.</td></tr>
-                <tr><td><kbd>R</kbd></td><td>Reset the current game.</td></tr>
-                <tr><td><kbd>H</kbd> or <kbd>?</kbd></td><td>Show this help.</td></tr>
+                <tr><td><kbd>r</kbd><kbd>R</kbd></td><td>Reset the current game.</td></tr>
+                <tr><td><kbd>h</kbd> <kbd>H</kbd> <kbd>?</kbd></td><td>Toggle help.</td></tr>
                 <tr><td colspan="2">Press two different numbers to move a ring (e.g. <kbd>3</kbd> <kbd>2</kbd>).</td></tr> 
                 <tr><td colspan="2">Press the same number twice to cancel.</td></tr>
             </table>
@@ -1145,12 +1147,21 @@
             }
 
             if (confirmDialog.style.display === 'block') return;
-            if (helpDialog.style.display === 'block') return;
 
             if (key === 'h' || key === 'H' || key === '?') {
-                openHelpDialog();
+                // toggle display of help menu
+                if (helpDialog.style.display === 'block') {
+                    closeHelpDialog();
+                }
+                else
+                {
+                    openHelpDialog();
+                }
+                // openHelpDialog();
                 return;
             }
+
+            if (helpDialog.style.display === 'block') return;
 
             if (key === 'r' || key === 'R') {
                 initGame();
