@@ -149,15 +149,32 @@
             <h3>About the Bit Interleaving Function</h3>
             <p>This function maps points from the unit square [0,1]×[0,1] to the unit interval [0,1] by interleaving the binary digits of the input coordinates.</p>
             <div class="formula">
-                Given: x = 0.x₁x₂x₃x₄... and y = 0.y₁y₂y₃y₄...<br>
-                Output: z = 0.x₁y₁x₂y₂x₃y₃...
+                Given: x = 0.x<sub>1</sub>x<sub>2</sub>x<sub>3</sub>x<sub>4</sub>... and 
+                y = 0.y<sub>1</sub>y<sub>2</sub>y<sub>3</sub>y<sub>4</sub>...<br>
+                Output: z = 0.x<sub>1</sub>y<sub>1</sub>x<sub>2</sub>y<sub>2</sub>x<sub>3</sub>y<sub>3</sub>x<sub>4</sub>y<sub>4</sub>...
             </div>
             <p><strong>Key Properties:</strong></p>
             <ul>
                 <li>The function creates a fractal-like, self-similar surface.</li>
-                <li>Although there are some subtleties due to the behaviour of special cases, this map can be used to demonstrate that [0,1]×[0,1] has the same cardinality as [0,1].</li>
+                <li>
+                Observe that each z value in [0,1] is the image of a point (x,y) in [0,1]×[0,1].
+                </li>
+                <li>
+                This map can be used to demonstrate that [0,1]×[0,1] has the same cardinality as [0,1].
+                </li>
+                <li>
+                There are some subtleties in the proof, due to the equality of some infinite
+                binary expansions that prevents f from being a bijection.
+                </li>
+                <li>
+                For example, in decimal notation we know that 0.5=0.4999999..., while in binary 
+                an equivalent statement is that 0.1 = 0.0111111...
+                </li>
+                <li>
+                If we exclude the binary expansions for x and y from terminating then we have a bijection.
+                </li>
             </ul>
-            <p><strong>Visualisation Notes:</strong> The jagged, step-like patterns you see are characteristic of this function. Try adjusting the resolution to see different levels of detail.</p>
+            <p><strong>Instructions:</strong> Adjust the resolution to see different levels of detail.</p>
         </div>
         <br />
         <br />
