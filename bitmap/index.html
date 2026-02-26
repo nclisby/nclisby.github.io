@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bit Interleaving Function Visualiser</title>
+    <title>Bit Interleaving Function</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
     <style>
         body {
@@ -142,9 +142,25 @@
 </head>
 <body>
     <div class="container">
-        <h1>Bit Interleaving Function Visualiser</h1>
+        <h1>The Bit Interleaving Function</h1>
         <p class="subtitle">f(x, y) = interleave(binary(x), binary(y))</p>
         
+        <div class="info-box">
+            <h3>About the Bit Interleaving Function</h3>
+            <p>This function maps points from the unit square [0,1]×[0,1] to the unit interval [0,1] by interleaving the binary digits of the input coordinates.</p>
+            <div class="formula">
+                Given: x = 0.x₁x₂x₃x₄... and y = 0.y₁y₂y₃y₄...<br>
+                Output: z = 0.x₁y₁x₂y₂x₃y₃...
+            </div>
+            <p><strong>Key Properties:</strong></p>
+            <ul>
+                <li>The function creates a fractal-like, self-similar surface.</li>
+                <li>Although there are some subtleties due to the behaviour of special cases, this map can be used to demonstrate that [0,1]×[0,1] has the same cardinality as [0,1].</li>
+            </ul>
+            <p><strong>Visualisation Notes:</strong> The jagged, step-like patterns you see are characteristic of this function. Try adjusting the resolution to see different levels of detail.</p>
+        </div>
+        <br />
+        <br />
         <div class="controls">
             <div class="control-group">
                 <label for="resolution">Resolution</label>
@@ -188,20 +204,6 @@
         
         <!-- <div class="debug-info" id="debug"></div> -->
         
-        <div class="info-box">
-            <h3>About the Bit Interleaving Function</h3>
-            <p>This function maps points from the unit square [0,1]×[0,1] to the unit interval [0,1] by interleaving the binary digits of the input coordinates.</p>
-            <div class="formula">
-                Given: x = 0.x₁x₂x₃x₄... and y = 0.y₁y₂y₃y₄...<br>
-                Output: z = 0.x₁y₁x₂y₂x₃y₃...
-            </div>
-            <p><strong>Key Properties:</strong></p>
-            <ul>
-                <li>The function creates a fractal-like, self-similar surface.</li>
-                <li>Although there are some subtleties due to the behaviour of special cases, this map can be used to demonstrate that [0,1]×[0,1] has the same cardinality as [0,1].</li>
-            </ul>
-            <p><strong>Visualisation Notes:</strong> The jagged, step-like patterns you see are characteristic of this function. Try adjusting the resolution to see different levels of detail.</p>
-        </div>
     </div>
 
     <script>
