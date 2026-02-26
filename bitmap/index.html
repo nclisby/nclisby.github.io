@@ -147,7 +147,7 @@
         
         <div class="info-box">
             <h3>About the Bit Interleaving Function</h3>
-            <p>This function maps points from the unit square [0,1]×[0,1] to the unit interval [0,1] by interleaving the binary digits of the input coordinates.</p>
+            <p>This function maps points from the unit square [0,1)×[0,1) to the unit interval [0,1) by interleaving the binary digits of the input coordinates.</p>
             <div class="formula">
                 Given: x = 0.x<sub>1</sub>x<sub>2</sub>x<sub>3</sub>x<sub>4</sub>... and 
                 y = 0.y<sub>1</sub>y<sub>2</sub>y<sub>3</sub>y<sub>4</sub>...<br>
@@ -157,21 +157,13 @@
             <ul>
                 <li>The function creates a fractal-like, self-similar surface.</li>
                 <li>
-                Observe that each z value in [0,1] is the image of a point (x,y) in [0,1]×[0,1].
+                Observe that each z value in [0,1) is the image of a point (x,y) in [0,1)×[0,1).
                 </li>
                 <li>
-                This map can be used to demonstrate that [0,1]×[0,1] has the same cardinality as [0,1].
+                This map can be used to demonstrate that [0,1)×[0,1) has the same cardinality as [0,1).
                 </li>
                 <li>
-                There are some subtleties in the proof, due to the equality of some infinite
-                binary expansions that prevents f from being a bijection.
-                </li>
-                <li>
-                For example, in decimal notation we know that 0.5=0.4999999..., while in binary 
-                an equivalent statement is that 0.1 = 0.0111111...
-                </li>
-                <li>
-                If we exclude the binary expansions for x and y from terminating then we have a bijection.
+                See the bottom of these page for further details.
                 </li>
             </ul>
             <p><strong>Instructions:</strong> Adjust the resolution to see different levels of detail.</p>
@@ -221,6 +213,68 @@
         
         <!-- <div class="debug-info" id="debug"></div> -->
         
+        <br />
+        <br />
+        <div class="info-box">
+            <p><strong>Subtleties:</strong></p>
+            <ul>
+                <li>
+                There are some subtleties in the proof that [0,1)×[0,1) has the
+                same cardinality as [0,1).
+                </li>
+                <li>
+                One issue is due to the equality of some infinite
+                binary expansions that prevent f, as written, from being single
+                valued.
+                </li>
+                <li>
+                For example, in decimal notation we know that 0.5=0.499999999...
+                and 0.75=0.749999999..., while in binary the
+                equivalent statements are that 0.1<sub>2</sub> =
+                0.011111111...<sub>2</sub> and
+                0.11<sub>2</sub> = 0.101111111...<sub>2</sub>
+                </li>
+                <li>
+                If we are not careful about this then f would have different
+                values depending on the choice of binary expansion for x and y.
+                </li>
+                <li>
+                We can circumvent this non-uniqueness issue if we define the
+                function &ldquo;binary&rdquo; to have a consistent definition in
+                the case of dyadic numbers. (Rational numbers whose denominator
+                when expressed in lowest terms is a power of 2.)
+                </li>
+                <li>
+                We can either choose to represent 
+                <b>all</b> dyadic numbers as
+                terminating binary expansions 
+                (e.g. 0.11<sub>2</sub>),
+                or to represent
+                <b>all</b> dyadic numbers as
+                non-terminating binary expansions
+                (e.g. 0.101111111...<sub>2</sub>).
+                </li>
+                <li>
+                If we do this then we have a well-defined map
+                from [0,1)×[0,1) <b>into</b> [0,1). (This is not a one-to-one
+                map, as some values in [0,1) cannot occur.) 
+                </li>
+                <li>
+                Thus the cardinality of [0,1) is at least as great as the
+                cardinality of [0,1)×[0,1).
+                </li>
+                <li>
+                We can easily construct a map from [0,1) into [0,1)×[0,1).
+                (How?)
+                <li>
+                Thus the cardinality of [0,1)×[0,1) is at least as great as the
+                cardinality of [0,1).
+                </li>
+                <li>
+                Finally we see that the two sets must have the same cardinality!
+                </li>
+            </ul>
+        </div>
     </div>
 
     <script>
