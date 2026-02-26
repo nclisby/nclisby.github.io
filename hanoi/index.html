@@ -214,17 +214,10 @@
             line-height: 1.4;
         }
         
-        #helpDialog .help-goal {
-            text-align: center;
-            margin-bottom: 10px;
+        #helpDialog a {
+            color: #00BFFF;
         }
-        
-        #helpDialog .help-tip {
-            margin-top: 14px;
-            color: #ccc;
-            font-size: 13px;
-        }
-        
+
         #helpDialog table {
             width: 100%;
             border-collapse: collapse;
@@ -303,16 +296,18 @@
         <div id="helpOverlay"></div>
         <div id="helpDialog">
             <h2>Tower of Hanoi</h2>
-            <p class="help-goal">Move all rings from the left spindle to either of the other two spindles. A larger ring cannot be placed on top of a smaller ring.</p>
+            <p>Move all rings from the left spindle to either of the other two spindles. A larger ring cannot be placed on top of a smaller ring.</p>
+            <p>More information available at <a href="https://en.wikipedia.org/wiki/Tower_of_Hanoi" target="_blank" rel="noopener noreferrer">Wikipedia</a>.</p>
             <h3>Mouse / Touch</h3>
             <p>Click or tap a spindle to select it, then click or tap another spindle to move the top ring.</p>
             <h3>Keyboard</h3>
             <table>
-                <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Select left, middle, or right spindle</td></tr>
-                <tr><td><kbd>R</kbd></td><td>Reset the current game</td></tr>
-                <tr><td><kbd>H</kbd> or <kbd>?</kbd></td><td>Show this help</td></tr>
+                <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>Select left, middle, or right spindle.</td></tr>
+                <tr><td><kbd>R</kbd></td><td>Reset the current game.</td></tr>
+                <tr><td><kbd>H</kbd> or <kbd>?</kbd></td><td>Show this help.</td></tr>
+                <tr><td colspan="2">Press two different numbers to move a ring (e.g. <kbd>3</kbd> <kbd>2</kbd>).</td></tr> 
+                <tr><td colspan="2">Press the same number twice to cancel.</td></tr>
             </table>
-            <p class="help-tip">Press two different numbers to move a ring (e.g. <kbd>1</kbd> <kbd>3</kbd>). Press the same number twice to cancel.</p>
             <button id="helpCloseBtn">OK</button>
         </div>
     </div>
