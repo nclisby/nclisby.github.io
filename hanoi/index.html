@@ -190,8 +190,11 @@
             text-align: left;
             display: none;
             z-index: 1000;
-            max-width: 420px;
-            width: 85%;
+            max-width: calc(100vw - 20px);
+            width: 420px;
+            max-height: calc(100vh - 20px);
+            overflow-y: auto;
+            box-sizing: border-box;
         }
         
         #helpDialog h2 {
@@ -246,20 +249,21 @@
         }
         
         #helpCloseBtn {
-            display: block;
-            margin: 18px auto 0;
-            padding: 10px 40px;
-            font-size: 18px;
-            border-radius: 5px;
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: none;
             border: none;
-            background-color: white;
-            color: black;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 33px;
+            line-height: 1;
             cursor: pointer;
-            transition: background-color 0.3s;
+            padding: 4px 8px;
+            transition: color 0.2s;
         }
         
         #helpCloseBtn:hover {
-            background-color: #f0f0f0;
+            color: white;
         }
     </style>
 </head>
@@ -308,7 +312,7 @@
                 <tr><td colspan="2">Press two different numbers to move a ring (e.g. <kbd>3</kbd> <kbd>2</kbd>).</td></tr> 
                 <tr><td colspan="2">Press the same number twice to cancel.</td></tr>
             </table>
-            <button id="helpCloseBtn">OK</button>
+            <button id="helpCloseBtn">&times;</button>
         </div>
     </div>
 
