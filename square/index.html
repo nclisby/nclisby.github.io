@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bit Interleaving Function</title>
+    <title>Cardinality of the unit square and the unit interval</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
     <style>
         body {
@@ -25,7 +25,7 @@
             color: #333;
             text-align: center;
             margin-bottom: 10px;
-            font-size: 2.5em;
+            font-size: 2.0em;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -142,18 +142,43 @@
 </head>
 <body>
     <div class="container">
-        <h1>The Bit Interleaving Function</h1>
-        <p class="subtitle">f(x, y) = interleave(binary(x), binary(y))</p>
+    <!-- <h1>Cardinality of the unit square and the unit interval</h1> -->
+    <h1>|unit square| =  |unit interval| </h1>
+
+    <p>
+    We will demonstrate that the unit square and the unit interval have
+    the same cardinality!
+    </p>
+    <p>
+    We will do so by defining the <b>bit interleaving function</b> which is
+    <em>almost</em> a bijection from the unit square [0,1)×[0,1) to the unit
+    interval [0,1).
+    </p>
+    <ul>
+        <li>
+    Read the definition of the bit interleaving function to understand what it
+    does.
+        </li>
+        <li>
+    Experiment with the 3d surface plot and 2d heatmap to gain intuition
+    into how the function behaves.
+        </li>
+        <li>
+    For further details see the <a href="#proof-sketch">Proof sketch</a> at
+    the bottom of the page.
+        </li>
+    </ul>
         
         <div class="info-box">
-            <h3>About the Bit Interleaving Function</h3>
+            <h3>The bit interleaving function</h3>
+            <p>f(x, y) = interleave(binary(x), binary(y))</p>
             <p>This function maps points from the unit square [0,1)×[0,1) to the unit interval [0,1) by interleaving the binary digits of the input coordinates.</p>
             <div class="formula">
-                Given: x = 0.x<sub>1</sub>x<sub>2</sub>x<sub>3</sub>x<sub>4</sub>... and 
+                Given: x = 0.x<sub>1</sub>x<sub>2</sub>x<sub>3</sub>x<sub>4</sub>...<sub>2</sub> and 
                 y = 0.y<sub>1</sub>y<sub>2</sub>y<sub>3</sub>y<sub>4</sub>...<br>
-                Output: z = 0.x<sub>1</sub>y<sub>1</sub>x<sub>2</sub>y<sub>2</sub>x<sub>3</sub>y<sub>3</sub>x<sub>4</sub>y<sub>4</sub>...
+                Output: z = 0.x<sub>1</sub>y<sub>1</sub>x<sub>2</sub>y<sub>2</sub>x<sub>3</sub>y<sub>3</sub>x<sub>4</sub>y<sub>4</sub>...<sub>2</sub>
             </div>
-            <p><strong>Key Properties:</strong></p>
+            <p><strong>Key properties:</strong></p>
             <ul>
                 <li>The function creates a fractal-like, self-similar surface.</li>
                 <li>
@@ -163,7 +188,8 @@
                 This map can be used to demonstrate that [0,1)×[0,1) has the same cardinality as [0,1).
                 </li>
                 <li>
-                See the bottom of this page for further details.
+                See the <a href="#proof-sketch">Proof sketch</a> at
+                the bottom of the page for further details.
                 </li>
             </ul>
             <p><strong>Instructions:</strong> Adjust the resolution to see different levels of detail.</p>
@@ -184,7 +210,7 @@
                 </select>
             </div>
             <div class="control-group">
-                <label for="colorscale">Colour Scheme</label>
+                <label for="colorscale">Colour scheme</label>
                 <select id="colorscale">
                     <option value="Viridis">Viridis</option>
                     <option value="Plasma">Plasma</option>
@@ -202,12 +228,12 @@
         <div class="loading" id="loading" style="display: none;">Calculating...</div>
         
         <div class="plot-wrapper">
-            <div class="plot-title">3D Surface Plot</div>
+            <div class="plot-title">3D surface plot</div>
             <div id="surface-plot"></div>
         </div>
         
         <div class="plot-wrapper">
-            <div class="plot-title">2D Heatmap</div>
+            <div class="plot-title">2D heatmap</div>
             <div id="heatmap-plot"></div>
         </div>
         
@@ -216,7 +242,7 @@
         <br />
         <br />
         <div class="info-box">
-            <p><strong>Subtleties:</strong></p>
+            <h3 id="proof-sketch">Proof sketch</h3>
             <ul>
                 <li>
                 There are some subtleties in the proof that [0,1)×[0,1) has the
@@ -261,7 +287,8 @@
                 </li>
                 <li>
                 Note that f is not surjective, 
-                as some values in [0,1) cannot occur, and thus 
+                as some values in [0,1) cannot occur (such as 0.011010101010...<sub>2</sub>), 
+                and thus 
                 f is not a bijection / one-to-one map. 
                 </li>
                 <li>
@@ -271,12 +298,20 @@
                 <li>
                 We can easily construct a map from [0,1) into [0,1)×[0,1).
                 (How?)
+                </li>
                 <li>
                 Thus the cardinality of [0,1)×[0,1) is at least as great as the
                 cardinality of [0,1).
                 </li>
                 <li>
-                Finally we see that the two sets must have the same cardinality!
+                If |A| ≤ |B| and |B| ≤ |A| then |A| = |B| by the 
+                <a href="https://en.wikipedia.org/wiki/Schröder–Bernstein_theorem"
+                    target="_blank" rel="noopener noreferrer">Schröder–Bernstein
+                    theorem</a>, which shows that a bijection between A and B
+                can be constructed.
+                </li>
+                <li>
+                Thus we see that [0,1)×[0,1) and [0,1) must have the same cardinality!
                 </li>
             </ul>
         </div>
