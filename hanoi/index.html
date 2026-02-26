@@ -554,11 +554,11 @@
             const baseTop = GAME_CENTER_Y - BASE_HEIGHT / 2;
             const bottomRingY = baseTop - (RING_HEIGHT + RING_GAP) + RING_GAP - RING_HEIGHT * 0.2;
             const aboveSpindleY = baseTop - SPINDLE_HEIGHT - RING_HEIGHT * 1.5;
-            const maxVertical = bottomRingY - aboveSpindleY;
+            // const maxVertical = bottomRingY - aboveSpindleY;
             const maxHorizontal = 2 * SPINDLE_SPACING;
-            const maxDistance = 2 * maxVertical + maxHorizontal;
+            // const maxDistance = 2 * maxVertical + maxHorizontal;
             // Original approach - based on total distance
-            animSpeed = maxDistance / ANIM_MAX_TRAVEL_TIME;
+            // animSpeed = maxDistance / ANIM_MAX_TRAVEL_TIME;
             // New approach - just horizontal distance, which is independent of
             // the number of rings.
             // I had noticed that it seemed very fast with lots of rings, and
@@ -613,7 +613,7 @@
             
             if (isComplete) {
                 // Place message in the animation zone above the spindles
-                const messageY = centerY - SPINDLE_HEIGHT - ANIM_ZONE * 0.5;
+                const messageY = centerY - SPINDLE_HEIGHT - ANIM_ZONE * 1.25;
                 message.style.left = centerX + 'px';
                 message.style.top = messageY + 'px';
             }
@@ -654,7 +654,7 @@
                     // Ring j sits with its bottom edge at baseTop - (j+1)*ringStep
                     // but nudged down slightly (0.25 * RING_HEIGHT) so rings nestle together
                     const ringStep = RING_HEIGHT + RING_GAP;
-                    const y = baseTop - (j + 1) * ringStep + RING_GAP - RING_HEIGHT * 0.2;
+                    const y = baseTop - (j + 1) * ringStep + RING_GAP - RING_HEIGHT * 0.3;
                     
                     ctx.fillStyle = RING_COLOR;
                     ctx.fillRect(x - ringWidth/2, y, ringWidth, RING_HEIGHT);
