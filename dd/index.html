@@ -895,58 +895,66 @@ function drawDirectionLine(ox, oy, size) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Draw direction arrow from the point
-  const arrowLen = size * 0.08;
+  // Compute gradient for scaling both arrows
+  const grad = computeGradientAt(state.pointX, state.pointY);
+  const gradMag = Math.sqrt(grad.dfdx * grad.dfdx + grad.dfdy * grad.dfdy);
+  const Duf = computeDirectionalDerivative(state.pointX, state.pointY, ux, uy);
+
+  // Pixels per domain unit
+  const pxPerUnit = size / (XMAX - XMIN);
   const ppx = toPixX(state.pointX), ppy = toPixY(state.pointY);
-  const screenAngle = Math.atan2(-uy, ux); // flip y for screen coords
-  const ax = ppx + arrowLen * Math.cos(screenAngle);
-  const ay = ppy + arrowLen * Math.sin(screenAngle);
-
-  ctx.strokeStyle = '#ff8a65';
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(ppx, ppy);
-  ctx.lineTo(ax, ay);
-  ctx.stroke();
-
-  // Arrowhead
   const headLen = 8;
   const headAngle = 0.4;
-  ctx.fillStyle = '#ff8a65';
-  ctx.beginPath();
-  ctx.moveTo(ax, ay);
-  ctx.lineTo(ax - headLen * Math.cos(screenAngle - headAngle), ay - headLen * Math.sin(screenAngle - headAngle));
-  ctx.lineTo(ax - headLen * Math.cos(screenAngle + headAngle), ay - headLen * Math.sin(screenAngle + headAngle));
-  ctx.closePath();
-  ctx.fill();
+  const screenAngle = Math.atan2(-uy, ux); // flip y for screen coords
 
-  // Draw gradient arrow if toggled
-  if (state.showGrad) {
-    const grad = computeGradientAt(state.pointX, state.pointY);
-    const gradMag = Math.sqrt(grad.dfdx * grad.dfdx + grad.dfdy * grad.dfdy);
-    if (gradMag > 0.01) {
-      const gradScale = size * 0.06 / Math.max(gradMag, 0.5);
-      const gScreenAngle = Math.atan2(-grad.dfdy, grad.dfdx);
-      const gLen = gradMag * gradScale;
-      const gax = ppx + gLen * Math.cos(gScreenAngle);
-      const gay = ppy + gLen * Math.sin(gScreenAngle);
+  // Draw gradient arrow FIRST (so direction arrow renders on top)
+  if (state.showGrad && gradMag > 0.01) {
+    const gScreenAngle = Math.atan2(-grad.dfdy, grad.dfdx);
+    const gPixLen = 1.0 * pxPerUnit; // 1 domain unit
+    const gax = ppx + gPixLen * Math.cos(gScreenAngle);
+    const gay = ppy + gPixLen * Math.sin(gScreenAngle);
 
-      ctx.strokeStyle = '#81c784';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(ppx, ppy);
-      ctx.lineTo(gax, gay);
-      ctx.stroke();
+    ctx.strokeStyle = '#81c784';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(ppx, ppy);
+    ctx.lineTo(gax, gay);
+    ctx.stroke();
 
-      ctx.fillStyle = '#81c784';
-      const gha = Math.atan2(gay - ppy, gax - ppx);
-      ctx.beginPath();
-      ctx.moveTo(gax, gay);
-      ctx.lineTo(gax - headLen * Math.cos(gha - headAngle), gay - headLen * Math.sin(gha - headAngle));
-      ctx.lineTo(gax - headLen * Math.cos(gha + headAngle), gay - headLen * Math.sin(gha + headAngle));
-      ctx.closePath();
-      ctx.fill();
-    }
+    ctx.fillStyle = '#81c784';
+    const gha = Math.atan2(gay - ppy, gax - ppx);
+    ctx.beginPath();
+    ctx.moveTo(gax, gay);
+    ctx.lineTo(gax - headLen * Math.cos(gha - headAngle), gay - headLen * Math.sin(gha - headAngle));
+    ctx.lineTo(gax - headLen * Math.cos(gha + headAngle), gay - headLen * Math.sin(gha + headAngle));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Draw direction arrow: always along û, length = |Duf| / |grad f| in domain units
+  const dirDomainLen = (gradMag > 0.01) ? Math.abs(Duf) / gradMag : 0;
+  const dirPixLen = dirDomainLen * pxPerUnit;
+
+  if (dirPixLen > 1) {
+    const dax = ppx + dirPixLen * Math.cos(screenAngle);
+    const day = ppy + dirPixLen * Math.sin(screenAngle);
+
+    ctx.strokeStyle = '#ff8a65';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(ppx, ppy);
+    ctx.lineTo(dax, day);
+    ctx.stroke();
+
+    // Arrowhead
+    const daAngle = Math.atan2(day - ppy, dax - ppx);
+    ctx.fillStyle = '#ff8a65';
+    ctx.beginPath();
+    ctx.moveTo(dax, day);
+    ctx.lineTo(dax - headLen * Math.cos(daAngle - headAngle), day - headLen * Math.sin(daAngle - headAngle));
+    ctx.lineTo(dax - headLen * Math.cos(daAngle + headAngle), day - headLen * Math.sin(daAngle + headAngle));
+    ctx.closePath();
+    ctx.fill();
   }
 
   // Draw selected point
