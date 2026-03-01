@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Directional Derivatives</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --panel: #181b24;
+    --panel-border: #2a2d3a;
+    --text: #e0e2eb;
+    --text-dim: #8b8fa3;
+    --accent: #64b5f6;
+    --accent-dim: #2a4a6b;
+    --input-bg: #1e2130;
+    --hover: #252838;
+    --radius: 8px;
+    --panel-width: 300px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .panel {
+    width: var(--panel-width);
+    min-width: var(--panel-width);
+    height: 100vh;
+    background: var(--panel);
+    border-right: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transition: margin-left 0.3s ease, opacity 0.3s ease;
+    position: relative;
+    z-index: 10;
+  }
+
+  .panel.collapsed {
+    margin-left: calc(-1 * var(--panel-width));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sidebar-toggle {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 20;
+    width: 40px;
+    height: 40px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s;
+    backdrop-filter: blur(8px);
+  }
+
+  .sidebar-toggle:hover { color: var(--accent); border-color: var(--accent-dim); }
+  .sidebar-toggle.hidden-when-open { display: none; }
+  .panel.collapsed ~ .canvas-area .sidebar-toggle.hidden-when-open { display: flex; }
+
+  .panel-header {
+    padding: 20px 20px 12px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .panel-header-text h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+  }
+
+  .collapse-btn {
+    background: none;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 24px;
+    flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+  }
+
+  .collapse-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+  .section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .fn-select {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 19px;
+    padding: 10px 12px;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b8fa3' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    transition: border-color 0.15s;
+  }
+
+  .fn-select:focus { border-color: var(--accent); }
+  .fn-select option { background: var(--panel); color: var(--text); padding: 8px; }
+
+  .custom-input-wrap { margin-top: 10px; }
+  .custom-input-wrap label { font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px; }
+
+  .custom-input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 19px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .custom-input:focus { border-color: var(--accent); }
+  .custom-input.error { border-color: #e57373; }
+  .error-msg { font-size: 10px; color: #e57373; margin-top: 4px; min-height: 14px; }
+
+  .opt-row { display: flex; gap: 4px; }
+
+  .opt-btn {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    padding: 10px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .opt-btn:hover, .opt-btn:active { background: var(--hover); }
+
+  .opt-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+
+  .toggle-row:first-child { margin-top: 0; }
+
+  .toggle-label { font-size: 18px; font-weight: 500; color: var(--text); }
+
+  .toggle-switch {
+    width: 44px; height: 26px;
+    background: var(--input-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 13px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: var(--text-dim);
+    border-radius: 50%;
+    top: 2px; left: 2px;
+    transition: all 0.2s;
+  }
+
+  .toggle-switch.active { background: var(--accent-dim); border-color: var(--accent); }
+  .toggle-switch.active::after { background: var(--accent); left: 20px; }
+
+  .slider-wrap { margin-top: 10px; }
+
+  .slider-wrap label {
+    font-size: 11px; color: var(--text-dim);
+    display: flex; justify-content: space-between; margin-bottom: 6px;
+  }
+
+  .slider-wrap input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none; appearance: none;
+    height: 6px; background: var(--input-bg); border-radius: 3px; outline: none;
+  }
+
+  .slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+
+  .canvas-area { flex: 1; position: relative; overflow: hidden; }
+
+  #mainCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+  .colourbar {
+    width: 16px; height: 200px; border-radius: 4px;
+    border: 1px solid var(--panel-border); pointer-events: none;
+  }
+
+  .current-fn {
+    position: absolute; top: 12px; right: 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 22px;
+    color: var(--accent);
+    background: rgba(15,17,23,0.85);
+    padding: 6px 12px; border-radius: var(--radius);
+    pointer-events: none; backdrop-filter: blur(4px);
+  }
+
+  .sub-options { margin-top: 8px; }
+
+  /* Angle slider overlay - top left of canvas area */
+  .angle-controls {
+    position: absolute;
+    top: 12px;
+    left: 56px;
+    z-index: 15;
+    background: rgba(24,27,36,0.92);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: auto;
+  }
+
+  .angle-controls label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .angle-controls input[type="range"] {
+    width: 200px;
+    -webkit-appearance: none; appearance: none;
+    height: 6px; background: var(--input-bg); border-radius: 3px; outline: none;
+  }
+
+  .angle-controls input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+
+  .angle-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    color: var(--accent);
+    min-width: 40px;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+      <h1>Directional derivatives</h1>
+    </div>
+    <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Function</div>
+    <select class="fn-select" id="fnSelect"></select>
+    <div class="custom-input-wrap">
+      <label>Custom f(x, y):</label>
+      <input type="text" class="custom-input" id="customExpr" placeholder="e.g. sin(x*y)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Display</div>
+    <div class="opt-row">
+      <button class="opt-btn active" data-mode="heatmap">Heatmap</button>
+      <button class="opt-btn" data-mode="contour">Contours</button>
+    </div>
+    <div id="contourSlider" style="display:none;">
+      <div class="slider-wrap">
+        <label><span>Contour levels</span><span id="contourCount">15</span></label>
+        <input type="range" min="5" max="40" value="15" id="contourLevels">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Colour scheme</div>
+    <div class="opt-row">
+      <button class="opt-btn active" data-scheme="viridis">Viridis</button>
+      <button class="opt-btn" data-scheme="plasma">Plasma</button>
+      <button class="opt-btn" data-scheme="inferno">Inferno</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="toggle-row">
+      <span class="toggle-label">Flip sign (&#8722;f)</span>
+      <div class="toggle-switch" id="toggleFlip"></div>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">Show &#8711;f</span>
+      <div class="toggle-switch" id="toggleGrad"></div>
+    </div>
+  </div>
+</div>
+
+<div class="canvas-area" id="canvasArea">
+  <button class="sidebar-toggle hidden-when-open" id="openBtn" title="Open sidebar">&#9776;</button>
+  <div class="angle-controls">
+    <label>&#952; =</label>
+    <input type="range" min="0" max="360" value="0" id="angleSlider">
+    <span class="angle-value" id="angleValue">0°</span>
+  </div>
+  <canvas id="mainCanvas"></canvas>
+  <div class="current-fn" id="currentFnLabel">f(x,y) = x + y</div>
+</div>
+
+<script>
+// ─── COLOUR MAPS ───
+const colourMaps = {
+  viridis: [
+    [0.267,0.004,0.329],[0.283,0.141,0.458],[0.254,0.265,0.530],
+    [0.207,0.372,0.553],[0.164,0.471,0.558],[0.128,0.567,0.551],
+    [0.134,0.658,0.517],[0.267,0.749,0.441],[0.478,0.821,0.318],
+    [0.741,0.873,0.150],[0.993,0.906,0.144]
+  ],
+  plasma: [
+    [0.050,0.030,0.528],[0.298,0.010,0.633],[0.492,0.012,0.658],
+    [0.659,0.054,0.604],[0.798,0.143,0.497],[0.899,0.261,0.383],
+    [0.964,0.395,0.275],[0.993,0.545,0.165],[0.983,0.706,0.073],
+    [0.930,0.876,0.122],[0.940,0.975,0.131]
+  ],
+  inferno: [
+    [0.001,0.000,0.014],[0.088,0.044,0.224],[0.225,0.036,0.388],
+    [0.373,0.074,0.432],[0.522,0.128,0.420],[0.659,0.189,0.370],
+    [0.797,0.268,0.286],[0.903,0.388,0.177],[0.964,0.546,0.055],
+    [0.974,0.734,0.154],[0.988,0.998,0.645]
+  ]
+};
+
+function sampleColourMap(name, t) {
+  const stops = colourMaps[name];
+  t = Math.max(0, Math.min(1, t));
+  const idx = t * (stops.length - 1);
+  const i = Math.floor(idx);
+  const f = idx - i;
+  if (i >= stops.length - 1) return stops[stops.length - 1];
+  return [
+    stops[i][0] + f * (stops[i+1][0] - stops[i][0]),
+    stops[i][1] + f * (stops[i+1][1] - stops[i][1]),
+    stops[i][2] + f * (stops[i+1][2] - stops[i][2]),
+  ];
+}
+
+function colourToCSS(rgb) {
+  return `rgb(${Math.round(rgb[0]*255)},${Math.round(rgb[1]*255)},${Math.round(rgb[2]*255)})`;
+}
+
+// ─── PRESETS ───
+const presets = [
+  { name: 'Plane',       expr: 'x + y',                           fn: (x,y) => x + y },
+  { name: 'Paraboloid',  expr: 'x\u00B2 + 2y\u00B2',            fn: (x,y) => x*x + 2*y*y },
+  { name: 'Saddle',      expr: 'x\u00B2 \u2212 y\u00B2',        fn: (x,y) => x*x - y*y },
+  { name: 'Cubic',       expr: 'x\u00B3 \u2212 2xy + y\u00B2',  fn: (x,y) => x*x*x - 2*x*y + y*y },
+  { name: 'Waves',       expr: 'sin(x)cos(y)',                    fn: (x,y) => Math.sin(x)*Math.cos(y) },
+  { name: 'Gaussian',    expr: 'exp(\u2212(x\u00B2+y\u00B2))',   fn: (x,y) => Math.exp(-(x*x+y*y)) },
+  { name: 'Radial',      expr: 'sin(\u221A(x\u00B2+y\u00B2))',   fn: (x,y) => Math.sin(Math.sqrt(x*x+y*y)) },
+  { name: 'Ripple',      expr: 'cos(x\u00B2+y\u00B2)',           fn: (x,y) => Math.cos(x*x+y*y) },
+  { name: 'Product',     expr: 'sin(x)sin(y)',                    fn: (x,y) => Math.sin(x)*Math.sin(y) },
+  { name: 'Egg crate',   expr: 'sin(x)+sin(y)',                   fn: (x,y) => Math.sin(x)+Math.sin(y) },
+];
+
+// ─── STATE ───
+let state = {
+  fnIndex: 0,
+  currentFn: presets[0].fn,
+  currentExpr: presets[0].expr,
+  mode: 'heatmap',
+  scheme: 'viridis',
+  contourLevels: 15,
+  isCustom: false,
+  flipSign: false,
+  showGrad: false,
+  // Directional derivative state
+  pointX: 0,
+  pointY: 0,
+  angleDeg: 0,
+};
+
+// ─── PARSE ───
+function parseCustom(expr) {
+  let e = expr
+    .replace(/\^/g, '**')
+    .replace(/\u03C0/g, 'Math.PI')
+    .replace(/pi\b/gi, 'Math.PI')
+    .replace(/\bsin\b/g, 'Math.sin')
+    .replace(/\bcos\b/g, 'Math.cos')
+    .replace(/\btan\b/g, 'Math.tan')
+    .replace(/\bexp\b/g, 'Math.exp')
+    .replace(/\blog\b/g, 'Math.log')
+    .replace(/\bln\b/g, 'Math.log')
+    .replace(/\bsqrt\b/g, 'Math.sqrt')
+    .replace(/\babs\b/g, 'Math.abs')
+    .replace(/\bcosh\b/g, 'Math.cosh')
+    .replace(/\bsinh\b/g, 'Math.sinh')
+    .replace(/\btanh\b/g, 'Math.tanh')
+    .replace(/\batan2?\b/g, 'Math.atan2')
+    .replace(/\basin\b/g, 'Math.asin')
+    .replace(/\bacos\b/g, 'Math.acos');
+  return new Function('x', 'y', `"use strict"; return (${e});`);
+}
+
+function evalFn(x, y) {
+  let v;
+  try { v = state.currentFn(x, y); } catch { v = 0; }
+  if (!isFinite(v)) v = 0;
+  return state.flipSign ? -v : v;
+}
+
+// ─── DOM ───
+const mainCanvas = document.getElementById('mainCanvas');
+const ctx = mainCanvas.getContext('2d');
+const canvasArea = document.getElementById('canvasArea');
+const panel = document.getElementById('panel');
+const fnSelect = document.getElementById('fnSelect');
+const customInput = document.getElementById('customExpr');
+const errorMsg = document.getElementById('errorMsg');
+const fnLabel = document.getElementById('currentFnLabel');
+const contourSliderWrap = document.getElementById('contourSlider');
+const contourLevelsInput = document.getElementById('contourLevels');
+const contourCountLabel = document.getElementById('contourCount');
+const toggleFlip = document.getElementById('toggleFlip');
+const toggleGrad = document.getElementById('toggleGrad');
+const collapseBtn = document.getElementById('collapseBtn');
+const openBtn = document.getElementById('openBtn');
+const angleSlider = document.getElementById('angleSlider');
+const angleValueLabel = document.getElementById('angleValue');
+
+// ─── SIDEBAR ───
+collapseBtn.addEventListener('click', () => {
+  panel.classList.add('collapsed');
+  setTimeout(() => { resize(); update(); }, 320);
+});
+openBtn.addEventListener('click', () => {
+  panel.classList.remove('collapsed');
+  setTimeout(() => { resize(); update(); }, 320);
+});
+
+// ─── DROPDOWN ───
+presets.forEach((p, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${p.name}  \u2014  ${p.expr}`;
+  fnSelect.appendChild(opt);
+});
+
+fnSelect.addEventListener('change', () => {
+  const i = parseInt(fnSelect.value);
+  state.fnIndex = i;
+  state.currentFn = presets[i].fn;
+  state.currentExpr = presets[i].expr;
+  state.isCustom = false;
+  customInput.value = '';
+  errorMsg.textContent = '';
+  customInput.classList.remove('error');
+  update();
+});
+
+customInput.addEventListener('input', () => {
+  const val = customInput.value.trim();
+  if (!val) { errorMsg.textContent = ''; customInput.classList.remove('error'); return; }
+  try {
+    const fn = parseCustom(val);
+    const test = fn(1, 1);
+    if (typeof test !== 'number' || !isFinite(test)) throw new Error();
+    state.currentFn = fn;
+    state.currentExpr = val;
+    state.isCustom = true;
+    errorMsg.textContent = '';
+    customInput.classList.remove('error');
+    fnSelect.value = '';
+    update();
+  } catch {
+    errorMsg.textContent = 'Invalid expression';
+    customInput.classList.add('error');
+  }
+});
+
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.mode = btn.dataset.mode;
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b === btn));
+    contourSliderWrap.style.display = state.mode === 'contour' ? 'block' : 'none';
+    update();
+  });
+});
+
+document.querySelectorAll('[data-scheme]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.scheme = btn.dataset.scheme;
+    document.querySelectorAll('[data-scheme]').forEach(b => b.classList.toggle('active', b === btn));
+    update();
+  });
+});
+
+contourLevelsInput.addEventListener('input', () => {
+  state.contourLevels = parseInt(contourLevelsInput.value);
+  contourCountLabel.textContent = state.contourLevels;
+  update();
+});
+
+toggleFlip.addEventListener('click', () => {
+  state.flipSign = !state.flipSign;
+  toggleFlip.classList.toggle('active', state.flipSign);
+  update();
+});
+
+toggleGrad.addEventListener('click', () => {
+  state.showGrad = !state.showGrad;
+  toggleGrad.classList.toggle('active', state.showGrad);
+  update();
+});
+
+// ─── ANGLE SLIDER ───
+angleSlider.addEventListener('input', () => {
+  state.angleDeg = parseInt(angleSlider.value);
+  angleValueLabel.textContent = state.angleDeg + '°';
+  update();
+});
+
+// ─── RESIZE ───
+function resize() {
+  const rect = canvasArea.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  mainCanvas.width = rect.width * dpr;
+  mainCanvas.height = rect.height * dpr;
+  mainCanvas.style.width = rect.width + 'px';
+  mainCanvas.style.height = rect.height + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', () => { resize(); update(); });
+
+// ─── DOMAIN ───
+const XMIN = -Math.PI, XMAX = Math.PI;
+const YMIN = -Math.PI, YMAX = Math.PI;
+
+function computeField(res) {
+  const data = new Float64Array(res * res);
+  let fmin = Infinity, fmax = -Infinity;
+  for (let j = 0; j < res; j++) {
+    const y = YMIN + (YMAX - YMIN) * j / (res - 1);
+    for (let i = 0; i < res; i++) {
+      const x = XMIN + (XMAX - XMIN) * i / (res - 1);
+      const v = evalFn(x, y);
+      data[j * res + i] = v;
+      if (v < fmin) fmin = v;
+      if (v > fmax) fmax = v;
+    }
+  }
+  return { data, fmin, fmax, res };
+}
+
+// ─── LAYOUT ───
+// Returns { lx, ly, lsize, rx, ry, rw, rh } for left (2D field) and right (1D slice) plots
+function getLayout() {
+  const rect = canvasArea.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
+  const margin = 16;
+  const topPad = 56; // space for angle controls
+
+  // Left plot: square, fits in left half
+  const halfW = (w - margin * 3) / 2;
+  const availH = h - topPad - margin * 2;
+  const lsize = Math.min(halfW, availH) * 0.82;
+  const lx = margin + (halfW - lsize) / 2;
+  const ly = topPad + margin + (availH - lsize) / 2;
+
+  // Right plot: same height as left, fills right half
+  const rx = margin * 2 + halfW;
+  const ry = ly;
+  const rw = halfW * 0.88;
+  const rh = lsize;
+
+  return { w, h, lx, ly, lsize, rx, ry, rw, rh };
+}
+
+// ─── CLICK HANDLING (select point on 2D plot) ───
+mainCanvas.addEventListener('pointerdown', (e) => {
+  const rect = canvasArea.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const L = getLayout();
+
+  // Check if click is within 2D plot
+  if (cx >= L.lx && cx <= L.lx + L.lsize && cy >= L.ly && cy <= L.ly + L.lsize) {
+    const fracX = (cx - L.lx) / L.lsize;
+    const fracY = 1 - (cy - L.ly) / L.lsize;
+    state.pointX = XMIN + fracX * (XMAX - XMIN);
+    state.pointY = YMIN + fracY * (YMAX - YMIN);
+    // Clamp to domain
+    state.pointX = Math.max(XMIN, Math.min(XMAX, state.pointX));
+    state.pointY = Math.max(YMIN, Math.min(YMAX, state.pointY));
+    update();
+  }
+});
+
+// Also support dragging
+let isDragging = false;
+mainCanvas.addEventListener('pointerdown', (e) => {
+  const rect = canvasArea.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const L = getLayout();
+  if (cx >= L.lx && cx <= L.lx + L.lsize && cy >= L.ly && cy <= L.ly + L.lsize) {
+    isDragging = true;
+    mainCanvas.setPointerCapture(e.pointerId);
+  }
+});
+mainCanvas.addEventListener('pointermove', (e) => {
+  if (!isDragging) return;
+  const rect = canvasArea.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const L = getLayout();
+  const fracX = (cx - L.lx) / L.lsize;
+  const fracY = 1 - (cy - L.ly) / L.lsize;
+  state.pointX = Math.max(XMIN, Math.min(XMAX, XMIN + fracX * (XMAX - XMIN)));
+  state.pointY = Math.max(YMIN, Math.min(YMAX, YMIN + fracY * (YMAX - YMIN)));
+  update();
+});
+mainCanvas.addEventListener('pointerup', () => isDragging = false);
+mainCanvas.addEventListener('pointercancel', () => isDragging = false);
+
+// ─── DIRECTIONAL DERIVATIVE ───
+function computeDirectionalDerivative(px, py, ux, uy) {
+  const h = 1e-5;
+  const fp = evalFn(px + h * ux, py + h * uy);
+  const fm = evalFn(px - h * ux, py - h * uy);
+  return (fp - fm) / (2 * h);
+}
+
+// Compute the line segment through (px, py) in direction (ux, uy) clipped to domain
+function computeLineRange(px, py, ux, uy) {
+  // Find t range where (px + t*ux, py + t*uy) stays in [XMIN,XMAX] x [YMIN,YMAX]
+  let tmin = -100, tmax = 100;
+  if (ux !== 0) {
+    const t1 = (XMIN - px) / ux, t2 = (XMAX - px) / ux;
+    const lo = Math.min(t1, t2), hi = Math.max(t1, t2);
+    tmin = Math.max(tmin, lo); tmax = Math.min(tmax, hi);
+  } else {
+    if (px < XMIN || px > XMAX) return { tmin: 0, tmax: 0 };
+  }
+  if (uy !== 0) {
+    const t1 = (YMIN - py) / uy, t2 = (YMAX - py) / uy;
+    const lo = Math.min(t1, t2), hi = Math.max(t1, t2);
+    tmin = Math.max(tmin, lo); tmax = Math.min(tmax, hi);
+  } else {
+    if (py < YMIN || py > YMAX) return { tmin: 0, tmax: 0 };
+  }
+  if (tmin > tmax) return { tmin: 0, tmax: 0 };
+  return { tmin, tmax };
+}
+
+// ─── GRADIENT AT POINT ───
+function computeGradientAt(px, py) {
+  const h = 1e-5;
+  const dfdx = (evalFn(px + h, py) - evalFn(px - h, py)) / (2 * h);
+  const dfdy = (evalFn(px, py + h) - evalFn(px, py - h)) / (2 * h);
+  return { dfdx, dfdy };
+}
+
+// ─── DRAW HEATMAP (left plot) ───
+function drawHeatmap(ox, oy, size) {
+  const res = Math.min(300, Math.round(size));
+  const field = computeField(res);
+  const range = field.fmax - field.fmin || 1;
+
+  const imgData = ctx.createImageData(res, res);
+  for (let j = 0; j < res; j++) {
+    for (let i = 0; i < res; i++) {
+      const v = field.data[j * res + i];
+      const t = (v - field.fmin) / range;
+      const rgb = sampleColourMap(state.scheme, t);
+      const idx = ((res - 1 - j) * res + i) * 4;
+      imgData.data[idx]   = Math.round(rgb[0] * 255);
+      imgData.data[idx+1] = Math.round(rgb[1] * 255);
+      imgData.data[idx+2] = Math.round(rgb[2] * 255);
+      imgData.data[idx+3] = 255;
+    }
+  }
+
+  const offscreen = document.createElement('canvas');
+  offscreen.width = res; offscreen.height = res;
+  offscreen.getContext('2d').putImageData(imgData, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(offscreen, ox, oy, size, size);
+}
+
+// ─── DRAW CONTOURS (left plot) ───
+function drawContours(ox, oy, size) {
+  const res = 200;
+  const field = computeField(res);
+  const range = field.fmax - field.fmin || 1;
+  const nLevels = state.contourLevels;
+
+  ctx.fillStyle = '#12141c';
+  ctx.fillRect(ox, oy, size, size);
+
+  for (let l = 0; l < nLevels; l++) {
+    const threshold = field.fmin + (l + 1) * range / (nLevels + 1);
+    const t = (threshold - field.fmin) / range;
+    const rgb = sampleColourMap(state.scheme, t);
+    ctx.strokeStyle = colourToCSS(rgb);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+
+    for (let j = 0; j < res - 1; j++) {
+      for (let i = 0; i < res - 1; i++) {
+        const v00 = field.data[j * res + i];
+        const v10 = field.data[j * res + i + 1];
+        const v01 = field.data[(j+1) * res + i];
+        const v11 = field.data[(j+1) * res + i + 1];
+        const b00 = v00 >= threshold ? 1 : 0;
+        const b10 = v10 >= threshold ? 1 : 0;
+        const b01 = v01 >= threshold ? 1 : 0;
+        const b11 = v11 >= threshold ? 1 : 0;
+        const cell = b00 | (b10 << 1) | (b11 << 2) | (b01 << 3);
+        if (cell === 0 || cell === 15) continue;
+
+        const px = (x) => ox + x * size / (res - 1);
+        const py = (y) => oy + (res - 1 - y) * size / (res - 1);
+        const interp = (va, vb) => (threshold - va) / (vb - va);
+
+        const top    = [i + interp(v00, v10), j];
+        const right  = [i + 1, j + interp(v10, v11)];
+        const bottom = [i + interp(v01, v11), j + 1];
+        const left   = [i, j + interp(v00, v01)];
+
+        const segments = [];
+        switch(cell) {
+          case 1: case 14: segments.push([left, top]); break;
+          case 2: case 13: segments.push([top, right]); break;
+          case 3: case 12: segments.push([left, right]); break;
+          case 4: case 11: segments.push([right, bottom]); break;
+          case 5: segments.push([left, top], [right, bottom]); break;
+          case 6: case 9: segments.push([top, bottom]); break;
+          case 7: case 8: segments.push([left, bottom]); break;
+          case 10: segments.push([top, right], [left, bottom]); break;
+        }
+
+        for (const seg of segments) {
+          ctx.moveTo(px(seg[0][0]), py(seg[0][1]));
+          ctx.lineTo(px(seg[1][0]), py(seg[1][1]));
+        }
+      }
+    }
+    ctx.stroke();
+  }
+}
+
+// ─── 2D AXES ───
+function drawAxes2D(ox, oy, size) {
+  ctx.strokeStyle = '#3a3d4d';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(ox, oy, size, size);
+
+  ctx.fillStyle = '#6b6f82';
+  ctx.font = '16px IBM Plex Mono';
+
+  const ticks = [-3, -2, -1, 0, 1, 2, 3];
+  for (const t of ticks) {
+    const frac = (t - XMIN) / (XMAX - XMIN);
+    const px = ox + frac * size;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(t === 0 ? '0' : t.toString(), px, oy + size + 6);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(t === 0 ? '0' : t.toString(), ox - 8, oy + (1 - frac) * size);
+  }
+
+  ctx.fillStyle = '#8b8fa3';
+  ctx.font = '500 18px IBM Plex Sans';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('x', ox + size / 2, oy + size + 26);
+
+  ctx.save();
+  ctx.translate(ox - 36, oy + size / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('y', 0, 0);
+  ctx.restore();
+}
+
+// ─── DRAW DIRECTIONAL LINE ON 2D PLOT ───
+function drawDirectionLine(ox, oy, size) {
+  const angleRad = state.angleDeg * Math.PI / 180;
+  const ux = Math.cos(angleRad), uy = Math.sin(angleRad);
+  const { tmin, tmax } = computeLineRange(state.pointX, state.pointY, ux, uy);
+
+  // Map domain coords to pixel coords
+  const toPixX = (x) => ox + (x - XMIN) / (XMAX - XMIN) * size;
+  const toPixY = (y) => oy + (1 - (y - YMIN) / (YMAX - YMIN)) * size;
+
+  // Draw dashed line
+  const x0 = state.pointX + tmin * ux, y0 = state.pointY + tmin * uy;
+  const x1 = state.pointX + tmax * ux, y1 = state.pointY + tmax * uy;
+
+  ctx.save();
+  ctx.setLineDash([6, 4]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(toPixX(x0), toPixY(y0));
+  ctx.lineTo(toPixX(x1), toPixY(y1));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw direction arrow from the point
+  const arrowLen = size * 0.08;
+  const ppx = toPixX(state.pointX), ppy = toPixY(state.pointY);
+  const screenAngle = Math.atan2(-uy, ux); // flip y for screen coords
+  const ax = ppx + arrowLen * Math.cos(screenAngle);
+  const ay = ppy + arrowLen * Math.sin(screenAngle);
+
+  ctx.strokeStyle = '#ff8a65';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(ppx, ppy);
+  ctx.lineTo(ax, ay);
+  ctx.stroke();
+
+  // Arrowhead
+  const headLen = 8;
+  const headAngle = 0.4;
+  ctx.fillStyle = '#ff8a65';
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(ax - headLen * Math.cos(screenAngle - headAngle), ay - headLen * Math.sin(screenAngle - headAngle));
+  ctx.lineTo(ax - headLen * Math.cos(screenAngle + headAngle), ay - headLen * Math.sin(screenAngle + headAngle));
+  ctx.closePath();
+  ctx.fill();
+
+  // Draw gradient arrow if toggled
+  if (state.showGrad) {
+    const grad = computeGradientAt(state.pointX, state.pointY);
+    const gradMag = Math.sqrt(grad.dfdx * grad.dfdx + grad.dfdy * grad.dfdy);
+    if (gradMag > 0.01) {
+      const gradScale = size * 0.06 / Math.max(gradMag, 0.5);
+      const gScreenAngle = Math.atan2(-grad.dfdy, grad.dfdx);
+      const gLen = gradMag * gradScale;
+      const gax = ppx + gLen * Math.cos(gScreenAngle);
+      const gay = ppy + gLen * Math.sin(gScreenAngle);
+
+      ctx.strokeStyle = '#81c784';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(ppx, ppy);
+      ctx.lineTo(gax, gay);
+      ctx.stroke();
+
+      ctx.fillStyle = '#81c784';
+      const gha = Math.atan2(gay - ppy, gax - ppx);
+      ctx.beginPath();
+      ctx.moveTo(gax, gay);
+      ctx.lineTo(gax - headLen * Math.cos(gha - headAngle), gay - headLen * Math.sin(gha - headAngle));
+      ctx.lineTo(gax - headLen * Math.cos(gha + headAngle), gay - headLen * Math.sin(gha + headAngle));
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Draw selected point
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(ppx, ppy, 5, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.strokeStyle = '#0f1117';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ─── 1D SLICE PLOT ───
+function draw1DSlice(rx, ry, rw, rh) {
+  const angleRad = state.angleDeg * Math.PI / 180;
+  const ux = Math.cos(angleRad), uy = Math.sin(angleRad);
+  const { tmin, tmax } = computeLineRange(state.pointX, state.pointY, ux, uy);
+
+  // Plot area with margins for axes
+  const plotLeft = rx + 50;
+  const plotRight = rx + rw - 12;
+  const plotTop = ry + 36;
+  const plotBottom = ry + rh - 30;
+  const plotW = plotRight - plotLeft;
+  const plotH = plotBottom - plotTop;
+
+  // Sample the function along the line
+  const nSamples = 400;
+  const tVals = [], fVals = [];
+  let fSliceMin = Infinity, fSliceMax = -Infinity;
+  for (let i = 0; i <= nSamples; i++) {
+    const t = tmin + (tmax - tmin) * i / nSamples;
+    const x = state.pointX + t * ux;
+    const y = state.pointY + t * uy;
+    const v = evalFn(x, y);
+    tVals.push(t);
+    fVals.push(v);
+    if (v < fSliceMin) fSliceMin = v;
+    if (v > fSliceMax) fSliceMax = v;
+  }
+
+  // Add some padding to f range
+  const fRange = fSliceMax - fSliceMin || 1;
+  fSliceMin -= fRange * 0.08;
+  fSliceMax += fRange * 0.08;
+  const fDispRange = fSliceMax - fSliceMin;
+
+  // Background
+  ctx.fillStyle = '#12141c';
+  ctx.fillRect(plotLeft, plotTop, plotW, plotH);
+  ctx.strokeStyle = '#3a3d4d';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(plotLeft, plotTop, plotW, plotH);
+
+  // Map t, f to pixel coords
+  const tToPx = (t) => plotLeft + (t - tmin) / (tmax - tmin) * plotW;
+  const fToPy = (f) => plotBottom - (f - fSliceMin) / fDispRange * plotH;
+
+  // Draw grid lines and t-axis ticks
+  ctx.fillStyle = '#6b6f82';
+  ctx.font = '13px IBM Plex Mono';
+
+  // t-axis ticks
+  const tRange = tmax - tmin;
+  const tStep = niceStep(tRange, 6);
+  const tStart = Math.ceil(tmin / tStep) * tStep;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  for (let t = tStart; t <= tmax + tStep * 0.01; t += tStep) {
+    const px = tToPx(t);
+    if (px < plotLeft + 2 || px > plotRight - 2) continue;
+    ctx.strokeStyle = '#2a2d3a';
+    ctx.beginPath(); ctx.moveTo(px, plotTop); ctx.lineTo(px, plotBottom); ctx.stroke();
+    ctx.fillStyle = '#6b6f82';
+    ctx.fillText(formatNum(t), px, plotBottom + 5);
+  }
+
+  // f-axis ticks
+  const fStep = niceStep(fDispRange, 5);
+  const fStart = Math.ceil(fSliceMin / fStep) * fStep;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for (let f = fStart; f <= fSliceMax + fStep * 0.01; f += fStep) {
+    const py = fToPy(f);
+    if (py < plotTop + 2 || py > plotBottom - 2) continue;
+    ctx.strokeStyle = '#2a2d3a';
+    ctx.beginPath(); ctx.moveTo(plotLeft, py); ctx.lineTo(plotRight, py); ctx.stroke();
+    ctx.fillStyle = '#6b6f82';
+    ctx.fillText(formatNum(f), plotLeft - 6, py);
+  }
+
+  // Draw f(t) curve
+  ctx.strokeStyle = '#64b5f6';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i <= nSamples; i++) {
+    const px = tToPx(tVals[i]);
+    const py = fToPy(fVals[i]);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Compute directional derivative at the selected point (t=0)
+  const Duf = computeDirectionalDerivative(state.pointX, state.pointY, ux, uy);
+  const f0 = evalFn(state.pointX, state.pointY);
+
+  // Mark the point on the curve (t=0)
+  const p0x = tToPx(0);
+  const p0y = fToPy(f0);
+
+  // Draw tangent line through the point
+  const tangentHalfLen = (tmax - tmin) * 0.2;
+  const t1 = -tangentHalfLen, t2 = tangentHalfLen;
+  const f1 = f0 + Duf * t1, f2 = f0 + Duf * t2;
+  ctx.strokeStyle = '#ff8a65';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 3]);
+  ctx.beginPath();
+  ctx.moveTo(tToPx(t1), fToPy(f1));
+  ctx.lineTo(tToPx(t2), fToPy(f2));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw point dot
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(p0x, p0y, 5, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.strokeStyle = '#0f1117';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = '#8b8fa3';
+  ctx.font = '500 16px IBM Plex Sans';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('t (arc length)', plotLeft + plotW / 2, plotBottom + 22);
+
+  ctx.save();
+  ctx.translate(plotLeft - 40, plotTop + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('f', 0, 0);
+  ctx.restore();
+
+  // Display directional derivative value above the plot
+  ctx.fillStyle = '#ff8a65';
+  ctx.font = '500 18px IBM Plex Mono';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`D\u1D64f = ${Duf.toFixed(4)}`, plotLeft, plotTop - 10);
+
+  // Display point coordinates
+  ctx.fillStyle = '#8b8fa3';
+  ctx.font = '14px IBM Plex Mono';
+  ctx.textAlign = 'right';
+  ctx.fillText(`(${state.pointX.toFixed(2)}, ${state.pointY.toFixed(2)})`, plotRight, plotTop - 10);
+}
+
+// ─── HELPER: nice step for axis ticks ───
+function niceStep(range, maxTicks) {
+  const rough = range / maxTicks;
+  const pow = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / pow;
+  let step;
+  if (norm < 1.5) step = 1;
+  else if (norm < 3.5) step = 2;
+  else if (norm < 7.5) step = 5;
+  else step = 10;
+  return step * pow;
+}
+
+function formatNum(v) {
+  if (Math.abs(v) < 1e-10) return '0';
+  if (Math.abs(v) >= 100) return v.toFixed(0);
+  if (Math.abs(v) >= 1) return v.toFixed(1);
+  return v.toFixed(2);
+}
+
+// ─── LABEL ───
+function updateLabel() {
+  if (state.flipSign) {
+    fnLabel.textContent = `f(x,y) = \u2212(${state.currentExpr})`;
+  } else {
+    fnLabel.textContent = `f(x,y) = ${state.currentExpr}`;
+  }
+}
+
+// ─── UPDATE ───
+function update() {
+  const rect = canvasArea.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const L = getLayout();
+
+  // Draw 2D field
+  if (state.mode === 'heatmap') {
+    drawHeatmap(L.lx, L.ly, L.lsize);
+  } else {
+    drawContours(L.lx, L.ly, L.lsize);
+  }
+  drawAxes2D(L.lx, L.ly, L.lsize);
+  drawDirectionLine(L.lx, L.ly, L.lsize);
+
+  // Draw 1D slice plot
+  draw1DSlice(L.rx, L.ry, L.rw, L.rh);
+
+  updateLabel();
+}
+
+// ─── INIT ───
+resize();
+update();
+</script>
+</body>
+</html>
