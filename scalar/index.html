@@ -443,7 +443,7 @@ const presets = [
   { name: 'Ripple',      expr: 'cos(x\u00B2+y\u00B2)',           fn: (x,y) => Math.cos(x*x+y*y) },
   { name: 'Product',     expr: 'sin(x)sin(y)',                    fn: (x,y) => Math.sin(x)*Math.sin(y) },
   { name: 'Egg crate',   expr: 'sin(x)+sin(y)',                   fn: (x,y) => Math.sin(x)+Math.sin(y) },
-  { name: 'Peaks',       expr: 'sinc(\u221A(x\u00B2+y\u00B2))',  fn: (x,y) => { const r = Math.sqrt(x*x+y*y); return r === 0 ? 1 : Math.sin(r)/r; } },
+  // { name: 'Peaks',       expr: 'sinc(\u221A(x\u00B2+y\u00B2))',  fn: (x,y) => { const r = Math.sqrt(x*x+y*y); return r === 0 ? 1 : Math.sin(r)/r; } },
 ];
 
 // ─── STATE ───
@@ -668,7 +668,7 @@ function drawGradientOverlay(ox, oy, size) {
   const { arrows, maxMag } = computeGradient(n);
   if (maxMag === 0) return;
   const cellSize = size / n;
-  const maxArrowLen = cellSize * 0.42;
+  const maxArrowLen = cellSize * 0.70;
 
   ctx.save();
   ctx.strokeStyle = 'rgba(255,255,255,0.85)';
@@ -676,16 +676,19 @@ function drawGradientOverlay(ox, oy, size) {
   ctx.lineWidth = 1.5;
 
   for (const a of arrows) {
+
     const px = ox + (a.x - XMIN) / (XMAX - XMIN) * size;
     const py = oy + (1 - (a.y - YMIN) / (YMAX - YMIN)) * size;
     const scale = (a.mag / maxMag) * maxArrowLen;
     if (scale < 0.5) continue;
     const angle = Math.atan2(-a.dy, a.dx);
-    const ex = px + Math.cos(angle) * scale;
-    const ey = py + Math.sin(angle) * scale;
+    const sx = px - Math.cos(angle) * scale * 0.5;
+    const sy = py - Math.sin(angle) * scale * 0.5;
+    const ex = px + Math.cos(angle) * scale * 0.5;
+    const ey = py + Math.sin(angle) * scale * 0.5;
 
     ctx.beginPath();
-    ctx.moveTo(px, py);
+    ctx.moveTo(sx, sy);
     ctx.lineTo(ex, ey);
     ctx.stroke();
 
@@ -1017,7 +1020,7 @@ function build3DGradientArrows() {
 
   const group = new THREE.Group();
   const cellSize = (XMAX - XMIN) / n;
-  const maxArrowLen = cellSize * 0.42;
+  const maxArrowLen = cellSize * 0.70;
 
   const shaftMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
   const headMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
@@ -1030,8 +1033,9 @@ function build3DGradientArrows() {
     const dx = a.dx / a.mag * scale;
     const dz = a.dy / a.mag * scale;
 
-    const start = new THREE.Vector3(sx, 0, sz);
-    const end = new THREE.Vector3(sx + dx, 0, sz + dz);
+    //centred arrows
+    const start = new THREE.Vector3(sx - dx * 0.5, 0, sz - dz * 0.5);
+    const end = new THREE.Vector3(sx + dx * 0.5, 0, sz + dz * 0.5);
 
     const lineGeo = new THREE.BufferGeometry().setFromPoints([start, end]);
     group.add(new THREE.Line(lineGeo, shaftMat));
