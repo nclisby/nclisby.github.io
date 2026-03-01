@@ -915,52 +915,56 @@ function initThree() {
 
   initOrbitControls();
 
+  // Axes: x and y are horizontal, z is vertical (up)
   const axisMat = new THREE.LineBasicMaterial({ color: 0x4a4d5d });
 
+  // x-axis
   const xGeo = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(-Math.PI, 0, 0), new THREE.Vector3(Math.PI, 0, 0)
   ]);
   scene.add(new THREE.Line(xGeo, axisMat));
 
-  const zGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, -Math.PI), new THREE.Vector3(0, 0, Math.PI)
-  ]);
-  scene.add(new THREE.Line(zGeo, axisMat));
-
+  // y-axis
   const yGeo = new THREE.BufferGeometry().setFromPoints([
-  // maximum 'y' value (z value in users view) is 3
-    // new THREE.Vector3(0, -4, 0), new THREE.Vector3(0, 4, 0)
-    new THREE.Vector3(0, -4, 0), new THREE.Vector3(0, 3.3, 0)
+    new THREE.Vector3(0, -Math.PI, 0), new THREE.Vector3(0, Math.PI, 0)
   ]);
   scene.add(new THREE.Line(yGeo, axisMat));
+
+  // z-axis (vertical, for f(x,y))
+  const zGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, -4), new THREE.Vector3(0, 0, 3.3)
+  ]);
+  scene.add(new THREE.Line(zGeo, axisMat));
 
   const xLabel = makeTextSprite('x', '#8b8fa3');
   xLabel.position.set(Math.PI + 0.4, 0, 0);
   scene.add(xLabel); axisLabels3D.push(xLabel);
 
   const yLabel = makeTextSprite('y', '#8b8fa3');
-  yLabel.position.set(0, 0, Math.PI + 0.4);
+  yLabel.position.set(0, Math.PI + 0.4, 0);
   scene.add(yLabel); axisLabels3D.push(yLabel);
 
   const zLabel = makeTextSprite('z', '#8b8fa3');
-  // zLabel.position.set(0, 4.3, 0);
-  zLabel.position.set(0, 3.6, 0);
+  zLabel.position.set(0, 0, 3.6);
   scene.add(zLabel); axisLabels3D.push(zLabel);
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.5));
   const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-  dirLight.position.set(5, 10, 5);
+  dirLight.position.set(5, 5, 10);
   scene.add(dirLight);
 }
 
 function initOrbitControls() {
   let isDown = false, prevX, prevY;
-  let theta = Math.PI / 4, phi = Math.PI / 4, radius = 13;
+  // azimuth around z-axis, elevation from xy-plane, distance
+  let azimuth = -Math.PI / 3, elevation = Math.PI / 5, radius = 13;
 
   function updateCam() {
-    camera.position.x = radius * Math.sin(phi) * Math.cos(theta);
-    camera.position.y = radius * Math.cos(phi);
-    camera.position.z = radius * Math.sin(phi) * Math.sin(theta);
+    // z is up: camera position in spherical coords with z-up
+    camera.position.x = radius * Math.cos(elevation) * Math.cos(azimuth);
+    camera.position.y = radius * Math.cos(elevation) * Math.sin(azimuth);
+    camera.position.z = radius * Math.sin(elevation);
+    camera.up.set(0, 0, 1);
     camera.lookAt(0, 0, 0);
   }
   updateCam();
@@ -973,8 +977,8 @@ function initOrbitControls() {
   });
   el.addEventListener('pointermove', e => {
     if (!isDown) return;
-    theta -= (e.clientX - prevX) * 0.008;
-    phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi + (e.clientY - prevY) * 0.008));
+    azimuth -= (e.clientX - prevX) * 0.008;
+    elevation = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, elevation + (e.clientY - prevY) * 0.008));
     prevX = e.clientX; prevY = e.clientY;
     updateCam();
   });
@@ -1032,13 +1036,14 @@ function build3DGradientArrows() {
     const scale = (a.mag / maxMag) * maxArrowLen;
     if (scale < 0.02) continue;
 
-    const sx = a.x, sz = a.y;
+    // Gradient arrows on the z=0 plane (the xy-plane)
+    const ax = a.x, ay = a.y;
     const dx = a.dx / a.mag * scale;
-    const dz = a.dy / a.mag * scale;
+    const dy = a.dy / a.mag * scale;
 
     //centred arrows
-    const start = new THREE.Vector3(sx - dx * 0.5, 0, sz - dz * 0.5);
-    const end = new THREE.Vector3(sx + dx * 0.5, 0, sz + dz * 0.5);
+    const start = new THREE.Vector3(ax - dx * 0.5, ay - dy * 0.5, 0);
+    const end = new THREE.Vector3(ax + dx * 0.5, ay + dy * 0.5, 0);
 
     const lineGeo = new THREE.BufferGeometry().setFromPoints([start, end]);
     group.add(new THREE.Line(lineGeo, shaftMat));
@@ -1049,7 +1054,8 @@ function build3DGradientArrows() {
     const cone = new THREE.Mesh(coneGeo, headMat);
     cone.position.copy(end);
 
-    const dir = new THREE.Vector3(dx, 0, dz).normalize();
+    // Orient cone along arrow direction (cone default is along +Y, we need to rotate to xy-plane direction)
+    const dir = new THREE.Vector3(dx, dy, 0).normalize();
     const up = new THREE.Vector3(0, 1, 0);
     cone.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(up, dir));
     group.add(cone);
@@ -1073,17 +1079,18 @@ function drawSurface() {
   const geometry = new THREE.BufferGeometry();
   const vertices = [], colors = [], indices = [];
 
-  // Scale so that max|f| maps to height 3, with f=0 at y=0
+  // Scale so that max|f| maps to height 3, with f=0 at z=0
   const maxAbs = Math.max(Math.abs(field.fmin), Math.abs(field.fmax)) || 1;
-  const yScale = 3.0 / maxAbs;
+  const zScale = 3.0 / maxAbs;
   const range = field.fmax - field.fmin || 1;
 
   for (let j = 0; j < res; j++) {
     for (let i = 0; i < res; i++) {
       const x = XMIN + (XMAX - XMIN) * i / (res - 1);
-      const z = YMIN + (YMAX - YMIN) * j / (res - 1);
+      const y = YMIN + (YMAX - YMIN) * j / (res - 1);
       const v = field.data[j * res + i];
-      vertices.push(x, v * yScale, z);
+      // Three.js coords: x=x, y=y, z=f(x,y)
+      vertices.push(x, y, v * zScale);
       const t = (v - field.fmin) / range;
       const rgb = sampleColourMap(state.scheme, t);
       colors.push(rgb[0], rgb[1], rgb[2]);
