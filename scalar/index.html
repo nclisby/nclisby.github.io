@@ -928,7 +928,9 @@ function initThree() {
   scene.add(new THREE.Line(zGeo, axisMat));
 
   const yGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, -4, 0), new THREE.Vector3(0, 4, 0)
+  // maximum 'y' value (z value in users view) is 3
+    // new THREE.Vector3(0, -4, 0), new THREE.Vector3(0, 4, 0)
+    new THREE.Vector3(0, -4, 0), new THREE.Vector3(0, 3.3, 0)
   ]);
   scene.add(new THREE.Line(yGeo, axisMat));
 
@@ -941,7 +943,8 @@ function initThree() {
   scene.add(yLabel); axisLabels3D.push(yLabel);
 
   const zLabel = makeTextSprite('z', '#8b8fa3');
-  zLabel.position.set(0, 4.3, 0);
+  // zLabel.position.set(0, 4.3, 0);
+  zLabel.position.set(0, 3.6, 0);
   scene.add(zLabel); axisLabels3D.push(zLabel);
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.5));
