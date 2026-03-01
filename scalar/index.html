@@ -19,7 +19,8 @@
     --input-bg: #1e2130;
     --hover: #252838;
     --radius: 8px;
-    --panel-width: 280px;
+    --panel-width: 300px;
+    // --panel-width: 280px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -95,15 +96,15 @@
 
   .panel-header-text h1 {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 15px;
+    font-size: 22px;
     font-weight: 600;
     letter-spacing: 0.5px;
     color: var(--accent);
-    text-transform: uppercase;
+    // text-transform: uppercase;
   }
 
   .panel-header-text p {
-    font-size: 12px;
+    font-size: 18px;
     color: var(--text-dim);
     margin-top: 4px;
   }
@@ -119,7 +120,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 24px;
     flex-shrink: 0;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -135,7 +136,7 @@
 
   .section-label {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: 15px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -150,7 +151,7 @@
     border-radius: var(--radius);
     color: var(--text);
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    font-size: 19px;
     padding: 10px 12px;
     outline: none;
     cursor: pointer;
@@ -182,7 +183,7 @@
     border-radius: var(--radius);
     color: var(--text);
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    font-size: 19px;
     padding: 10px 12px;
     outline: none;
     transition: border-color 0.15s;
@@ -204,7 +205,7 @@
     border-radius: var(--radius);
     color: var(--text-dim);
     font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 12px;
+    font-size: 18px;
     font-weight: 500;
     padding: 10px 6px;
     cursor: pointer;
@@ -231,7 +232,7 @@
 
   .toggle-row:first-child { margin-top: 0; }
 
-  .toggle-label { font-size: 12px; font-weight: 500; color: var(--text); }
+  .toggle-label { font-size: 18px; font-weight: 500; color: var(--text); }
 
   .toggle-switch {
     width: 44px; height: 26px;
@@ -303,7 +304,7 @@
 
   .current-fn {
     position: absolute; top: 12px; right: 12px;
-    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 22px;
     color: var(--accent);
     background: rgba(15,17,23,0.85);
     padding: 6px 12px; border-radius: var(--radius);
@@ -318,8 +319,7 @@
 <div class="panel" id="panel">
   <div class="panel-header">
     <div class="panel-header-text">
-      <h1>Scalar Fields</h1>
-      <p>f : &#8477;&#178; &#8594; &#8477; on [&#8722;&#960;, &#960;]&#178;</p>
+      <h1>Scalar fields</h1>
     </div>
     <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
   </div>
@@ -337,7 +337,7 @@
   <div class="section">
     <div class="section-label">Display</div>
     <div class="opt-row">
-      <button class="opt-btn active" data-mode="heatmap">Heat map</button>
+      <button class="opt-btn active" data-mode="heatmap">Heat&nbsp;map</button>
       <button class="opt-btn" data-mode="contour">Contours</button>
       <button class="opt-btn" data-mode="surface">Surface</button>
     </div>
@@ -705,7 +705,7 @@ function drawGradientOverlay(ox, oy, size) {
 function drawHeatmap() {
   const rect = canvasArea.getBoundingClientRect();
   const w = rect.width, h = rect.height;
-  const size = Math.min(w, h) * 0.85;
+  const size = Math.min(w, h) * 0.75;
   const ox = (w - size) / 2, oy = (h - size) / 2;
   const res = Math.min(300, Math.round(size));
   const field = computeField(res);
@@ -743,7 +743,7 @@ function drawHeatmap() {
 function drawContours() {
   const rect = canvasArea.getBoundingClientRect();
   const w = rect.width, h = rect.height;
-  const size = Math.min(w, h) * 0.85;
+  const size = Math.min(w, h) * 0.75;
   const ox = (w - size) / 2, oy = (h - size) / 2;
   const res = 200;
   const field = computeField(res);
@@ -818,7 +818,7 @@ function drawAxes(ox, oy, size) {
   ctx.strokeRect(ox, oy, size, size);
 
   ctx.fillStyle = '#6b6f82';
-  ctx.font = '11px IBM Plex Mono';
+  ctx.font = '22px IBM Plex Mono';
 
   const ticks = [-3, -2, -1, 0, 1, 2, 3];
   for (const t of ticks) {
@@ -826,20 +826,20 @@ function drawAxes(ox, oy, size) {
     const px = ox + frac * size;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(t === 0 ? '0' : t.toString(), px, oy + size + 4);
+    ctx.fillText(t === 0 ? '0' : t.toString(), px, oy + size + 8);
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    ctx.fillText(t === 0 ? '0' : t.toString(), ox - 6, oy + (1 - frac) * size);
+    ctx.fillText(t === 0 ? '0' : t.toString(), ox - 10, oy + (1 - frac) * size);
   }
 
   ctx.fillStyle = '#8b8fa3';
-  ctx.font = '500 12px IBM Plex Sans';
+  ctx.font = '500 24px IBM Plex Sans';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText('x', ox + size / 2, oy + size + 18);
+  ctx.fillText('x', ox + size / 2, oy + size + 34);
 
   ctx.save();
-  ctx.translate(ox - 28, oy + size / 2);
+  ctx.translate(ox - 48, oy + size / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
