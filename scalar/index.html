@@ -1165,20 +1165,11 @@ update();
   let pointerX = window.innerWidth / 2;
   let pointerY = window.innerHeight / 2;
 
-  // Use physical pixels (correcting for devicePixelRatio) and the
-  // shorter screen dimension so the pointer is the same proportion
-  // of screen on all devices and orientations.
-  function getPhysicalShortEdge() {
-    const dpr = window.devicePixelRatio || 1;
-    const physW = window.innerWidth * dpr;
-    const physH = window.innerHeight * dpr;
-    return Math.min(physW, physH);
-  }
-
+  // Use the shorter screen dimension (stable across zoom/rotation)
+  // for consistent sizing on all devices.
   function getPointerRadius() {
-    const dpr = window.devicePixelRatio || 1;
-    // Compute in physical pixels, convert back to CSS pixels
-    return Math.round(getPhysicalShortEdge() * POINTER_SIZE_FRACTION / dpr);
+    const shortEdge = Math.min(screen.width, screen.height);
+    return Math.round(shortEdge * POINTER_SIZE_FRACTION);
   }
 
   function getButtonSize() {
@@ -1346,22 +1337,26 @@ update();
     e.preventDefault();
 
     if (!active) {
-      // Activate: place pointer in centre of canvas area
+      // Activate
       active = true;
       btn.classList.add('active');
       updateSizes();
-      const centre = getCanvasCentre();
-      const clamped = clampToCanvas(centre.x, centre.y);
-      pointerX = clamped.x;
-      pointerY = clamped.y;
-      updatePointerPosition();
 
       if (isTouch(e)) {
-        // Touch: show pointer in centre, ready to be dragged
+        // Touch: show pointer in centre of canvas, ready to be dragged
+        const centre = getCanvasCentre();
+        const clamped = clampToCanvas(centre.x, centre.y);
+        pointerX = clamped.x;
+        pointerY = clamped.y;
+        updatePointerPosition();
         pointer.style.display = 'block';
         pointer.classList.add('accepts-input');
       } else {
-        // Mouse: enter follow mode immediately
+        // Mouse: place pointer at cursor position, enter follow mode
+        const clamped = clampToCanvas(e.clientX, e.clientY);
+        pointerX = clamped.x;
+        pointerY = clamped.y;
+        updatePointerPosition();
         insideCanvas = isInsideCanvas(e.clientX, e.clientY);
         enterFollowMode();
       }
