@@ -1147,13 +1147,12 @@ resize();
 update();
 </script>
 
-
 <!-- code for pointer -->
 <script>
 (function() {
   // ─── CONFIG ───
   const POINTER_OPACITY = 0.85;
-  const POINTER_SIZE_FRACTION = 1/120; // of screen width, controls both pointer and toggle button
+  const POINTER_SIZE_FRACTION = 1/120; // of physical screen short edge
   const POINTER_COLOUR = '#e53935';
   const BUTTON_MARGIN = 12; // px from bottom-right
   const CANVAS_AREA_SELECTOR = '.canvas-area'; // the main window element
@@ -1166,15 +1165,27 @@ update();
   let pointerX = window.innerWidth / 2;
   let pointerY = window.innerHeight / 2;
 
+  // Use physical pixels (correcting for devicePixelRatio) and the
+  // shorter screen dimension so the pointer is the same proportion
+  // of screen on all devices and orientations.
+  function getPhysicalShortEdge() {
+    const dpr = window.devicePixelRatio || 1;
+    const physW = window.innerWidth * dpr;
+    const physH = window.innerHeight * dpr;
+    return Math.min(physW, physH);
+  }
+
   function getPointerRadius() {
-    return Math.round(window.innerWidth * POINTER_SIZE_FRACTION);
+    const dpr = window.devicePixelRatio || 1;
+    // Compute in physical pixels, convert back to CSS pixels
+    return Math.round(getPhysicalShortEdge() * POINTER_SIZE_FRACTION / dpr);
   }
 
   function getButtonSize() {
-    return Math.round(window.innerWidth * POINTER_SIZE_FRACTION * 2);
+    return getPointerRadius() * 2;
   }
 
-  // Get the canvas area element (looked up once DOM is ready)
+  // Get the canvas area element
   let canvasArea = null;
   function getCanvasArea() {
     if (!canvasArea) canvasArea = document.querySelector(CANVAS_AREA_SELECTOR);
@@ -1199,6 +1210,11 @@ update();
       x: Math.max(b.left + r, Math.min(b.right - r, x)),
       y: Math.max(b.top + r, Math.min(b.bottom - r, y))
     };
+  }
+
+  function getCanvasCentre() {
+    const b = getCanvasBounds();
+    return { x: (b.left + b.right) / 2, y: (b.top + b.bottom) / 2 };
   }
 
   // ─── STYLES ───
@@ -1310,7 +1326,6 @@ update();
     dragging = false;
     insideCanvas = true;
     btn.classList.remove('active');
-    btn.style.pointerEvents = '';
     pointer.style.display = 'none';
     pointer.classList.remove('accepts-input', 'dragging');
     const el = getCanvasArea();
@@ -1331,40 +1346,24 @@ update();
     e.preventDefault();
 
     if (!active) {
-      // Activate
+      // Activate: place pointer in centre of canvas area
       active = true;
       btn.classList.add('active');
       updateSizes();
+      const centre = getCanvasCentre();
+      const clamped = clampToCanvas(centre.x, centre.y);
+      pointerX = clamped.x;
+      pointerY = clamped.y;
+      updatePointerPosition();
 
       if (isTouch(e)) {
-        // Touch: place pointer over button, start dragging immediately
-        // Hide button during drag so it can't interfere with touch events
-        btn.style.pointerEvents = 'none';
-        const bs = getButtonSize();
-        pointerX = window.innerWidth - BUTTON_MARGIN - bs / 2;
-        pointerY = window.innerHeight - BUTTON_MARGIN - bs / 2;
-        updatePointerPosition();
+        // Touch: show pointer in centre, ready to be dragged
         pointer.style.display = 'block';
         pointer.classList.add('accepts-input');
-        dragging = true;
-        pointer.classList.add('dragging');
-        pointer.setPointerCapture(e.pointerId);
       } else {
-        // Mouse: place pointer at current mouse position (clamped), enter follow mode
-        const clamped = clampToCanvas(e.clientX, e.clientY);
-        pointerX = clamped.x;
-        pointerY = clamped.y;
-        updatePointerPosition();
+        // Mouse: enter follow mode immediately
         insideCanvas = isInsideCanvas(e.clientX, e.clientY);
-        if (insideCanvas) {
-          enterFollowMode();
-        } else {
-          // Clicked toggle but mouse isn't over canvas — show pointer but
-          // wait for mouse to enter canvas before following
-          pointer.style.display = 'block';
-          following = true;
-          pointer.classList.remove('accepts-input');
-        }
+        enterFollowMode();
       }
     } else {
       // Deactivate
@@ -1380,14 +1379,11 @@ update();
     const nowInside = isInsideCanvas(e.clientX, e.clientY);
 
     if (nowInside && !insideCanvas) {
-      // Mouse entered canvas area — show pointer, hide cursor
       insideCanvas = true;
       showPointerInCanvas();
     } else if (!nowInside && insideCanvas) {
-      // Mouse left canvas area — hide pointer, show cursor
       insideCanvas = false;
       hidePointerFromCanvas();
-      // Keep following=true so re-entering resumes
     }
 
     if (nowInside) {
@@ -1402,15 +1398,11 @@ update();
   document.addEventListener('pointerdown', (e) => {
     if (!active || !following) return;
     if (isTouch(e)) return;
-    // Ignore clicks on the toggle button (handled separately)
     if (btn.contains(e.target)) return;
-
-    // If clicking outside canvas area, just ignore (sidebar interaction)
     if (!isInsideCanvas(e.clientX, e.clientY)) return;
 
     e.stopPropagation();
     e.preventDefault();
-    // Drop the pointer in place
     exitFollowMode();
   });
 
@@ -1421,12 +1413,10 @@ update();
     e.preventDefault();
 
     if (isTouch(e)) {
-      // Touch: start drag
       dragging = true;
       pointer.classList.add('dragging');
       pointer.setPointerCapture(e.pointerId);
     } else {
-      // Mouse: resume follow mode
       insideCanvas = true;
       enterFollowMode();
     }
@@ -1448,31 +1438,11 @@ update();
     e.stopPropagation();
     dragging = false;
     pointer.classList.remove('dragging');
-    btn.style.pointerEvents = '';
   });
 
   pointer.addEventListener('pointercancel', (e) => {
     dragging = false;
     pointer.classList.remove('dragging');
-    btn.style.pointerEvents = '';
-  });
-
-  // Handle initial touch drag that starts on the button
-  document.addEventListener('pointermove', (e) => {
-    if (dragging && isTouch(e)) {
-      const clamped = clampToCanvas(e.clientX, e.clientY);
-      pointerX = clamped.x;
-      pointerY = clamped.y;
-      updatePointerPosition();
-    }
-  });
-
-  document.addEventListener('pointerup', (e) => {
-    if (dragging && isTouch(e)) {
-      dragging = false;
-      pointer.classList.remove('dragging');
-      btn.style.pointerEvents = '';
-    }
   });
 
   // Block events from passing through the pointer when it accepts input
