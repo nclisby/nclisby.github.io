@@ -1153,7 +1153,7 @@ update();
 (function() {
   // ─── CONFIG ───
   const POINTER_OPACITY = 0.85;
-  const POINTER_SIZE_FRACTION = 1/100; // of screen width, controls both pointer and toggle button
+  const POINTER_SIZE_FRACTION = 1/120; // of screen width, controls both pointer and toggle button
   const POINTER_COLOUR = '#e53935';
   const BUTTON_MARGIN = 12; // px from bottom-right
   const CANVAS_AREA_SELECTOR = '.canvas-area'; // the main window element
@@ -1310,6 +1310,7 @@ update();
     dragging = false;
     insideCanvas = true;
     btn.classList.remove('active');
+    btn.style.pointerEvents = '';
     pointer.style.display = 'none';
     pointer.classList.remove('accepts-input', 'dragging');
     const el = getCanvasArea();
@@ -1337,6 +1338,8 @@ update();
 
       if (isTouch(e)) {
         // Touch: place pointer over button, start dragging immediately
+        // Hide button during drag so it can't interfere with touch events
+        btn.style.pointerEvents = 'none';
         const bs = getButtonSize();
         pointerX = window.innerWidth - BUTTON_MARGIN - bs / 2;
         pointerY = window.innerHeight - BUTTON_MARGIN - bs / 2;
@@ -1445,11 +1448,13 @@ update();
     e.stopPropagation();
     dragging = false;
     pointer.classList.remove('dragging');
+    btn.style.pointerEvents = '';
   });
 
   pointer.addEventListener('pointercancel', (e) => {
     dragging = false;
     pointer.classList.remove('dragging');
+    btn.style.pointerEvents = '';
   });
 
   // Handle initial touch drag that starts on the button
@@ -1466,6 +1471,7 @@ update();
     if (dragging && isTouch(e)) {
       dragging = false;
       pointer.classList.remove('dragging');
+      btn.style.pointerEvents = '';
     }
   });
 
