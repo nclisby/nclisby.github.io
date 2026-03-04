@@ -18,7 +18,7 @@
     --input-bg: #1e2130;
     --hover: #252838;
     --radius: 8px;
-    --panel-width: 300px;
+    --panel-width: 350px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1174,5 +1174,320 @@ function update() {
 resize();
 update();
 </script>
+
+<!-- code for pointer -->
+<script>
+(function() {
+  // ─── CONFIG ───
+  const POINTER_OPACITY = 0.85;
+  const POINTER_SIZE_FRACTION = 1/60; // of physical screen short edge
+  const POINTER_COLOUR = '#e53935';
+  const BUTTON_MARGIN = 30; // px from bottom-right
+  const CANVAS_AREA_SELECTOR = '.canvas-area'; // the main window element
+
+  // ─── STATE ───
+  let active = false;       // pointer is visible/enabled
+  let following = false;    // mouse mode: pointer is tracking cursor
+  let dragging = false;     // touch mode: pointer is being dragged
+  let insideCanvas = true;  // whether cursor is inside the canvas area
+  let pointerX = window.innerWidth / 2;
+  let pointerY = window.innerHeight / 2;
+
+  // Use the shorter screen dimension (stable across zoom/rotation)
+  // for consistent sizing on all devices.
+  function getPointerRadius() {
+    const shortEdge = Math.min(screen.width, screen.height);
+    return Math.round(shortEdge * POINTER_SIZE_FRACTION);
+  }
+
+  function getButtonSize() {
+    return getPointerRadius() * 2;
+  }
+
+  // Get the canvas area element
+  let canvasArea = null;
+  function getCanvasArea() {
+    if (!canvasArea) canvasArea = document.querySelector(CANVAS_AREA_SELECTOR);
+    return canvasArea;
+  }
+
+  function getCanvasBounds() {
+    const el = getCanvasArea();
+    if (!el) return { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
+    return el.getBoundingClientRect();
+  }
+
+  function isInsideCanvas(x, y) {
+    const b = getCanvasBounds();
+    return x >= b.left && x <= b.right && y >= b.top && y <= b.bottom;
+  }
+
+  function clampToCanvas(x, y) {
+    const b = getCanvasBounds();
+    const r = getPointerRadius();
+    return {
+      x: Math.max(b.left + r, Math.min(b.right - r, x)),
+      y: Math.max(b.top + r, Math.min(b.bottom - r, y))
+    };
+  }
+
+  function getCanvasCentre() {
+    const b = getCanvasBounds();
+    return { x: (b.left + b.right) / 2, y: (b.top + b.bottom) / 2 };
+  }
+
+  // ─── STYLES ───
+  const style = document.createElement('style');
+  style.textContent = `
+    .tp-btn {
+      position: fixed;
+      bottom: ${BUTTON_MARGIN}px;
+      right: ${BUTTON_MARGIN}px;
+      z-index: 99999;
+      border-radius: 50%;
+      border: 3px solid #ffffff;
+      background: transparent;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .tp-btn:hover {
+      border-color: #ffcdd2;
+    }
+    .tp-btn.active {
+      background: #ffffff;
+      border-color: #ffffff;
+      box-shadow: 0 2px 12px rgba(255,255,255,0.4);
+    }
+    .tp-pointer {
+      position: fixed;
+      z-index: 100000;
+      border-radius: 50%;
+      background: ${POINTER_COLOUR};
+      opacity: ${POINTER_OPACITY};
+      pointer-events: none;
+      touch-action: none;
+      border: 2px solid rgba(255,255,255,0.9);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.4), 0 0 20px 6px rgba(0,0,0,0.35);
+      display: none;
+      transform: translate(-50%, -50%);
+    }
+    .tp-pointer.accepts-input {
+      pointer-events: auto;
+      cursor: grab;
+    }
+    .tp-pointer.dragging {
+      cursor: grabbing;
+    }
+    .tp-hide-cursor,
+    .tp-hide-cursor * {
+      cursor: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ─── TOGGLE BUTTON ───
+  const btn = document.createElement('div');
+  btn.className = 'tp-btn';
+  btn.title = 'Teaching pointer';
+  document.body.appendChild(btn);
+
+  // ─── POINTER ELEMENT ───
+  const pointer = document.createElement('div');
+  pointer.className = 'tp-pointer';
+  document.body.appendChild(pointer);
+
+  function updateSizes() {
+    const r = getPointerRadius();
+    const d = r * 2;
+    pointer.style.width = d + 'px';
+    pointer.style.height = d + 'px';
+    const bs = getButtonSize();
+    btn.style.width = bs + 'px';
+    btn.style.height = bs + 'px';
+  }
+
+  function updatePointerPosition() {
+    pointer.style.left = pointerX + 'px';
+    pointer.style.top = pointerY + 'px';
+  }
+
+  function showPointerInCanvas() {
+    pointer.style.display = 'block';
+    const el = getCanvasArea();
+    if (el) el.classList.add('tp-hide-cursor');
+  }
+
+  function hidePointerFromCanvas() {
+    pointer.style.display = 'none';
+    const el = getCanvasArea();
+    if (el) el.classList.remove('tp-hide-cursor');
+  }
+
+  function enterFollowMode() {
+    following = true;
+    pointer.classList.remove('accepts-input');
+    showPointerInCanvas();
+  }
+
+  function exitFollowMode() {
+    following = false;
+    pointer.classList.add('accepts-input');
+    const el = getCanvasArea();
+    if (el) el.classList.remove('tp-hide-cursor');
+  }
+
+  function deactivate() {
+    active = false;
+    following = false;
+    dragging = false;
+    insideCanvas = true;
+    btn.classList.remove('active');
+    pointer.style.display = 'none';
+    pointer.classList.remove('accepts-input', 'dragging');
+    const el = getCanvasArea();
+    if (el) el.classList.remove('tp-hide-cursor');
+  }
+
+  // Initialise sizes
+  updateSizes();
+
+  // ─── DETECT INPUT TYPE ───
+  function isTouch(e) {
+    return e.pointerType === 'touch';
+  }
+
+  // ─── TOGGLE BUTTON ───
+  btn.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!active) {
+      // Activate
+      active = true;
+      btn.classList.add('active');
+      updateSizes();
+
+      if (isTouch(e)) {
+        // Touch: show pointer in centre of canvas, ready to be dragged
+        const centre = getCanvasCentre();
+        const clamped = clampToCanvas(centre.x, centre.y);
+        pointerX = clamped.x;
+        pointerY = clamped.y;
+        updatePointerPosition();
+        pointer.style.display = 'block';
+        pointer.classList.add('accepts-input');
+      } else {
+        // Mouse: place pointer at cursor position, enter follow mode
+        const clamped = clampToCanvas(e.clientX, e.clientY);
+        pointerX = clamped.x;
+        pointerY = clamped.y;
+        updatePointerPosition();
+        insideCanvas = isInsideCanvas(e.clientX, e.clientY);
+        enterFollowMode();
+      }
+    } else {
+      // Deactivate
+      deactivate();
+    }
+  });
+
+  // ─── MOUSE: follow mode — pointer tracks mouse within canvas area ───
+  document.addEventListener('pointermove', (e) => {
+    if (!active || !following) return;
+    if (isTouch(e)) return;
+
+    const nowInside = isInsideCanvas(e.clientX, e.clientY);
+
+    if (nowInside && !insideCanvas) {
+      insideCanvas = true;
+      showPointerInCanvas();
+    } else if (!nowInside && insideCanvas) {
+      insideCanvas = false;
+      hidePointerFromCanvas();
+    }
+
+    if (nowInside) {
+      const clamped = clampToCanvas(e.clientX, e.clientY);
+      pointerX = clamped.x;
+      pointerY = clamped.y;
+      updatePointerPosition();
+    }
+  });
+
+  // Mouse click while following: drop pointer, show cursor
+  document.addEventListener('pointerdown', (e) => {
+    if (!active || !following) return;
+    if (isTouch(e)) return;
+    if (btn.contains(e.target)) return;
+    if (!isInsideCanvas(e.clientX, e.clientY)) return;
+
+    e.stopPropagation();
+    e.preventDefault();
+    exitFollowMode();
+  });
+
+  // ─── MOUSE: click on dropped pointer to resume following ───
+  pointer.addEventListener('pointerdown', (e) => {
+    if (!active) return;
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (isTouch(e)) {
+      dragging = true;
+      pointer.classList.add('dragging');
+      pointer.setPointerCapture(e.pointerId);
+    } else {
+      insideCanvas = true;
+      enterFollowMode();
+    }
+  });
+
+  // ─── TOUCH: drag handling (clamped to canvas area) ───
+  pointer.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const clamped = clampToCanvas(e.clientX, e.clientY);
+    pointerX = clamped.x;
+    pointerY = clamped.y;
+    updatePointerPosition();
+  });
+
+  pointer.addEventListener('pointerup', (e) => {
+    if (!dragging) return;
+    e.stopPropagation();
+    dragging = false;
+    pointer.classList.remove('dragging');
+  });
+
+  pointer.addEventListener('pointercancel', (e) => {
+    dragging = false;
+    pointer.classList.remove('dragging');
+  });
+
+  // Block events from passing through the pointer when it accepts input
+  ['click', 'mousedown', 'mouseup', 'touchstart', 'touchmove', 'touchend'].forEach(evt => {
+    pointer.addEventListener(evt, (e) => {
+      if (active) { e.stopPropagation(); e.preventDefault(); }
+    });
+  });
+
+  // ─── RESIZE ───
+  window.addEventListener('resize', () => {
+    updateSizes();
+    const clamped = clampToCanvas(pointerX, pointerY);
+    pointerX = clamped.x;
+    pointerY = clamped.y;
+    updatePointerPosition();
+  });
+})();
+</script>
+<!-- end code for pointer -->
+
+
+
 </body>
 </html>
