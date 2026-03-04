@@ -1147,6 +1147,7 @@ function initThree() {
 }
 
 function initOrbitControls() {
+  let isPinching = false;
   let isDown = false, prevX, prevY;
   let azimuth = -Math.PI / 3, elevation = Math.PI / 5, radius = 13;
 
@@ -1184,6 +1185,8 @@ function initOrbitControls() {
   el.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
       e.preventDefault();
+      isPinching = true;
+      isDown = false;  // cancel any active orbit drag
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       lastPinchDist = Math.sqrt(dx*dx + dy*dy);
@@ -1201,6 +1204,12 @@ function initOrbitControls() {
       // radius = Math.max(3, Math.min(25, radius + (lastPinchDist - dist) * 0.03));
       lastPinchDist = dist;
       // updateCam();
+    }
+  }, { passive: false });
+  el.addEventListener('touchend', e => {
+    if (e.touches.length < 2) {
+      isPinching = false;
+      lastPinchDist = 0;
     }
   }, { passive: false });
 }
