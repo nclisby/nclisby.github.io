@@ -483,10 +483,17 @@ function parseCustom(expr) {
   return new Function('x', 'y', `"use strict"; return (${e});`);
 }
 
+//may introduce a cutoff at some stage
+//let cutoff=0.0;
 function evalFn(x, y) {
   let v;
   try { v = state.currentFn(x, y); } catch { v = 0; }
   if (!isFinite(v)) v = 0;
+  //if (cutoff > 0.0)
+  //{
+  //  if (v > cutoff) v = cutoff;
+  //  if (v < -cutoff) v = -cutoff;
+  //}
   return state.flipSign ? -v : v;
 }
 
