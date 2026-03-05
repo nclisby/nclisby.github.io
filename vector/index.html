@@ -634,17 +634,63 @@ openBtn.addEventListener('click', () => {
 });
 
 // ─── MODE TOGGLE ───
+// Per-mode saved state
+const savedState = {
+  '2d': { presetIndex: 0, isCustom: false, showDiv: false, showCurl: false },
+  '3d': { presetIndex: 0, isCustom: false },
+};
+
 document.querySelectorAll('[data-mode]').forEach(btn => {
   btn.addEventListener('click', () => {
+    // Save current mode state before switching
+    const prev = state.mode;
+    savedState[prev].presetIndex = state.presetIndex;
+    savedState[prev].isCustom = state.isCustom;
+    if (prev === '2d') {
+      savedState[prev].showDiv = state.showDiv;
+      savedState[prev].showCurl = state.showCurl;
+    }
+
+    // Switch mode
     state.mode = btn.dataset.mode;
     document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b === btn));
-    state.presetIndex = 0;
-    state.isCustom = false;
+
+    // Restore saved state for new mode
+    const restored = savedState[state.mode];
+    state.presetIndex = restored.presetIndex;
+    state.isCustom = restored.isCustom;
+
+    // Rebuild dropdown and select the restored preset
     populateDropdown();
+    if (!state.isCustom) {
+      fnSelect.value = state.presetIndex;
+    } else {
+      fnSelect.value = '';
+    }
+
+    // Show/hide mode-specific UI
     densityRow2d.style.display = state.mode === '2d' ? 'flex' : 'none';
     densityRow3d.style.display = state.mode === '3d' ? 'flex' : 'none';
     customWrap2d.style.display = state.mode === '2d' ? 'block' : 'none';
     customWrap3d.style.display = state.mode === '3d' ? 'block' : 'none';
+    document.getElementById('divRow').style.display = state.mode === '2d' ? 'flex' : 'none';
+    document.getElementById('curlRow').style.display = state.mode === '2d' ? 'flex' : 'none';
+
+    if (state.mode === '2d') {
+      // Restore div/curl state
+      state.showDiv = restored.showDiv;
+      state.showCurl = restored.showCurl;
+      document.getElementById('toggleDiv').classList.toggle('active', state.showDiv);
+      document.getElementById('toggleCurl').classList.toggle('active', state.showCurl);
+      updateOverlayUI();
+    } else {
+      state.showDiv = false;
+      state.showCurl = false;
+      document.getElementById('toggleDiv').classList.remove('active');
+      document.getElementById('toggleCurl').classList.remove('active');
+      document.getElementById('overlayOptions').style.display = 'none';
+    }
+
     update();
   });
 });
