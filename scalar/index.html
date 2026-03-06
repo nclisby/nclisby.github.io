@@ -828,15 +828,17 @@ function drawAxes(ox, oy, size) {
   ctx.lineWidth = 1;
   ctx.strokeRect(ox, oy, size, size);
 
-  ctx.fillStyle = '#6b6f82';
-  ctx.font = '22px IBM Plex Mono';
+  // ctx.fillStyle = '#6b6f82';
+  // ctx.font = '22px IBM Plex Mono';
 
   ctx.fillStyle = '#8b8fa3';
   ctx.font = '500 24px IBM Plex Sans';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText('x', ox + size / 2, oy + size + 34);
-  ctx.fillText('y', ox-48, oy + size / 2);
+  // ctx.fillText('x', ox + size / 2, oy + size + 34);
+  ctx.fillText('x', ox + size / 2, oy + size + 20);
+  // ctx.fillText('y', ox-48, oy + size / 2);
+  ctx.fillText('y', ox-30, oy + size / 2 - 10);
 
 }
 

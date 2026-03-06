@@ -685,15 +685,17 @@ function getLayout() {
   const margin = 16;
   const topPad = 56; // space for angle controls
 
-  if (state.mode === 'surface') {
-    // Surface mode: 3D takes left half, 1D slice on right half (drawn on canvas)
-    const halfW = w / 2;
-    const rx = halfW + margin;
-    const ry = topPad + margin;
-    const rw = halfW - margin * 2.5;
-    const rh = h - topPad - margin * 3;
-    return { w, h, lx: 0, ly: 0, lsize: 0, rx, ry, rw, rh, isSurface: true };
-  }
+  // want the same 2d slice size for both modes.
+  // if in surface mode the left hand sizes are irrelevant and are ignored
+  //if (state.mode === 'surface') {
+  //  // Surface mode: 3D takes left half, 1D slice on right half (drawn on canvas)
+  //  const halfW = w / 2;
+  //  const rx = halfW + margin;
+  //  const ry = topPad + margin;
+  //  const rw = halfW - margin * 2.5;
+  //  const rh = h - topPad - margin * 3;
+  //  return { w, h, lx: 0, ly: 0, lsize: 0, rx, ry, rw, rh, isSurface: true };
+  //}
 
   // 2D modes: left plot square, right plot beside it
   const halfW = (w - margin * 3) / 2;
@@ -702,11 +704,17 @@ function getLayout() {
   const lx = margin + (halfW - lsize) / 2;
   const ly = topPad + margin + (availH - lsize) / 2;
 
-  const rx = margin * 2 + halfW;
-  const ry = ly;
-  const rw = halfW * 0.88;
-  const rh = lsize;
+  // variable aspect ratio
+  // const rx = margin * 2 + halfW;
+  // const ry = ly;
+  // const rw = halfW * 0.88;
+  // const rh = lsize;
 
+  // fixed square aspect ratio
+  const rx = margin * 2 + halfW + (halfW - lsize) / 2;
+  const ry = ly;
+  const rw = lsize;
+  const rh = lsize;
   return { w, h, lx, ly, lsize, rx, ry, rw, rh, isSurface: false };
 }
 
@@ -890,15 +898,17 @@ function drawAxes2D(ox, oy, size) {
   ctx.lineWidth = 1;
   ctx.strokeRect(ox, oy, size, size);
 
-  ctx.fillStyle = '#6b6f82';
-  ctx.font = '16px IBM Plex Mono';
+  // ctx.fillStyle = '#6b6f82';
+  // ctx.font = '16px IBM Plex Mono';
 
   ctx.fillStyle = '#8b8fa3';
-  ctx.font = '500 18px IBM Plex Sans';
+  ctx.font = '500 20px IBM Plex Sans';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText('x', ox + size / 2, oy + size + 26);
-  ctx.fillText('y', ox-48, oy + size / 2);
+  // ctx.fillText('x', ox + size / 2, oy + size + 26);
+  ctx.fillText('x', ox + size / 2, oy + size + 10);
+  // ctx.fillText('y', ox-48, oy + size / 2);
+  ctx.fillText('y', ox-24, oy + size / 2 - 10);
 
 }
 
@@ -926,33 +936,40 @@ function drawDirectionLine(ox, oy, size) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Compute gradient for scaling both arrows
-  const grad = computeGradientAt(state.pointX, state.pointY);
-  const gradMag = Math.sqrt(grad.dfdx * grad.dfdx + grad.dfdy * grad.dfdy);
-  const Duf = computeDirectionalDerivative(state.pointX, state.pointY, ux, uy);
+
+  const unitVectorLength = 1.5 
 
   // Pixels per domain unit
   const pxPerUnit = size / (XMAX - XMIN);
   const ppx = toPixX(state.pointX), ppy = toPixY(state.pointY);
   const headLen = 8;
-  const headAngle = 0.4;
+  // const headAngle = 0.4;
+  const headAngle = 0.6;
   const screenAngle = Math.atan2(-uy, ux); // flip y for screen coords
+
+  // Compute gradient for scaling both arrows
+  const grad = computeGradientAt(state.pointX, state.pointY);
+  const gradMag = Math.sqrt(grad.dfdx * grad.dfdx + grad.dfdy * grad.dfdy);
+  const Duf = computeDirectionalDerivative(state.pointX, state.pointY, ux, uy);
+
+  // these calculations are required by the projection calculation that
+  // happens later
+  const gScreenAngle = Math.atan2(-grad.dfdy, grad.dfdx);
+  const gPixLen = unitVectorLength * pxPerUnit; 
+  const gax = ppx + gPixLen * Math.cos(gScreenAngle);
+  const gay = ppy + gPixLen * Math.sin(gScreenAngle);
 
   // Draw gradient arrow FIRST (so direction arrow renders on top)
   if (state.showGrad && gradMag > 0.01) {
-    const gScreenAngle = Math.atan2(-grad.dfdy, grad.dfdx);
-    const gPixLen = 1.0 * pxPerUnit; // 1 domain unit
-    const gax = ppx + gPixLen * Math.cos(gScreenAngle);
-    const gay = ppy + gPixLen * Math.sin(gScreenAngle);
 
-    ctx.strokeStyle = '#81c784';
+    ctx.strokeStyle = '#88ff00';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(ppx, ppy);
     ctx.lineTo(gax, gay);
     ctx.stroke();
 
-    ctx.fillStyle = '#81c784';
+    ctx.fillStyle = ctx.strokeStyle;
     const gha = Math.atan2(gay - ppy, gax - ppx);
     ctx.beginPath();
     ctx.moveTo(gax, gay);
@@ -962,30 +979,64 @@ function drawDirectionLine(ox, oy, size) {
     ctx.fill();
   }
 
-  // Draw direction arrow: always along û, length = |Duf| / |grad f| in domain units
-  const dirDomainLen = (gradMag > 0.01) ? Math.abs(Duf) / gradMag : 0;
-  const dirPixLen = dirDomainLen * pxPerUnit;
+  // Draw direction arrow: unit vector along û
+  const dirPixLen = unitVectorLength * pxPerUnit;
 
-  if (dirPixLen > 1) {
-    const dax = ppx + dirPixLen * Math.cos(screenAngle);
-    const day = ppy + dirPixLen * Math.sin(screenAngle);
+  const dax = ppx + dirPixLen * Math.cos(screenAngle);
+  const day = ppy + dirPixLen * Math.sin(screenAngle);
 
-    ctx.strokeStyle = '#ff8a65';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(ppx, ppy);
-    ctx.lineTo(dax, day);
-    ctx.stroke();
+  // ctx.strokeStyle = '#ff8a65';
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(ppx, ppy);
+  ctx.lineTo(dax, day);
+  ctx.stroke();
 
-    // Arrowhead
-    const daAngle = Math.atan2(day - ppy, dax - ppx);
-    ctx.fillStyle = '#ff8a65';
-    ctx.beginPath();
-    ctx.moveTo(dax, day);
-    ctx.lineTo(dax - headLen * Math.cos(daAngle - headAngle), day - headLen * Math.sin(daAngle - headAngle));
-    ctx.lineTo(dax - headLen * Math.cos(daAngle + headAngle), day - headLen * Math.sin(daAngle + headAngle));
-    ctx.closePath();
-    ctx.fill();
+  // Arrowhead
+  const daAngle = Math.atan2(day - ppy, dax - ppx);
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.beginPath();
+  ctx.moveTo(dax, day);
+  ctx.lineTo(dax - headLen * Math.cos(daAngle - headAngle), day - headLen * Math.sin(daAngle - headAngle));
+  ctx.lineTo(dax - headLen * Math.cos(daAngle + headAngle), day - headLen * Math.sin(daAngle + headAngle));
+  ctx.closePath();
+  ctx.fill();
+
+
+  // Draw directional derivative as projection onto u hat
+  // length = |Duf| / |grad f| in domain units
+  // Do this last, so that it appears over the top of u hat
+  if (state.showGrad && gradMag > 0.01) {
+     //const ddDomainLen = (gradMag > 0.01) ? Math.abs(Duf) / gradMag : 0;
+     const ddDomainLen = (gradMag > 0.01) ? Duf / gradMag : 0;
+     const ddPixLen = unitVectorLength * ddDomainLen * pxPerUnit;
+
+    if (Math.abs(ddPixLen) > 1) {
+      const ddx = ppx + ddPixLen * Math.cos(screenAngle);
+      const ddy = ppy + ddPixLen * Math.sin(screenAngle);
+
+      ctx.strokeStyle = '#ff8a65';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(ppx, ppy);
+      ctx.lineTo(ddx, ddy);
+      ctx.stroke();
+      ctx.closePath();
+
+
+      // also draw dashed line to show how it is calculated
+
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = '#ff8a65';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(gax, gay);
+      ctx.lineTo(ddx, ddy);
+      ctx.stroke();
+      ctx.closePath();
+      ctx.setLineDash([]);
+    }
   }
 
   // Draw selected point
@@ -1016,10 +1067,15 @@ function draw1DSlice(rx, ry, rw, rh) {
   const sDispRange = sDispMax - sDispMin;
 
   // Plot area with margins for axes
-  const plotLeft = rx + 50;
-  const plotRight = rx + rw - 12;
-  const plotTop = ry + 36;
-  const plotBottom = ry + rh - 30;
+  //const plotLeft = rx + 50;
+  //const plotRight = rx + rw - 12;
+  //const plotTop = ry + 36;
+  //const plotBottom = ry + rh - 30;
+  // Plot area without margins for axes
+  const plotLeft = rx;
+  const plotRight = rx + rw;
+  const plotTop = ry;
+  const plotBottom = ry + rh;
   const plotW = plotRight - plotLeft;
   const plotH = plotBottom - plotTop;
 
@@ -1126,11 +1182,13 @@ function draw1DSlice(rx, ry, rw, rh) {
 
   // Axis labels
   ctx.fillStyle = '#8b8fa3';
-  ctx.font = '500 16px IBM Plex Sans';
+  ctx.font = '500 20px IBM Plex Sans';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText('s (arc length)', plotLeft + plotW / 2, plotBottom + 22);
-  ctx.fillText('f', plotLeft-40, plotTop + plotH / 2 - 10);
+  //ctx.fillText('s (arc length)', plotLeft + plotW / 2, plotBottom + 22);
+  ctx.fillText('s (arc length)', plotLeft + plotW / 2, plotBottom + 10);
+  //ctx.fillText('f', plotLeft-40, plotTop + plotH / 2 - 10);
+  ctx.fillText('f', plotLeft-20, plotTop + plotH / 2 - 10);
 
   //ctx.save();
   //ctx.translate(plotLeft - 40, plotTop + plotH / 2);
@@ -1257,7 +1315,7 @@ function initThree() {
 function initOrbitControls() {
   let isPinching = false;
   let isDown = false, prevX, prevY;
-  let azimuth = -Math.PI / 3, elevation = Math.PI / 5, radius = 13;
+  let azimuth = -Math.PI / 3, elevation = Math.PI / 5, radius = 18;
 
   function updateCam() {
     threeCamera.position.x = radius * Math.cos(elevation) * Math.cos(azimuth);
