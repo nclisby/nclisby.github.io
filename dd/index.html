@@ -1237,6 +1237,8 @@ let threeScene, threeCamera, threeRenderer;
 let surfaceMesh = null;
 let slicePlane = null;
 let sliceLine = null;
+let sliceArrow1 = null;
+let sliceArrow2 = null;
 let slicePointMarker = null;
 let threeInited = false;
 
@@ -1458,6 +1460,18 @@ function updateSlice(zScale, field) {
     sliceLine.material.dispose();
     sliceLine = null;
   }
+  if (sliceArrow1) {
+    threeScene.remove(sliceArrow1);
+    sliceArrow1.geometry.dispose();
+    sliceArrow1.material.dispose();
+    sliceArrow1 = null;
+  }
+  if (sliceArrow2) {
+    threeScene.remove(sliceArrow2);
+    sliceArrow2.geometry.dispose();
+    sliceArrow2.material.dispose();
+    sliceArrow2 = null;
+  }
   if (slicePointMarker) {
     threeScene.remove(slicePointMarker);
     slicePointMarker.geometry.dispose();
@@ -1512,6 +1526,59 @@ function updateSlice(zScale, field) {
     color: 0xffffff, linewidth: 2
   }));
   threeScene.add(sliceLine);
+
+  {
+  // Arrowhead on surface line showing direction of traversal
+  const arrowT = tmin + (tmax-tmin) * 0.80;
+  //const arrowT = tmax * 0.70; // place near the end
+  const arrowX = state.pointX + arrowT * ux;
+  const arrowY = state.pointY + arrowT * uy;
+  const arrowZ = evalFn(arrowX, arrowY) * zScaleVal;
+
+  // Get tangent direction by finite difference
+  const dt = 0.01;
+  const aheadX = state.pointX + (arrowT + dt) * ux;
+  const aheadY = state.pointY + (arrowT + dt) * uy;
+  const aheadZ = evalFn(aheadX, aheadY) * zScaleVal;
+  const dir = new THREE.Vector3(aheadX - arrowX, aheadY - arrowY, aheadZ - arrowZ).normalize();
+
+  const coneGeo = new THREE.ConeGeometry(0.08, 0.25, 24);
+  const coneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  sliceArrow1 = new THREE.Mesh(coneGeo, coneMat);
+  sliceArrow1.position.set(arrowX, arrowY, arrowZ);
+
+  // ConeGeometry points along +Y by default, rotate to tangent direction
+  const defaultDir = new THREE.Vector3(0, 1, 0);
+  sliceArrow1.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(defaultDir, dir));
+
+  threeScene.add(sliceArrow1);
+  }
+
+  {
+  // Arrowhead on surface line showing direction of traversal
+  const arrowT = tmin + (tmax-tmin) * 0.20;
+  const arrowX = state.pointX + arrowT * ux;
+  const arrowY = state.pointY + arrowT * uy;
+  const arrowZ = evalFn(arrowX, arrowY) * zScaleVal;
+
+  // Get tangent direction by finite difference
+  const dt = 0.01;
+  const aheadX = state.pointX + (arrowT + dt) * ux;
+  const aheadY = state.pointY + (arrowT + dt) * uy;
+  const aheadZ = evalFn(aheadX, aheadY) * zScaleVal;
+  const dir = new THREE.Vector3(aheadX - arrowX, aheadY - arrowY, aheadZ - arrowZ).normalize();
+
+  const coneGeo = new THREE.ConeGeometry(0.08, 0.25, 24);
+  const coneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  sliceArrow2 = new THREE.Mesh(coneGeo, coneMat);
+  sliceArrow2.position.set(arrowX, arrowY, arrowZ);
+
+  // ConeGeometry points along +Y by default, rotate to tangent direction
+  const defaultDir = new THREE.Vector3(0, 1, 0);
+  sliceArrow2.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(defaultDir, dir));
+
+  threeScene.add(sliceArrow2);
+  }
 
   // Mark the selected point on the surface
   const fAtPoint = evalFn(state.pointX, state.pointY);
