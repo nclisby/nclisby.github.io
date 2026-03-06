@@ -1536,7 +1536,7 @@ function updateSlice(zScale, field) {
   const arrowZ = evalFn(arrowX, arrowY) * zScaleVal;
 
   // Get tangent direction by finite difference
-  const dt = 0.01;
+  const dt = 0.001;
   const aheadX = state.pointX + (arrowT + dt) * ux;
   const aheadY = state.pointY + (arrowT + dt) * uy;
   const aheadZ = evalFn(aheadX, aheadY) * zScaleVal;
@@ -1562,7 +1562,7 @@ function updateSlice(zScale, field) {
   const arrowZ = evalFn(arrowX, arrowY) * zScaleVal;
 
   // Get tangent direction by finite difference
-  const dt = 0.01;
+  const dt = 0.001;
   const aheadX = state.pointX + (arrowT + dt) * ux;
   const aheadY = state.pointY + (arrowT + dt) * uy;
   const aheadZ = evalFn(aheadX, aheadY) * zScaleVal;
