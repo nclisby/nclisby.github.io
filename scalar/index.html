@@ -6,7 +6,6 @@
 <title>2D Scalar Fields</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
   :root {
     --bg: #0f1117;
@@ -26,7 +25,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
     background: var(--bg);
     color: var(--text);
     height: 100vh;
@@ -95,7 +94,7 @@
   }
 
   .panel-header-text h1 {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     font-size: 22px;
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -135,7 +134,7 @@
   }
 
   .section-label {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     font-size: 15px;
     font-weight: 600;
     text-transform: uppercase;
@@ -150,7 +149,7 @@
     border: 1px solid var(--panel-border);
     border-radius: var(--radius);
     color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     font-size: 19px;
     padding: 10px 12px;
     outline: none;
@@ -182,7 +181,7 @@
     border: 1px solid var(--panel-border);
     border-radius: var(--radius);
     color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     font-size: 19px;
     padding: 10px 12px;
     outline: none;
@@ -204,7 +203,7 @@
     border: 1px solid var(--panel-border);
     border-radius: var(--radius);
     color: var(--text-dim);
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
     font-size: 18px;
     font-weight: 500;
     padding: 10px 6px;
@@ -295,7 +294,8 @@
   }
 
   .cb-max, .cb-min {
-    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 10px;
     color: var(--text-dim); text-align: center; width: 60px; margin-left: -22px;
   }
 
@@ -304,7 +304,8 @@
 
   .current-fn {
     position: absolute; top: 12px; right: 12px;
-    font-family: 'IBM Plex Mono', monospace; font-size: 22px;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 22px;
     color: var(--accent);
     background: rgba(15,17,23,0.85);
     padding: 6px 12px; border-radius: var(--radius);
@@ -828,11 +829,8 @@ function drawAxes(ox, oy, size) {
   ctx.lineWidth = 1;
   ctx.strokeRect(ox, oy, size, size);
 
-  // ctx.fillStyle = '#6b6f82';
-  // ctx.font = '22px IBM Plex Mono';
-
   ctx.fillStyle = '#8b8fa3';
-  ctx.font = '500 24px IBM Plex Sans';
+  ctx.font = '500 24px system-ui, -apple-system, "Segoe UI", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   // ctx.fillText('x', ox + size / 2, oy + size + 34);
@@ -877,7 +875,7 @@ function makeTextSprite(text, color) {
   const size = 128;
   canvas.width = size; canvas.height = size;
   const ctx2 = canvas.getContext('2d');
-  ctx2.font = 'bold 64px IBM Plex Sans, sans-serif';
+  ctx2.font = 'bold 64px system-ui, -apple-system, "Segoe UI", sans-serif';
   ctx2.fillStyle = color || '#8b8fa3';
   ctx2.textAlign = 'center';
   ctx2.textBaseline = 'middle';
