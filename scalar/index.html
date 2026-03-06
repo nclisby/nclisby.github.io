@@ -313,6 +313,41 @@
   }
 
   .sub-options { margin-top: 8px; }
+
+  /* Slice slider overlay - top left of canvas area */
+  .slice-controls {
+    position: absolute;
+    top: 12px;
+    left: 56px;
+    z-index: 15;
+    background: rgba(24,27,36,0.92);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    gap: 12px;
+    pointer-events: auto;
+  }
+
+  .slice-controls label {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 16px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .slice-controls input[type="range"] {
+    width: 200px;
+    -webkit-appearance: none; appearance: none;
+    height: 6px; background: var(--input-bg); border-radius: 3px; outline: none;
+  }
+
+  .slice-controls input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -366,6 +401,10 @@
       <div class="toggle-switch" id="toggleFlip"></div>
     </div>
     <div class="toggle-row">
+      <span class="toggle-label">Slice</span>
+      <div class="toggle-switch" id="toggleSlice"></div>
+    </div>
+    <div class="toggle-row">
       <span class="toggle-label">Show &#8711;f</span>
       <div class="toggle-switch" id="toggleGrad"></div>
     </div>
@@ -381,6 +420,10 @@
 
 <div class="canvas-area" id="canvasArea">
   <button class="sidebar-toggle hidden-when-open" id="openBtn" title="Open sidebar">&#9776;</button>
+  <div class="slice-controls" id="sliceControls">
+    <label>c =</label>
+    <input type="range" min="0" max="1000" value="500" id="sliceSlider">
+  </div>
   <canvas id="canvas2d"></canvas>
   <div id="container3d" style="display:none;"></div>
   <div class="current-fn" id="currentFnLabel">f(x,y) = x + y</div>
@@ -460,6 +503,8 @@ let state = {
   isCustom: false,
   flipSign: false,
   showGrad: false,
+  showSlice: false,
+  sliceFrac: 0.5,  // 0..1, maps to fmin..fmax
   gradRes: 10
 };
 
@@ -521,6 +566,9 @@ const toggleGrad = document.getElementById('toggleGrad');
 const gradOptions = document.getElementById('gradOptions');
 const collapseBtn = document.getElementById('collapseBtn');
 const openBtn = document.getElementById('openBtn');
+const toggleSlice = document.getElementById('toggleSlice');
+const sliceControls = document.getElementById('sliceControls');
+const sliceSlider = document.getElementById('sliceSlider');
 
 // ─── SIDEBAR COLLAPSE ───
 collapseBtn.addEventListener('click', () => {
@@ -606,6 +654,18 @@ toggleGrad.addEventListener('click', () => {
   state.showGrad = !state.showGrad;
   toggleGrad.classList.toggle('active', state.showGrad);
   gradOptions.style.display = state.showGrad ? 'block' : 'none';
+  update();
+});
+
+toggleSlice.addEventListener('click', () => {
+  state.showSlice = !state.showSlice;
+  toggleSlice.classList.toggle('active', state.showSlice);
+  sliceControls.style.display = state.showSlice ? 'flex' : 'none';
+  update();
+});
+
+sliceSlider.addEventListener('input', () => {
+  state.sliceFrac = parseInt(sliceSlider.value) / 1000;
   update();
 });
 
@@ -714,6 +774,61 @@ function drawGradientOverlay(ox, oy, size) {
   ctx.restore();
 }
 
+// ─── DRAW SLICE CONTOUR (single level curve on 2D plot) ───
+function drawSliceContour2D(ox, oy, size) {
+  if (!state.showSlice) return;
+  const res = 200;
+  const field = computeField(res);
+  const range = field.fmax - field.fmin || 1;
+  const threshold = field.fmin + state.sliceFrac * range;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+
+  for (let j = 0; j < res - 1; j++) {
+    for (let i = 0; i < res - 1; i++) {
+      const v00 = field.data[j * res + i];
+      const v10 = field.data[j * res + i + 1];
+      const v01 = field.data[(j+1) * res + i];
+      const v11 = field.data[(j+1) * res + i + 1];
+      const b00 = v00 >= threshold ? 1 : 0;
+      const b10 = v10 >= threshold ? 1 : 0;
+      const b01 = v01 >= threshold ? 1 : 0;
+      const b11 = v11 >= threshold ? 1 : 0;
+      const cell = b00 | (b10 << 1) | (b11 << 2) | (b01 << 3);
+      if (cell === 0 || cell === 15) continue;
+
+      const px = (x) => ox + x * size / (res - 1);
+      const py = (y) => oy + (res - 1 - y) * size / (res - 1);
+      const interp = (va, vb) => (threshold - va) / (vb - va);
+
+      const top    = [i + interp(v00, v10), j];
+      const right  = [i + 1, j + interp(v10, v11)];
+      const bottom = [i + interp(v01, v11), j + 1];
+      const left   = [i, j + interp(v00, v01)];
+
+      const segments = [];
+      switch(cell) {
+        case 1: case 14: segments.push([left, top]); break;
+        case 2: case 13: segments.push([top, right]); break;
+        case 3: case 12: segments.push([left, right]); break;
+        case 4: case 11: segments.push([right, bottom]); break;
+        case 5: segments.push([left, top], [right, bottom]); break;
+        case 6: case 9: segments.push([top, bottom]); break;
+        case 7: case 8: segments.push([left, bottom]); break;
+        case 10: segments.push([top, right], [left, bottom]); break;
+      }
+
+      for (const seg of segments) {
+        ctx.moveTo(px(seg[0][0]), py(seg[0][1]));
+        ctx.lineTo(px(seg[1][0]), py(seg[1][1]));
+      }
+    }
+  }
+  ctx.stroke();
+}
+
 // ─── DRAW HEATMAP ───
 function drawHeatmap() {
   const rect = canvasArea.getBoundingClientRect();
@@ -747,6 +862,7 @@ function drawHeatmap() {
   ctx.drawImage(offscreen, ox, oy, size, size);
 
   if (state.showGrad) drawGradientOverlay(ox, oy, size);
+  drawSliceContour2D(ox, oy, size);
   drawAxes(ox, oy, size);
   drawColourbar(field.fmin, field.fmax);
   updateLabel();
@@ -819,6 +935,7 @@ function drawContours() {
   }
 
   if (state.showGrad) drawGradientOverlay(ox, oy, size);
+  drawSliceContour2D(ox, oy, size);
   drawAxes(ox, oy, size);
   drawColourbar(field.fmin, field.fmax);
   updateLabel();
@@ -868,6 +985,9 @@ function updateLabel() {
 // ─── THREE.JS ───
 let scene, camera, renderer, surfaceMesh;
 let gradientArrows3D = null;
+let slicePlane3D = null;
+let sliceSurfaceLine = null;
+let sliceXYLine = null;
 let axisLabels3D = [];
 let threeInited = false;
 
@@ -1122,6 +1242,7 @@ function drawSurface() {
   scene.add(surfaceMesh);
 
   build3DGradientArrows();
+  buildSlice3D(field, zScale);
   renderer.render(scene, camera);
 
   if (!window._animating) {
@@ -1134,6 +1255,113 @@ function drawSurface() {
 
   drawColourbar(field.fmin, field.fmax);
   updateLabel();
+}
+
+// ─── 3D SLICE (horizontal plane + intersection lines) ───
+function buildSlice3D(field, zScale) {
+  // Clean up old slice objects
+  if (slicePlane3D) {
+    scene.remove(slicePlane3D);
+    slicePlane3D.geometry.dispose();
+    slicePlane3D.material.dispose();
+    slicePlane3D = null;
+  }
+  if (sliceSurfaceLine) {
+    scene.remove(sliceSurfaceLine);
+    sliceSurfaceLine.geometry.dispose();
+    sliceSurfaceLine.material.dispose();
+    sliceSurfaceLine = null;
+  }
+  if (sliceXYLine) {
+    scene.remove(sliceXYLine);
+    sliceXYLine.geometry.dispose();
+    sliceXYLine.material.dispose();
+    sliceXYLine = null;
+  }
+
+  if (!state.showSlice) return;
+
+  const range = field.fmax - field.fmin || 1;
+  const sliceVal = field.fmin + state.sliceFrac * range;
+  const sliceZ = sliceVal * zScale;
+
+  // Horizontal translucent plane at z = sliceZ
+  const planeGeo = new THREE.PlaneGeometry((XMAX - XMIN) * 1.02, (YMAX - YMIN) * 1.02);
+  const planeMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0.15,
+    side: THREE.DoubleSide, depthWrite: false
+  });
+  slicePlane3D = new THREE.Mesh(planeGeo, planeMat);
+  slicePlane3D.position.set(0, 0, sliceZ);
+  scene.add(slicePlane3D);
+
+  // Intersection line: where f(x,y)*zScale == sliceZ on the surface
+  // Use marching squares on the field data
+  const res = field.res;
+  const surfacePoints = [];
+
+  for (let j = 0; j < res - 1; j++) {
+    for (let i = 0; i < res - 1; i++) {
+      const v00 = field.data[j * res + i];
+      const v10 = field.data[j * res + i + 1];
+      const v01 = field.data[(j+1) * res + i];
+      const v11 = field.data[(j+1) * res + i + 1];
+      const b00 = v00 >= sliceVal ? 1 : 0;
+      const b10 = v10 >= sliceVal ? 1 : 0;
+      const b01 = v01 >= sliceVal ? 1 : 0;
+      const b11 = v11 >= sliceVal ? 1 : 0;
+      const cell = b00 | (b10 << 1) | (b11 << 2) | (b01 << 3);
+      if (cell === 0 || cell === 15) continue;
+
+      const gx = (gi) => XMIN + (XMAX - XMIN) * gi / (res - 1);
+      const gy = (gj) => YMIN + (YMAX - YMIN) * gj / (res - 1);
+      const interp = (va, vb) => (sliceVal - va) / (vb - va);
+
+      const top    = [i + interp(v00, v10), j];
+      const right  = [i + 1, j + interp(v10, v11)];
+      const bottom = [i + interp(v01, v11), j + 1];
+      const left   = [i, j + interp(v00, v01)];
+
+      const segments = [];
+      switch(cell) {
+        case 1: case 14: segments.push([left, top]); break;
+        case 2: case 13: segments.push([top, right]); break;
+        case 3: case 12: segments.push([left, right]); break;
+        case 4: case 11: segments.push([right, bottom]); break;
+        case 5: segments.push([left, top], [right, bottom]); break;
+        case 6: case 9: segments.push([top, bottom]); break;
+        case 7: case 8: segments.push([left, bottom]); break;
+        case 10: segments.push([top, right], [left, bottom]); break;
+      }
+
+      for (const seg of segments) {
+        const x0 = gx(seg[0][0]), y0 = gy(seg[0][1]);
+        const x1 = gx(seg[1][0]), y1 = gy(seg[1][1]);
+        // On the surface at z = sliceZ
+        surfacePoints.push(
+          new THREE.Vector3(x0, y0, sliceZ),
+          new THREE.Vector3(x1, y1, sliceZ)
+        );
+      }
+    }
+  }
+
+  if (surfacePoints.length > 0) {
+    // Surface intersection line (white, on the surface at slice height)
+    const surfLineGeo = new THREE.BufferGeometry().setFromPoints(surfacePoints);
+    sliceSurfaceLine = new THREE.LineSegments(surfLineGeo, new THREE.LineBasicMaterial({
+      color: 0xffffff, linewidth: 2
+    }));
+    scene.add(sliceSurfaceLine);
+
+    // XY-plane projection (same contour at z=0)
+    const xyPoints = surfacePoints.map(p => new THREE.Vector3(p.x, p.y, 0));
+    const xyLineGeo = new THREE.BufferGeometry().setFromPoints(xyPoints);
+    sliceXYLine = new THREE.LineSegments(xyLineGeo, new THREE.LineBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.5, linewidth: 1
+    }));
+    scene.add(sliceXYLine);
+  }
 }
 
 // ─── UPDATE ───
