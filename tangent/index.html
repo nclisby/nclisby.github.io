@@ -487,11 +487,11 @@
 
   <div class="section">
     <div class="section-label">Options</div>
-    <div class="toggle-row">
+    <div class="toggle-row" id="heatmapRow">
       <span class="toggle-label">Heat map</span>
       <div class="toggle-switch" id="toggleHeatmap"></div>
     </div>
-    <div class="toggle-row">
+    <div class="toggle-row" id="contoursRow">
       <span class="toggle-label">Level curves</span>
       <div class="toggle-switch" id="toggleContours"></div>
     </div>
@@ -1860,7 +1860,7 @@ function update3D() {
   const idxCount = isoGeo.index ? isoGeo.index.count : 0;
   if (idxCount > 0) {
     const isoMat = new THREE.MeshPhongMaterial({
-      color: 0x4488cc, transparent: true, opacity: 0.55,
+      color: 0xffffff, transparent: true, opacity: 0.55,
       side: THREE.DoubleSide, shininess: 40, depthWrite: false
     });
     isoMesh = new THREE.Mesh(isoGeo, isoMat);
@@ -2086,7 +2086,13 @@ function update3D() {
 
 // ========== MODE SWITCH ==========
 function switchMode() {
-  if (state.dim === 2) {
+  const is2d = state.dim === 2;
+  // Show/hide 2D-only sidebar options
+  document.getElementById('heatmapRow').style.display = is2d ? '' : 'none';
+  document.getElementById('contoursRow').style.display = is2d ? '' : 'none';
+  document.getElementById('colourSection').style.display = is2d ? '' : 'none';
+
+  if (is2d) {
     canvas2d.style.display = 'block';
     container3d.style.display = 'none';
   } else {
@@ -2094,7 +2100,6 @@ function switchMode() {
     container3d.style.display = 'block';
     colourbarWrap.style.display = 'none';
     initThree();
-    // Resize after container becomes visible
     const rect = canvasArea.getBoundingClientRect();
     if (renderer && rect.width > 0 && rect.height > 0) {
       renderer.setSize(rect.width, rect.height);
