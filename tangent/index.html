@@ -1277,7 +1277,7 @@ function draw2D() {
 
   // Gradient arrows along curve
   if (state.showGradAll) {
-    const step = Math.max(1, Math.floor(state.levelPoints.length / 15));
+    const step = Math.max(1, Math.floor(state.levelPoints.length / 30));
     const arrowLen = size * 0.06;
     ctx.save();
     for (let i = 0; i < state.levelPoints.length; i += step) {
