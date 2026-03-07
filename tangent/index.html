@@ -599,6 +599,7 @@ const presets3d = [
     cMin: -4, cMax: 4, cDef: 1, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -3, zMax: 3 },
   { expr: 'x² + y² − z', label: 'φ = x² + y² − z', fn: (x,y,z) => x*x + y*y - z,
     gx: (x,y,z) => 2*x, gy: (x,y,z) => 2*y, gz: (x,y,z) => -1,
+    domain: (x,y,z) => x*x + y*y <= 9,
     cMin: -4, cMax: 4, cDef: 0, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -9, zMax: 9 },
   { expr: 'xyz', label: 'φ = xyz', fn: (x,y,z) => x*y*z,
     gx: (x,y,z) => y*z, gy: (x,y,z) => x*z, gz: (x,y,z) => x*y,
@@ -1840,16 +1841,35 @@ function buildIsosurface(p, c, gridRes) {
     }
   }
 
-  // Store level points (vertex positions on the isosurface)
+  // Filter triangles by domain constraint (discard if any vertex is outside)
+  const domainFn = p.domain || null;
+  let filteredIndices = indices;
+  if (domainFn) {
+    filteredIndices = [];
+    for (let i = 0; i < indices.length; i += 3) {
+      const i0 = indices[i], i1 = indices[i+1], i2 = indices[i+2];
+      const x0 = vertices[i0*3], y0 = vertices[i0*3+1], z0 = vertices[i0*3+2];
+      const x1 = vertices[i1*3], y1 = vertices[i1*3+1], z1 = vertices[i1*3+2];
+      const x2 = vertices[i2*3], y2 = vertices[i2*3+1], z2 = vertices[i2*3+2];
+      if (domainFn(x0,y0,z0) && domainFn(x1,y1,z1) && domainFn(x2,y2,z2)) {
+        filteredIndices.push(i0, i1, i2);
+      }
+    }
+  }
+
+  // Store level points (vertex positions on the isosurface, filtered by domain)
   const pts = [];
+  const usedVerts = domainFn ? new Set(filteredIndices) : null;
   for (let i = 0; i < vertices.length; i += 3) {
+    const vi = i / 3;
+    if (domainFn && !usedVerts.has(vi)) continue;
     pts.push({ x: vertices[i], y: vertices[i+1], z: vertices[i+2] });
   }
   state.levelPoints = pts;
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  geometry.setIndex(indices);
+  geometry.setIndex(filteredIndices);
   geometry.computeVertexNormals();
   return geometry;
 }
