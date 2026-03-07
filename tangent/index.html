@@ -1625,19 +1625,29 @@ function initThree() {
 
 function makeTextSprite(text, color, size) {
   const canvas = document.createElement('canvas');
-  const sz = 256;
-  canvas.width = sz; canvas.height = sz;
   const cx = canvas.getContext('2d');
-  cx.font = `bold ${sz * 0.45}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+  const fontSize = 64;
+  const font = `bold ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+  cx.font = font;
+  const metrics = cx.measureText(text);
+  const textW = Math.ceil(metrics.width) + 16; // padding
+  const textH = fontSize + 16;
+  // Size canvas to fit (power of 2 not required for CanvasTexture)
+  canvas.width = textW;
+  canvas.height = textH;
+  // Must re-set font after resize
+  cx.font = font;
   cx.fillStyle = color || '#8b8fa3';
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
-  cx.fillText(text, sz / 2, sz / 2);
+  cx.fillText(text, textW / 2, textH / 2);
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(size || 0.6, size || 0.6, 0.6);
+  const aspect = textW / textH;
+  const s = size || 0.6;
+  sprite.scale.set(s * aspect, s, 0.6);
   return sprite;
 }
 
@@ -1968,19 +1978,22 @@ function update3D() {
     const dir = new THREE.Vector3(gx/gMag, gy/gMag, gz/gMag);
     const origin = new THREE.Vector3(tp.x, tp.y, tp.z);
     const arrowLen = 1.2;
-    const arrowGeo = new THREE.BufferGeometry().setFromPoints([
-      origin, origin.clone().add(dir.clone().multiplyScalar(arrowLen))
-    ]);
-    const arrowLine = new THREE.Line(arrowGeo, new THREE.LineBasicMaterial({ color: 0xff6b6b, linewidth: 3 }));
-    tangentGroup.add(arrowLine);
+    // Thick cylinder for the arrow shaft
+    const shaftGeo = new THREE.CylinderGeometry(0.03, 0.03, arrowLen, 8);
+    const shaftMat = new THREE.MeshBasicMaterial({ color: 0xff6b6b });
+    const shaft = new THREE.Mesh(shaftGeo, shaftMat);
+    const midPt = origin.clone().add(dir.clone().multiplyScalar(arrowLen / 2));
+    shaft.position.copy(midPt);
+    const upVec = new THREE.Vector3(0, 1, 0);
+    shaft.quaternion.setFromUnitVectors(upVec, dir);
+    tangentGroup.add(shaft);
 
     // Cone head
     const coneGeo = new THREE.CylinderGeometry(0, 0.08, 0.2, 8);
     const coneMat = new THREE.MeshBasicMaterial({ color: 0xff6b6b });
     const cone = new THREE.Mesh(coneGeo, coneMat);
     cone.position.copy(origin.clone().add(dir.clone().multiplyScalar(arrowLen)));
-    const up = new THREE.Vector3(0, 1, 0);
-    cone.quaternion.setFromUnitVectors(up, dir);
+    cone.quaternion.setFromUnitVectors(upVec, dir);
     tangentGroup.add(cone);
 
     if (state.showLabels) {
@@ -2036,11 +2049,20 @@ function update3D() {
       tp.z + t1.z * planeSize * 0.4 + t2.z * planeSize * 0.3,
     );
 
-    // Line from tangent point to generic point
-    const lineGeo = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(tp.x, tp.y, tp.z), genPt
-    ]);
-    tangentGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x64b5f6 })));
+    // Line from tangent point to generic point (thick cylinder)
+    const tpVec = new THREE.Vector3(tp.x, tp.y, tp.z);
+    const lineDir = genPt.clone().sub(tpVec);
+    const lineLen = lineDir.length();
+    if (lineLen > 1e-6) {
+      const lineNorm = lineDir.clone().normalize();
+      const lineCylGeo = new THREE.CylinderGeometry(0.03, 0.03, lineLen, 8);
+      const lineCylMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 });
+      const lineCyl = new THREE.Mesh(lineCylGeo, lineCylMat);
+      lineCyl.position.copy(tpVec.clone().add(lineDir.clone().multiplyScalar(0.5)));
+      const upV = new THREE.Vector3(0, 1, 0);
+      lineCyl.quaternion.setFromUnitVectors(upV, lineNorm);
+      tangentGroup.add(lineCyl);
+    }
 
     // Generic point sphere
     const gpSphere = new THREE.Mesh(
@@ -2053,13 +2075,33 @@ function update3D() {
     // Right angle symbol in 3D (shown when both gradient at point and tangent are displayed)
     if (state.showGradPt) {
       const symLen = 0.2;
-      // Direction from tp to genPt
+      const raRadius = 0.015; // half the other cylinders
       const toGen = genPt.clone().sub(new THREE.Vector3(tp.x, tp.y, tp.z)).normalize();
       const p1 = new THREE.Vector3(tp.x, tp.y, tp.z).add(toGen.clone().multiplyScalar(symLen));
       const p2 = p1.clone().add(n.clone().multiplyScalar(symLen));
       const p3 = new THREE.Vector3(tp.x, tp.y, tp.z).add(n.clone().multiplyScalar(symLen));
-      const raGeo = new THREE.BufferGeometry().setFromPoints([p1, p2, p3]);
-      tangentGroup.add(new THREE.Line(raGeo, new THREE.LineBasicMaterial({ color: 0xffffff })));
+      const raMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const upRA = new THREE.Vector3(0, 1, 0);
+      // Segment p1 → p2
+      const d1 = p2.clone().sub(p1);
+      const len1 = d1.length();
+      if (len1 > 1e-6) {
+        const dir1 = d1.clone().normalize();
+        const cyl1 = new THREE.Mesh(new THREE.CylinderGeometry(raRadius, raRadius, len1, 6), raMat);
+        cyl1.position.copy(p1.clone().add(d1.clone().multiplyScalar(0.5)));
+        cyl1.quaternion.setFromUnitVectors(upRA, dir1);
+        tangentGroup.add(cyl1);
+      }
+      // Segment p2 → p3
+      const d2 = p3.clone().sub(p2);
+      const len2 = d2.length();
+      if (len2 > 1e-6) {
+        const dir2 = d2.clone().normalize();
+        const cyl2 = new THREE.Mesh(new THREE.CylinderGeometry(raRadius, raRadius, len2, 6), raMat);
+        cyl2.position.copy(p2.clone().add(d2.clone().multiplyScalar(0.5)));
+        cyl2.quaternion.setFromUnitVectors(upRA, dir2);
+        tangentGroup.add(cyl2);
+      }
     }
 
     // Labels
