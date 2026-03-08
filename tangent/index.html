@@ -198,6 +198,12 @@
 
   .opt-row { display: flex; gap: 4px; }
 
+  .opt-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+  }
+
   .opt-btn {
     flex: 1;
     background: var(--input-bg);
@@ -205,9 +211,9 @@
     border-radius: var(--radius);
     color: var(--text-dim);
     font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
-    padding: 10px 6px;
+    padding: 9px 6px;
     cursor: pointer;
     text-align: center;
     transition: all 0.15s;
@@ -221,57 +227,6 @@
     background: var(--accent-dim);
     border-color: var(--accent);
     color: var(--accent);
-  }
-
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 10px;
-  }
-
-  .toggle-row:first-child { margin-top: 0; }
-
-  .toggle-label {
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .toggle-switch {
-    width: 44px;
-    height: 26px;
-    background: var(--input-bg);
-    border: 1px solid var(--panel-border);
-    border-radius: 13px;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    flex-shrink: 0;
-  }
-
-  .toggle-switch::after {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: var(--text-dim);
-    border-radius: 50%;
-    top: 2px;
-    left: 2px;
-    transition: all 0.2s;
-  }
-
-  .toggle-switch.active {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-  }
-
-  .toggle-switch.active::after {
-    background: var(--accent);
-    left: 20px;
   }
 
   .slider-wrap { margin-top: 10px; }
@@ -451,7 +406,7 @@
   <div class="panel-header">
     <div class="panel-header-text">
       <h1>Tangents</h1>
-      <p>Level sets, ∇φ, tangent lines &amp; planes</p>
+      <p>Level sets, ∇φ, tangents</p>
     </div>
     <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
   </div>
@@ -476,44 +431,25 @@
     </div>
   </div>
 
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn" id="toggleHeatmap">Heat map</button>
+      <button class="opt-btn" id="toggleContours">Level sets</button>
+      <button class="opt-btn active" id="toggleLabels">Labels</button>
+      <button class="opt-btn active" id="toggleGradPt">∇φ point</button>
+      <button class="opt-btn" id="toggleGradAll">∇φ</button>
+      <button class="opt-btn active" id="toggleTangent">Tangent</button>
+      <button class="opt-btn" id="toggleFlip">−φ</button>
+    </div>
+  </div>
+
   <div class="section" id="colourSection">
     <div class="section-label">Colour scheme</div>
     <div class="opt-row">
       <button class="opt-btn active" data-scheme="palette1">1</button>
       <button class="opt-btn" data-scheme="palette2">2</button>
       <button class="opt-btn" data-scheme="palette3">3</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-label">Options</div>
-    <div class="toggle-row" id="heatmapRow">
-      <span class="toggle-label">Heat map</span>
-      <div class="toggle-switch" id="toggleHeatmap"></div>
-    </div>
-    <div class="toggle-row" id="contoursRow">
-      <span class="toggle-label">Level curves</span>
-      <div class="toggle-switch" id="toggleContours"></div>
-    </div>
-    <div class="toggle-row">
-      <span class="toggle-label">∇φ along curve</span>
-      <div class="toggle-switch" id="toggleGradAll"></div>
-    </div>
-    <div class="toggle-row">
-      <span class="toggle-label">∇φ at point</span>
-      <div class="toggle-switch active" id="toggleGradPt"></div>
-    </div>
-    <div class="toggle-row">
-      <span class="toggle-label">Show tangent</span>
-      <div class="toggle-switch active" id="toggleTangent"></div>
-    </div>
-    <div class="toggle-row">
-      <span class="toggle-label">Labels</span>
-      <div class="toggle-switch active" id="toggleLabels"></div>
-    </div>
-    <div class="toggle-row">
-      <span class="toggle-label">Flip sign of φ</span>
-      <div class="toggle-switch" id="toggleFlip"></div>
     </div>
   </div>
 </div>
@@ -523,7 +459,6 @@
   <div class="slice-controls" id="cControls" style="display:flex;">
     <label>c =</label>
     <input type="range" min="0" max="600" value="300" id="cSlider">
-    <label id="cValue" style="min-width:50px;text-align:right;">0.00</label>
   </div>
   <canvas id="canvas2d"></canvas>
   <div id="container3d"></div>
@@ -690,7 +625,6 @@ const fnSelect = document.getElementById('fnSelect');
 const customInput = document.getElementById('customExpr');
 const errorMsg = document.getElementById('errorMsg');
 const cSlider = document.getElementById('cSlider');
-const cValueEl = document.getElementById('cValue');
 const toggleGradAll = document.getElementById('toggleGradAll');
 const toggleGradPt = document.getElementById('toggleGradPt');
 const toggleTangent = document.getElementById('toggleTangent');
@@ -720,21 +654,68 @@ openBtn.addEventListener('click', () => {
   setTimeout(() => { resize(); update(); }, 320);
 });
 
+// Saved state per dimension
+const savedDimState = { 2: null, 3: null };
+
+function saveDimState() {
+  savedDimState[state.dim] = {
+    fnIndex: state.fnIndex,
+    cParam: state.cParam,
+    tangentPoint: state.tangentPoint,
+    levelPoints: state.levelPoints,
+    isCustom: state.isCustom,
+    customPreset: state.customPreset,
+    customExpr: state.customExpr,
+    flipSign: state.flipSign,
+    cachedFieldMin: cachedFieldMin,
+    cachedFieldMax: cachedFieldMax,
+    customInputValue: customInput.value,
+  };
+}
+
+function restoreDimState(d) {
+  const s = savedDimState[d];
+  if (!s) return false;
+  state.fnIndex = s.fnIndex;
+  state.cParam = s.cParam;
+  state.tangentPoint = s.tangentPoint;
+  state.levelPoints = s.levelPoints;
+  state.isCustom = s.isCustom;
+  state.customPreset = s.customPreset;
+  state.customExpr = s.customExpr;
+  state.flipSign = s.flipSign;
+  cachedFieldMin = s.cachedFieldMin;
+  cachedFieldMax = s.cachedFieldMax;
+  customInput.value = s.customInputValue || '';
+  toggleFlip.classList.toggle('active', state.flipSign);
+  fnSelect.value = state.isCustom ? '' : state.fnIndex;
+  cSlider.value = state.cParam;
+  currentFnLabel.textContent = getPreset().label;
+  return true;
+}
+
 document.querySelectorAll('[data-dim]').forEach(btn => {
   btn.addEventListener('click', () => {
     const d = parseInt(btn.dataset.dim);
     if (d === state.dim) return;
+    // Save current dimension state
+    saveDimState();
     state.dim = d;
     document.querySelectorAll('[data-dim]').forEach(b =>
       b.classList.toggle('active', b === btn));
-    state.fnIndex = 0;
-    state.isCustom = false;
-    customInput.value = '';
-    errorMsg.textContent = '';
-    customInput.classList.remove('error');
     customInput.placeholder = d === 2 ? 'e.g. x^2 + y^2' : 'e.g. x^2 + y^2 + z^2';
     populateSelect();
-    resetForPreset();
+    // Try to restore saved state for this dimension
+    if (!restoreDimState(d)) {
+      state.fnIndex = 0;
+      state.isCustom = false;
+      state.flipSign = false;
+      toggleFlip.classList.remove('active');
+      customInput.value = '';
+      errorMsg.textContent = '';
+      customInput.classList.remove('error');
+      resetForPreset();
+    }
     switchMode();
     update();
   });
@@ -876,7 +857,6 @@ function resetForPreset() {
   const rawC = cSliderFromValue(midC);
   cSlider.value = rawC;
   state.cParam = rawC;
-  cValueEl.textContent = midC.toFixed(2);
   state.tangentPoint = null;
   state.levelPoints = [];
   hintOverlay.style.opacity = '1';
@@ -887,7 +867,6 @@ function resetForPreset() {
 cSlider.addEventListener('input', () => {
   state.cParam = parseInt(cSlider.value);
   const c = mapC(state.cParam);
-  cValueEl.textContent = c.toFixed(2);
   // Keep tangentPoint — it will be snapped to the new level set in draw2D/update3D
   state.levelPoints = [];
   update();
@@ -927,7 +906,6 @@ toggleFlip.addEventListener('click', () => {
   const rawC = cSliderFromValue(-oldC);
   cSlider.value = Math.max(0, Math.min(600, rawC));
   state.cParam = parseInt(cSlider.value);
-  cValueEl.textContent = mapC(state.cParam).toFixed(2);
   state.levelPoints = [];
   currentFnLabel.textContent = getPreset().label;
   update();
@@ -1291,7 +1269,7 @@ function draw2D() {
       const px1 = tpx(pt.x), py1 = tpy(pt.y);
       const px2 = px1 + nx * arrowLen;
       const py2 = py1 - ny * arrowLen;
-      drawArrow(ctx, px1, py1, px2, py2, 'rgba(255,180,50,0.8)', 1.8, 7);
+      drawArrow(ctx, px1, py1, px2, py2, 'rgba(255,255,255,0.8)', 1.8, 7);
     }
     ctx.restore();
   }
@@ -1303,14 +1281,17 @@ function draw2D() {
     const px1 = tpx(tp.x), py1 = tpy(tp.y);
     const px2 = px1 + nx * arrowLen;
     const py2 = py1 - ny * arrowLen;
-    drawArrow(ctx, px1, py1, px2, py2, '#ff6b6b', 3, 10);
+    drawArrow(ctx, px1, py1, px2, py2, '#ffffff', 3, 10);
 
     if (state.showLabels) {
       ctx.font = '500 16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-      ctx.fillStyle = '#ff6b6b';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText('∇φ', px2 + 6, py2 - 6);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Place label centre 35% past the arrow tip along the arrow direction
+      const lblGx = px2 + (px2 - px1) * 0.35;
+      const lblGy = py2 + (py2 - py1) * 0.35;
+      ctx.fillText('∇φ', lblGx, lblGy);
     }
   }
 
@@ -1330,56 +1311,69 @@ function draw2D() {
     ctx.setLineDash([]);
 
     // Generic point on tangent line
-    const genT = 0.35;
+    const genT = 0.525;
     const gp = { x: tp.x + tx * ext * genT, y: tp.y + ty * ext * genT };
-    if (gp.x >= XMIN && gp.x <= XMAX && gp.y >= YMIN && gp.y <= YMAX) {
-      ctx.strokeStyle = 'rgba(100,181,246,0.6)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(tpx(tp.x), tpy(tp.y));
-      ctx.lineTo(tpx(gp.x), tpy(gp.y));
-      ctx.stroke();
 
-      // Right angle symbol
-      if (state.showGradPt && gradMag > 1e-10) {
-        const symbolSize = 12;
-        const nxDir = gradX / gradMag, nyDir = gradY / gradMag;
-        const scaleF = size / (XMAX - XMIN);
-        const txPxS = tx * scaleF, tyPxS = -ty * scaleF;
-        const nxPxS = nxDir * scaleF, nyPxS = -nyDir * scaleF;
-        const tLen = Math.sqrt(txPxS*txPxS + tyPxS*tyPxS);
-        const nLen = Math.sqrt(nxPxS*nxPxS + nyPxS*nyPxS);
-        if (tLen > 0 && nLen > 0) {
-          const txN = txPxS / tLen * symbolSize;
-          const tyN = tyPxS / tLen * symbolSize;
-          const nxN = nxPxS / nLen * symbolSize;
-          const nyN = nyPxS / nLen * symbolSize;
-          const cpx = tpx(tp.x), cpy = tpy(tp.y);
-          ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(cpx + txN, cpy + tyN);
-          ctx.lineTo(cpx + txN + nxN, cpy + tyN + nyN);
-          ctx.lineTo(cpx + nxN, cpy + nyN);
-          ctx.stroke();
-        }
+    // Solid opaque line from tangent point to generic point
+    ctx.strokeStyle = '#64b5f6';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(tpx(tp.x), tpy(tp.y));
+    ctx.lineTo(tpx(gp.x), tpy(gp.y));
+    ctx.stroke();
+
+    // Right angle symbol
+    if (state.showGradPt && gradMag > 1e-10) {
+      const symbolSize = 12;
+      const nxDir = gradX / gradMag, nyDir = gradY / gradMag;
+      const scaleF = size / (XMAX - XMIN);
+      const txPxS = tx * scaleF, tyPxS = -ty * scaleF;
+      const nxPxS = nxDir * scaleF, nyPxS = -nyDir * scaleF;
+      const tLen = Math.sqrt(txPxS*txPxS + tyPxS*tyPxS);
+      const nLen = Math.sqrt(nxPxS*nxPxS + nyPxS*nyPxS);
+      if (tLen > 0 && nLen > 0) {
+        const txN = txPxS / tLen * symbolSize;
+        const tyN = tyPxS / tLen * symbolSize;
+        const nxN = nxPxS / nLen * symbolSize;
+        const nyN = nyPxS / nLen * symbolSize;
+        const cpx = tpx(tp.x), cpy = tpy(tp.y);
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cpx + txN, cpy + tyN);
+        ctx.lineTo(cpx + txN + nxN, cpy + tyN + nyN);
+        ctx.lineTo(cpx + nxN, cpy + nyN);
+        ctx.stroke();
       }
-
-      if (state.showLabels) {
-        ctx.font = '500 16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-        ctx.fillStyle = '#e0e2eb';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        ctx.fillText('(x₀, y₀)', tpx(tp.x) + 8, tpy(tp.y) + 8);
-        ctx.fillStyle = '#64b5f6';
-        ctx.fillText('(x, y)', tpx(gp.x) + 8, tpy(gp.y) - 20);
-      }
-
-      ctx.fillStyle = '#64b5f6';
-      ctx.beginPath();
-      ctx.arc(tpx(gp.x), tpy(gp.y), 4, 0, Math.PI * 2);
-      ctx.fill();
     }
+
+    // Labels positioned along the continuation of the line segment
+    if (state.showLabels) {
+      ctx.font = '500 16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      const tpPx = tpx(tp.x), tpPy = tpy(tp.y);
+      const gpPx = tpx(gp.x), gpPy = tpy(gp.y);
+      const segLen = Math.sqrt((gpPx - tpPx) ** 2 + (gpPy - tpPy) ** 2) || 1;
+      const dxSeg = (gpPx - tpPx) / segLen;
+      const dySeg = (gpPy - tpPy) / segLen;
+      const offset = 0.225 * segLen;
+      // (x₀,y₀) label: continue past tp in direction away from gp
+      const lbl0x = tpPx - dxSeg * offset;
+      const lbl0y = tpPy - dySeg * offset;
+      ctx.fillStyle = '#e53935';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('(x₀, y₀)', lbl0x, lbl0y);
+      // (x,y) label: continue past gp in direction away from tp
+      const lbl1x = gpPx + dxSeg * offset;
+      const lbl1y = gpPy + dySeg * offset;
+      ctx.fillStyle = '#64b5f6';
+      ctx.fillText('(x, y)', lbl1x, lbl1y);
+    }
+
+    ctx.fillStyle = '#64b5f6';
+    ctx.beginPath();
+    ctx.arc(tpx(gp.x), tpy(gp.y), 4, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   // Tangent point dot
@@ -1391,18 +1385,7 @@ function draw2D() {
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Info box
-  if (state.showLabels) {
-    let info = `φ(x₀, y₀) = ${c.toFixed(2)}`;
-    info += `\n(x₀, y₀) = (${tp.x.toFixed(2)}, ${tp.y.toFixed(2)})`;
-    if (gradMag > 1e-10) {
-      info += `\n∇φ = (${gradX.toFixed(2)}, ${gradY.toFixed(2)})`;
-    }
-    infoBox.textContent = info;
-    infoBox.style.display = '';
-  } else {
-    infoBox.style.display = 'none';
-  }
+  infoBox.style.display = 'none';
 }
 
 function drawArrow(ctx, x1, y1, x2, y2, colour, lw, headLen) {
@@ -1959,12 +1942,12 @@ function update3D() {
       const arrowGeo = new THREE.BufferGeometry().setFromPoints([
         origin, origin.clone().add(dir.clone().multiplyScalar(arrowLen))
       ]);
-      const arrowLine = new THREE.Line(arrowGeo, new THREE.LineBasicMaterial({ color: 0xffb432, linewidth: 2 }));
+      const arrowLine = new THREE.Line(arrowGeo, new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }));
       gradGroup.add(arrowLine);
 
       // Small cone for arrowhead
       const coneGeo = new THREE.CylinderGeometry(0, 0.06, 0.15, 6);
-      const coneMat = new THREE.MeshBasicMaterial({ color: 0xffb432 });
+      const coneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
       const cone = new THREE.Mesh(coneGeo, coneMat);
       const tipPos = origin.clone().add(dir.clone().multiplyScalar(arrowLen));
       cone.position.copy(tipPos);
@@ -1983,13 +1966,6 @@ function update3D() {
   const sphere = new THREE.Mesh(sphereGeo, sphereMat);
   sphere.position.set(tp.x, tp.y, tp.z);
   pointGroup.add(sphere);
-
-  // Labels
-  if (state.showLabels) {
-    const ptLabel = makeTextSprite('(x₀,y₀,z₀)', '#e0e2eb', 0.8);
-    ptLabel.position.set(tp.x + 0.3, tp.y + 0.3, tp.z + 0.3);
-    pointGroup.add(ptLabel);
-  }
   scene.add(pointGroup);
 
   // Gradient at point
@@ -2000,7 +1976,7 @@ function update3D() {
     const arrowLen = 1.2;
     // Thick cylinder for the arrow shaft
     const shaftGeo = new THREE.CylinderGeometry(0.03, 0.03, arrowLen, 8);
-    const shaftMat = new THREE.MeshBasicMaterial({ color: 0xff6b6b });
+    const shaftMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const shaft = new THREE.Mesh(shaftGeo, shaftMat);
     const midPt = origin.clone().add(dir.clone().multiplyScalar(arrowLen / 2));
     shaft.position.copy(midPt);
@@ -2010,15 +1986,15 @@ function update3D() {
 
     // Cone head
     const coneGeo = new THREE.CylinderGeometry(0, 0.08, 0.2, 8);
-    const coneMat = new THREE.MeshBasicMaterial({ color: 0xff6b6b });
+    const coneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const cone = new THREE.Mesh(coneGeo, coneMat);
     cone.position.copy(origin.clone().add(dir.clone().multiplyScalar(arrowLen)));
     cone.quaternion.setFromUnitVectors(upVec, dir);
     tangentGroup.add(cone);
 
     if (state.showLabels) {
-      const gradLabel = makeTextSprite('∇φ', '#ff6b6b', 0.7);
-      gradLabel.position.copy(origin.clone().add(dir.clone().multiplyScalar(arrowLen + 0.3)));
+      const gradLabel = makeTextSprite('∇φ', '#ffffff', 0.5);
+      gradLabel.position.copy(origin.clone().add(dir.clone().multiplyScalar(arrowLen * 1.225)));
       tangentGroup.add(gradLabel);
     }
   }
@@ -2064,9 +2040,9 @@ function update3D() {
 
     // Generic point on tangent plane
     const genPt = new THREE.Vector3(
-      tp.x + t1.x * planeSize * 0.4 + t2.x * planeSize * 0.3,
-      tp.y + t1.y * planeSize * 0.4 + t2.y * planeSize * 0.3,
-      tp.z + t1.z * planeSize * 0.4 + t2.z * planeSize * 0.3,
+      tp.x + t1.x * planeSize * 0.6 + t2.x * planeSize * 0.45,
+      tp.y + t1.y * planeSize * 0.6 + t2.y * planeSize * 0.45,
+      tp.z + t1.z * planeSize * 0.6 + t2.z * planeSize * 0.45,
     );
 
     // Line from tangent point to generic point (thick cylinder)
@@ -2124,34 +2100,35 @@ function update3D() {
       }
     }
 
-    // Labels
+    // Labels positioned along continuation of the line segment
     if (state.showLabels) {
-      const gpLabel = makeTextSprite('(x,y,z)', '#64b5f6', 0.7);
-      gpLabel.position.copy(genPt.clone().add(new THREE.Vector3(0.2, 0.2, 0.2)));
+      const tpVec3 = new THREE.Vector3(tp.x, tp.y, tp.z);
+      const segDir = genPt.clone().sub(tpVec3);
+      const segLen3 = segDir.length() || 1;
+      const segNorm = segDir.clone().normalize();
+      const lblOffset = 0.225 * segLen3;
+      // (x₀,y₀,z₀) label: continue past tp away from gp
+      const ptLabel = makeTextSprite('(x₀,y₀,z₀)', '#e53935', 0.55);
+      ptLabel.position.copy(tpVec3.clone().sub(segNorm.clone().multiplyScalar(lblOffset)));
+      tangentGroup.add(ptLabel);
+      // (x,y,z) label: continue past gp away from tp
+      const gpLabel = makeTextSprite('(x,y,z)', '#64b5f6', 0.5);
+      gpLabel.position.copy(genPt.clone().add(segNorm.clone().multiplyScalar(lblOffset)));
       tangentGroup.add(gpLabel);
     }
   }
 
   if (tangentGroup) scene.add(tangentGroup);
-
-  // Info box
-  if (state.showLabels) {
-    let info = `φ(x₀,y₀,z₀) = ${c.toFixed(2)}`;
-    info += `\n(x₀,y₀,z₀) = (${tp.x.toFixed(2)}, ${tp.y.toFixed(2)}, ${tp.z.toFixed(2)})`;
-    if (gMag > 1e-10) info += `\n∇φ = (${gx.toFixed(2)}, ${gy.toFixed(2)}, ${gz.toFixed(2)})`;
-    infoBox.textContent = info;
-    infoBox.style.display = '';
-  } else {
-    infoBox.style.display = 'none';
-  }
+  infoBox.style.display = 'none';
 }
 
 // ========== MODE SWITCH ==========
 function switchMode() {
   const is2d = state.dim === 2;
   // Show/hide 2D-only sidebar options
-  document.getElementById('heatmapRow').style.display = is2d ? '' : 'none';
-  document.getElementById('contoursRow').style.display = is2d ? '' : 'none';
+  toggleHeatmap.style.display = is2d ? '' : 'none';
+  toggleContours.style.display = is2d ? '' : 'none';
+  // Colour section: show at bottom always, but in 3D it's less relevant — keep visible for both
   document.getElementById('colourSection').style.display = is2d ? '' : 'none';
 
   if (is2d) {
