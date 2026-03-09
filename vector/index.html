@@ -863,6 +863,13 @@ function computeScalarField(res, type) {
       if (v > fmax) fmax = v;
     }
   }
+
+  // Make the range symmetrical around zero, so that it is possible quickly
+  //interpret the overall sign for almost constant values.
+  let maxf = Math.max(Math.abs(fmin),Math.abs(fmax));
+  fmin = -maxf;
+  fmax = maxf;
+
   // Enforce a minimum range so that floating point noise
   // doesn't get amplified into the full colour scale
   // for fields with constant or near-constant div/curl.
