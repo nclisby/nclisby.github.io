@@ -386,6 +386,70 @@
     text-align: center;
     transition: opacity 0.5s;
   }
+
+.overview-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(15, 17, 23, 0.92);
+  z-index: 50000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
+  }
+
+.overview-overlay.visible {
+  display: flex;
+}
+
+.overview-content {
+  max-width: 680px;
+  max-height: 90vh;
+  padding: 40px 48px;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 20px;
+  line-height: 1.4;
+  position: relative;
+  overflow-y: auto;
+}
+
+.overview-content h1 {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.overview-content p {
+  margin-bottom: 16px;
+}
+
+.overview-close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  color: #ffffff;
+  font-size: 32px;
+  cursor: pointer;
+  z-index: 50001;
+  width: 40px;
+  height: 40px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  touch-action: manipulation;
+}
+
+.overview-overlay.visible + .overview-close,
+.overview-overlay.visible ~ .overview-close {
+  display: flex;
+}
 </style>
 </head>
 <body>
@@ -422,6 +486,7 @@
   <div class="section">
     <div class="section-label">Options</div>
     <div class="opt-grid-3">
+      <button class="opt-btn" id="btnOverview">Overview</button>
       <button class="opt-btn" id="toggleHeatmap">Heat map</button>
       <button class="opt-btn" id="toggleContours">Level sets</button>
       <button class="opt-btn" id="toggleTangent">Tangent</button>
@@ -457,6 +522,82 @@
   <div class="info-box" id="infoBox" style="display:none;"></div>
   <div class="hint-overlay" id="hintOverlay">Click the level set to place a tangent point</div>
 </div>
+
+
+<div class="overview-overlay" id="overviewOverlay">
+  <div class="overview-content" id="overviewContent">
+    <h1>Overview</h1>
+    <p>
+    ∇φ is perpendicular to level sets of the form φ(<b>r</b>) = c.
+    </p>
+    <p>
+    Choose a point <b>r<sub>0</sub></b> on the level set, set the normal vector 
+    <b>N</b> to be some multiple of the gradient: 
+    <b>N</b>&nbsp;=&nbsp;k&nbsp;∇φ(<b>r<sub>0</sub></b>)
+    </p>
+    <p>
+    Given a generic point <b>r</b> on the tangent, we see that:
+    </p>
+    <p style="text-align:center;">
+    <b>N</b> &bull; (<b>r</b>-<b>r<sub>0</sub></b>) = 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⇒ <b>N</b> &bull; <b>r</b> = <b>N</b> &bull; <b>r<sub>0</sub></b> 
+    </p>
+    <p>
+    Thus we have an equation for the tangent line or plane!
+    </p>
+    <p style="text-align:center;">
+    In 2d: &nbsp; &nbsp; &nbsp; N<sub>1</sub> x + N<sub>2</sub> y  = N<sub>1</sub> x<sub>0</sub> + N<sub>2</sub> y<sub>0</sub>
+    <br />
+    In 3d: &nbsp; &nbsp; &nbsp; 
+     N<sub>1</sub> x + N<sub>2</sub> y + N<sub>3</sub> y = N<sub>1</sub> x<sub>0</sub> + N<sub>2</sub> y<sub>0</sub> + N<sub>3</sub> z<sub>0</sub>
+    </p>
+    <!--
+    <p>Consider the equation</p>
+    <p style="text-align:center;">x + 1 = 3</p>
+    <p style="text-align:center;">⟹ x = 2</p>
+    <p style="text-align:center;">⇒ x = 2</p>
+    <p>
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    </p>
+    <p>
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    This is some text to test formatting.
+    </p>
+    -->
+  </div>
+</div>
+<button class="overview-close" id="overviewClose">✕</button>
+
 
 <script>
 // ========== STATE ==========
@@ -2171,6 +2312,42 @@ switchMode();
 resize();
 update();
 window.addEventListener('resize', () => { resize(); update(); });
+</script>
+
+<!-- code for overview -->
+<script>
+// ========== OVERVIEW OVERLAY ==========
+const overviewOverlay = document.getElementById('overviewOverlay');
+const overviewClose = document.getElementById('overviewClose');
+const btnOverview = document.getElementById('btnOverview');
+
+function showOverview() {
+  overviewOverlay.classList.add('visible');
+}
+
+function hideOverview() {
+  overviewOverlay.classList.remove('visible');
+}
+
+btnOverview.addEventListener('click', (e) => {
+  e.stopPropagation();
+  showOverview();
+});
+
+overviewClose.addEventListener('click', hideOverview);
+overviewOverlay.addEventListener('click', hideOverview);
+
+// Any key press closes it
+document.addEventListener('keydown', (e) => {
+  if (overviewOverlay.classList.contains('visible')) {
+    hideOverview();
+    e.preventDefault();
+  }
+});
+
+// Prevent clicks on the content text from closing (optional — remove if you want any click to close)
+// document.getElementById('overviewContent').addEventListener('click', (e) => e.stopPropagation());
+
 </script>
 
 <!-- code for pointer -->
