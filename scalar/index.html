@@ -1317,13 +1317,15 @@ function buildSlice3D(field, zScale) {
     }));
     scene.add(sliceSurfaceLine);
 
+    // disabling this for v7 - just makes the 3d surface less visually
+    // intelligible.
     // XY-plane projection (same contour at z=0)
-    const xyPoints = surfacePoints.map(p => new THREE.Vector3(p.x, p.y, 0));
-    const xyLineGeo = new THREE.BufferGeometry().setFromPoints(xyPoints);
-    sliceXYLine = new THREE.LineSegments(xyLineGeo, new THREE.LineBasicMaterial({
-      color: 0xffffff, transparent: true, opacity: 0.5, linewidth: 1
-    }));
-    scene.add(sliceXYLine);
+    //const xyPoints = surfacePoints.map(p => new THREE.Vector3(p.x, p.y, 0));
+    //const xyLineGeo = new THREE.BufferGeometry().setFromPoints(xyPoints);
+    //sliceXYLine = new THREE.LineSegments(xyLineGeo, new THREE.LineBasicMaterial({
+    //  color: 0xffffff, transparent: true, opacity: 0.5, linewidth: 1
+    //}));
+    //scene.add(sliceXYLine);
   }
 }
 
