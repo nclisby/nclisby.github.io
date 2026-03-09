@@ -205,42 +205,11 @@
     color: var(--accent);
   }
 
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 10px;
+  .opt-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
   }
-
-  .toggle-row:first-child { margin-top: 0; }
-
-  .toggle-label { font-size: 18px; font-weight: 500; color: var(--text); }
-
-  .toggle-switch {
-    width: 44px; height: 26px;
-    background: var(--input-bg);
-    border: 1px solid var(--panel-border);
-    border-radius: 13px;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    flex-shrink: 0;
-  }
-
-  .toggle-switch::after {
-    content: '';
-    position: absolute;
-    width: 20px; height: 20px;
-    background: var(--text-dim);
-    border-radius: 50%;
-    top: 2px; left: 2px;
-    transition: all 0.2s;
-  }
-
-  .toggle-switch.active { background: var(--accent-dim); border-color: var(--accent); }
-  .toggle-switch.active::after { background: var(--accent); left: 20px; }
 
   .slider-wrap { margin-top: 10px; }
 
@@ -361,23 +330,19 @@
   </div>
 
   <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn" id="toggleFlip">−f</button>
+      <button class="opt-btn" id="toggleGrad">∇f</button>
+    </div>
+  </div>
+
+  <div class="section">
     <div class="section-label">Colour scheme</div>
     <div class="opt-row">
       <button class="opt-btn active" data-scheme="palette1">1</button>
       <button class="opt-btn" data-scheme="palette2">2</button>
       <button class="opt-btn" data-scheme="palette3">3</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-label">Options</div>
-    <div class="toggle-row">
-      <span class="toggle-label">Flip sign (&#8722;f)</span>
-      <div class="toggle-switch" id="toggleFlip"></div>
-    </div>
-    <div class="toggle-row">
-      <span class="toggle-label">Show &#8711;f</span>
-      <div class="toggle-switch" id="toggleGrad"></div>
     </div>
   </div>
 </div>
