@@ -1099,7 +1099,7 @@ function initOrbitControls() {
 }
 
 
-function build3DGradientArrows() {
+function build3DGradientArrows(sliceZ) {
   if (gradientArrows3D) {
     scene.remove(gradientArrows3D);
     gradientArrows3D.traverse(c => {
@@ -1109,6 +1109,9 @@ function build3DGradientArrows() {
     gradientArrows3D = null;
   }
   if (!state.showGrad) return;
+
+  // add vectors to the slice plane at z = sliceZ
+  // const sliceZ = sliceVal * zScale;
 
   const n = state.gradRes;
   const { arrows, maxMag } = computeGradient(n);
@@ -1131,8 +1134,8 @@ function build3DGradientArrows() {
     const dy = a.dy / a.mag * scale;
 
     //centred arrows
-    const start = new THREE.Vector3(ax - dx * 0.5, ay - dy * 0.5, 0);
-    const end = new THREE.Vector3(ax + dx * 0.5, ay + dy * 0.5, 0);
+    const start = new THREE.Vector3(ax - dx * 0.5, ay - dy * 0.5, sliceZ);
+    const end = new THREE.Vector3(ax + dx * 0.5, ay + dy * 0.5, sliceZ);
 
     const lineGeo = new THREE.BufferGeometry().setFromPoints([start, end]);
     group.add(new THREE.Line(lineGeo, shaftMat));
@@ -1204,7 +1207,20 @@ function drawSurface() {
   }));
   scene.add(surfaceMesh);
 
-  build3DGradientArrows();
+  
+  if (state.showGrad) 
+  {
+    const range = field.fmax - field.fmin || 1;
+    const sliceVal = field.fmin + state.sliceFrac * range;
+    const sliceZ = sliceVal * zScale;
+    build3DGradientArrows(sliceZ);
+  }
+  else
+  {
+    const sliceZ = 0;
+    build3DGradientArrows(sliceZ);
+  }
+
   buildSlice3D(field, zScale);
   renderer.render(scene, camera);
 
@@ -1234,12 +1250,6 @@ function buildSlice3D(field, zScale) {
     sliceSurfaceLine.geometry.dispose();
     sliceSurfaceLine.material.dispose();
     sliceSurfaceLine = null;
-  }
-  if (sliceXYLine) {
-    scene.remove(sliceXYLine);
-    sliceXYLine.geometry.dispose();
-    sliceXYLine.material.dispose();
-    sliceXYLine = null;
   }
 
   if (!state.showSlice) return;
@@ -1316,16 +1326,6 @@ function buildSlice3D(field, zScale) {
       color: 0xffffff, linewidth: 2
     }));
     scene.add(sliceSurfaceLine);
-
-    // disabling this for v7 - just makes the 3d surface less visually
-    // intelligible.
-    // XY-plane projection (same contour at z=0)
-    //const xyPoints = surfacePoints.map(p => new THREE.Vector3(p.x, p.y, 0));
-    //const xyLineGeo = new THREE.BufferGeometry().setFromPoints(xyPoints);
-    //sliceXYLine = new THREE.LineSegments(xyLineGeo, new THREE.LineBasicMaterial({
-    //  color: 0xffffff, transparent: true, opacity: 0.5, linewidth: 1
-    //}));
-    //scene.add(sliceXYLine);
   }
 }
 
