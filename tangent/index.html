@@ -312,18 +312,6 @@
     z-index: 5;
   }
 
-  .cb-max, .cb-min {
-    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    text-align: center;
-    width: 60px;
-    margin-left: -22px;
-  }
-
-  .cb-max { margin-bottom: 4px; }
-  .cb-min { margin-top: 4px; }
-
   .slice-controls {
     position: absolute;
     top: 12px;
@@ -436,10 +424,10 @@
     <div class="opt-grid-3">
       <button class="opt-btn" id="toggleHeatmap">Heat map</button>
       <button class="opt-btn" id="toggleContours">Level sets</button>
-      <button class="opt-btn active" id="toggleLabels">Labels</button>
-      <button class="opt-btn active" id="toggleGradPt">∇φ point</button>
+      <button class="opt-btn" id="toggleTangent">Tangent</button>
+      <button class="opt-btn" id="toggleGradPt">∇φ point</button>
       <button class="opt-btn" id="toggleGradAll">∇φ</button>
-      <button class="opt-btn active" id="toggleTangent">Tangent</button>
+      <button class="opt-btn" id="toggleLabels">Labels</button>
       <button class="opt-btn" id="toggleFlip">−φ</button>
     </div>
   </div>
@@ -463,9 +451,7 @@
   <canvas id="canvas2d"></canvas>
   <div id="container3d"></div>
   <div class="cb-wrap" id="colourbarWrap" style="display:none;">
-    <div class="cb-max" id="cbMax"></div>
     <canvas class="colourbar" id="colourbar" width="16" height="200"></canvas>
-    <div class="cb-min" id="cbMin"></div>
   </div>
   <div class="current-fn" id="currentFnLabel"></div>
   <div class="info-box" id="infoBox" style="display:none;"></div>
@@ -479,9 +465,9 @@ const state = {
   fnIndex: 0,
   cParam: 100,    // slider raw value, mapped to real c per-function
   showGradAll: false,
-  showGradPt: true,
-  showTangent: true,
-  showLabels: true,
+  showGradPt: false,
+  showTangent: false,
+  showLabels: false,
   showHeatmap: false,
   showContours: false,
   scheme: 'palette1',
@@ -498,54 +484,56 @@ const state = {
 
 // ========== 2D PRESETS ==========
 const presets2d = [
-  { expr: 'x² + y²', label: 'φ = x² + y²', fn: (x,y) => x*x + y*y,
+  { expr: 'x² + y²', label: 'φ(x,y) = x² + y²', fn: (x,y) => x*x + y*y,
     gx: (x,y) => 2*x, gy: (x,y) => 2*y,
-    cMin: 0.1, cMax: 8, cDef: 2, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
-  { expr: 'x² − y²', label: 'φ = x² − y²', fn: (x,y) => x*x - y*y,
+    cMin: 0.01, cMax: 16, cDef: 2, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+    //cMin: 0.1, cMax: 8, cDef: 2, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+  { expr: 'x² − y²', label: 'φ(x,y) = x² − y²', fn: (x,y) => x*x - y*y,
     gx: (x,y) => 2*x, gy: (x,y) => -2*y,
-    cMin: -4, cMax: 4, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
-  { expr: 'xy', label: 'φ = xy', fn: (x,y) => x*y,
+    cMin: -8, cMax: 8, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+  { expr: 'xy', label: 'φ(x,y) = xy', fn: (x,y) => x*y,
     gx: (x,y) => y, gy: (x,y) => x,
     cMin: -4, cMax: 4, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
-  { expr: 'sin(x) + sin(y)', label: 'φ = sin(x) + sin(y)', fn: (x,y) => Math.sin(x) + Math.sin(y),
+  { expr: 'sin(x) + sin(y)', label: 'φ(x,y) = sin(x) + sin(y)', fn: (x,y) => Math.sin(x) + Math.sin(y),
     gx: (x,y) => Math.cos(x), gy: (x,y) => Math.cos(y),
     cMin: -2, cMax: 2, cDef: 0.5, xMin: -6, xMax: 6, yMin: -6, yMax: 6 },
-  { expr: 'sin(xy)', label: 'φ = sin(xy)', fn: (x,y) => Math.sin(x*y),
+  { expr: 'sin(xy)', label: 'φ(x,y) = sin(xy)', fn: (x,y) => Math.sin(x*y),
     gx: (x,y) => y*Math.cos(x*y), gy: (x,y) => x*Math.cos(x*y),
     cMin: -1, cMax: 1, cDef: 0.5, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
-  { expr: 'x³ − 3xy²', label: 'φ = x³ − 3xy²', fn: (x,y) => x*x*x - 3*x*y*y,
+  { expr: 'x³ − 3xy²', label: 'φ(x,y) = x³ − 3xy²', fn: (x,y) => x*x*x - 3*x*y*y,
     gx: (x,y) => 3*x*x - 3*y*y, gy: (x,y) => -6*x*y,
     cMin: -8, cMax: 8, cDef: 2, xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
-  { expr: 'eˣ cos(y)', label: 'φ = eˣ cos(y)', fn: (x,y) => Math.exp(x)*Math.cos(y),
+  { expr: 'eˣ cos(y)', label: 'φ(x,y) = eˣ cos(y)', fn: (x,y) => Math.exp(x)*Math.cos(y),
     gx: (x,y) => Math.exp(x)*Math.cos(y), gy: (x,y) => -Math.exp(x)*Math.sin(y),
-    cMin: -3, cMax: 3, cDef: 1, xMin: -3, xMax: 3, yMin: -4, yMax: 4 },
-  { expr: 'x² + 4y²', label: 'φ = x² + 4y²', fn: (x,y) => x*x + 4*y*y,
+    cMin: -3, cMax: 3, cDef: 1, xMin: -1.5, xMax: 1.5, yMin: -4.8, yMax: 4.8 },
+  { expr: 'x² + 4y²', label: 'φ(x,y) = x² + 4y²', fn: (x,y) => x*x + 4*y*y,
     gx: (x,y) => 2*x, gy: (x,y) => 8*y,
-    cMin: 0.1, cMax: 16, cDef: 4, xMin: -5, xMax: 5, yMin: -3, yMax: 3 },
+    cMin: 0.01, cMax: 16, cDef: 2, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
 ];
 
 // ========== 3D PRESETS ==========
 const presets3d = [
-  { expr: 'x² + y² + z²', label: 'φ = x² + y² + z²', fn: (x,y,z) => x*x + y*y + z*z,
+  { expr: 'x² + y² + z²', label: 'φ(x,y,z) = x² + y² + z²', fn: (x,y,z) => x*x + y*y + z*z,
     gx: (x,y,z) => 2*x, gy: (x,y,z) => 2*y, gz: (x,y,z) => 2*z,
-    cMin: 0.1, cMax: 9, cDef: 4, xMin: -3.5, xMax: 3.5, yMin: -3.5, yMax: 3.5, zMin: -3.5, zMax: 3.5 },
-  { expr: 'x² + y² − z²', label: 'φ = x² + y² − z²', fn: (x,y,z) => x*x + y*y - z*z,
+    cMin: 0.01, cMax: 9, cDef: 4, xMin: -3., xMax: 3., yMin: -3., yMax: 3., zMin: -3., zMax: 3. },
+  { expr: 'x² + y² − z²', label: 'φ(x,y,z) = x² + y² − z²', fn: (x,y,z) => x*x + y*y - z*z,
     gx: (x,y,z) => 2*x, gy: (x,y,z) => 2*y, gz: (x,y,z) => -2*z,
-    cMin: -4, cMax: 4, cDef: 1, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -3, zMax: 3 },
-  { expr: 'x² + y² − z', label: 'φ = x² + y² − z', fn: (x,y,z) => x*x + y*y - z,
+    cMin: -4, cMax: 3, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4, zMin: -3, zMax: 3 },
+  { expr: 'x² + y² − z', label: 'φ(x,y,z) = x² + y² − z', fn: (x,y,z) => x*x + y*y - z,
     gx: (x,y,z) => 2*x, gy: (x,y,z) => 2*y, gz: (x,y,z) => -1,
-    domain: (x,y,z) => x*x + y*y <= 9,
-    cMin: -4, cMax: 4, cDef: 0, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -9, zMax: 9 },
-  { expr: 'xyz', label: 'φ = xyz', fn: (x,y,z) => x*y*z,
+//    domain: (x,y,z) => x*x + y*y <= 9,
+    cMin: -3.8, cMax: 3.8, cDef: 0, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -4, zMax: 4 },
+  { expr: 'xyz', label: 'φ(x,y,z) = xyz', fn: (x,y,z) => x*y*z,
     gx: (x,y,z) => y*z, gy: (x,y,z) => x*z, gz: (x,y,z) => x*y,
-    cMin: -4, cMax: 4, cDef: 1, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -3, zMax: 3 },
-  { expr: 'x² + y²/4 + z²/9', label: 'φ = x² + y²/4 + z²/9', fn: (x,y,z) => x*x + y*y/4 + z*z/9,
+    cMin: -6, cMax: 6, cDef: 1, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -3, zMax: 3 },
+  { expr: 'x² + y²/4 + z²/9', label: 'φ(x,y,z) = x² + y²/4 + z²/9', fn: (x,y,z) => x*x + y*y/4 + z*z/9,
     gx: (x,y,z) => 2*x, gy: (x,y,z) => y/2, gz: (x,y,z) => 2*z/9,
-    cMin: 0.1, cMax: 9, cDef: 1, xMin: -3.5, xMax: 3.5, yMin: -7, yMax: 7, zMin: -10, zMax: 10 },
-  { expr: 'sin(x) + sin(y) + sin(z)', label: 'φ = sin(x)+sin(y)+sin(z)',
+    cMin: 0.01, cMax: 2, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4, zMin: -4,
+    zMax: 4 },
+  { expr: 'sin(x) + sin(y) + sin(z)', label: 'φ(x,y,z) = sin(x)+sin(y)+sin(z)',
     fn: (x,y,z) => Math.sin(x)+Math.sin(y)+Math.sin(z),
     gx: (x,y,z) => Math.cos(x), gy: (x,y,z) => Math.cos(y), gz: (x,y,z) => Math.cos(z),
-    cMin: -3, cMax: 3, cDef: 0, xMin: -4, xMax: 4, yMin: -4, yMax: 4, zMin: -4, zMax: 4 },
+    cMin: -2.99, cMax: 2.99, cDef: 0, xMin: -4, xMax: 4, yMin: -4, yMax: 4, zMin: -4, zMax: 4 },
 ];
 
 function getPresets() { return state.dim === 2 ? presets2d : presets3d; }
@@ -560,14 +548,14 @@ function getPreset() {
   // Return a flipped copy
   if (state.dim === 2) {
     return { ...p,
-      label: 'φ = −(' + (state.isCustom ? state.customExpr : p.expr) + ')',
+      label: 'φ(x,y) = −(' + (state.isCustom ? state.customExpr : p.expr) + ')',
       fn: (x, y) => -p.fn(x, y),
       gx: (x, y) => -p.gx(x, y),
       gy: (x, y) => -p.gy(x, y),
     };
   } else {
     return { ...p,
-      label: 'φ = −(' + (state.isCustom ? state.customExpr : p.expr) + ')',
+      label: 'φ(x,y,z) = −(' + (state.isCustom ? state.customExpr : p.expr) + ')',
       fn: (x, y, z) => -p.fn(x, y, z),
       gx: (x, y, z) => -p.gx(x, y, z),
       gy: (x, y, z) => -p.gy(x, y, z),
@@ -577,7 +565,8 @@ function getPreset() {
 }
 
 // Cached field range for c slider
-let cachedFieldMin = -1, cachedFieldMax = 1;
+//let cachedFieldMin = -1, cachedFieldMax = 1;
+let cMin = -1, cMax = 1;
 
 function computeFieldRange() {
   const p = getPreset();
@@ -605,16 +594,16 @@ function computeFieldRange() {
   }
   if (!isFinite(fmin)) { fmin = -1; fmax = 1; }
   if (fmax - fmin < 1e-10) { fmin -= 1; fmax += 1; }
-  cachedFieldMin = fmin;
-  cachedFieldMax = fmax;
+  cMin = fmin;
+  cMax = fmax;
 }
 
 function mapC(raw) {
-  return cachedFieldMin + (raw / 600) * (cachedFieldMax - cachedFieldMin);
+  return cMin + (raw / 600) * (cMax - cMin);
 }
 
 function cSliderFromValue(c) {
-  return Math.round((c - cachedFieldMin) / (cachedFieldMax - cachedFieldMin) * 600);
+  return Math.round((c - cMin) / (cMax - cMin) * 600);
 }
 
 // ========== DOM ==========
@@ -667,8 +656,8 @@ function saveDimState() {
     customPreset: state.customPreset,
     customExpr: state.customExpr,
     flipSign: state.flipSign,
-    cachedFieldMin: cachedFieldMin,
-    cachedFieldMax: cachedFieldMax,
+    cachedcMin: cMin,
+    cachedcMax: cMax,
     customInputValue: customInput.value,
   };
 }
@@ -684,8 +673,8 @@ function restoreDimState(d) {
   state.customPreset = s.customPreset;
   state.customExpr = s.customExpr;
   state.flipSign = s.flipSign;
-  cachedFieldMin = s.cachedFieldMin;
-  cachedFieldMax = s.cachedFieldMax;
+  cMin = s.cachedcMin;
+  cMax = s.cachedcMax;
   customInput.value = s.customInputValue || '';
   toggleFlip.classList.toggle('active', state.flipSign);
   fnSelect.value = state.isCustom ? '' : state.fnIndex;
@@ -851,17 +840,39 @@ customInput.addEventListener('input', () => {
 
 function resetForPreset() {
   const p = getPreset();
-  computeFieldRange();
-  // Start slider at midpoint of field range
-  const midC = (cachedFieldMin + cachedFieldMax) / 2;
-  const rawC = cSliderFromValue(midC);
-  cSlider.value = rawC;
-  state.cParam = rawC;
   state.tangentPoint = null;
   state.levelPoints = [];
   hintOverlay.style.opacity = '1';
   hintOverlay.style.display = '';
   currentFnLabel.textContent = p.label;
+  if (state.isCustom && state.customPreset) {
+      computeFieldRange();
+      // Start slider at midpoint of field range
+      //const midC = (cachedFieldMin + cachedFieldMax) / 2;
+      const midC = (cMin + cMax) / 2;
+      const rawC = cSliderFromValue(midC);
+      cSlider.value = rawC;
+      state.cParam = rawC;
+  }
+  else
+  {
+  if (state.flipSign) 
+  {
+      cMin = -p.cMax;
+      cMax = -p.cMin;
+      const rawC = cSliderFromValue(-p.cDef);
+      cSlider.value = rawC;
+      state.cParam = rawC;
+  }
+  else
+  {
+      cMin = p.cMin;
+      cMax = p.cMax;
+      const rawC = cSliderFromValue(p.cDef);
+      cSlider.value = rawC;
+      state.cParam = rawC;
+  }
+  }
 }
 
 cSlider.addEventListener('input', () => {
@@ -899,9 +910,13 @@ toggleFlip.addEventListener('click', () => {
   state.flipSign = !state.flipSign;
   toggleFlip.classList.toggle('active', state.flipSign);
   // Swap field range
-  const tmp = cachedFieldMin;
-  cachedFieldMin = -cachedFieldMax;
-  cachedFieldMax = -tmp;
+  //const tmp = cachedFieldMin;
+  //cachedFieldMin = -cachedFieldMax;
+  //cachedFieldMax = -tmp;
+  // Swap field range
+  const tmp = cMin;
+  cMin = -cMax;
+  cMax = -tmp;
   // Set c to -oldC
   const rawC = cSliderFromValue(-oldC);
   cSlider.value = Math.max(0, Math.min(600, rawC));
@@ -938,6 +953,7 @@ function toMathY(py) { return YMIN + (1 - (py - plotOy) / plotSize) * (YMAX - YM
 function computeLevelCurve2D() {
   const p = getPreset();
   const c = mapC(state.cParam);
+  //alert(c);
   XMIN = p.xMin; XMAX = p.xMax; YMIN = p.yMin; YMAX = p.yMax;
   const res = 300;
   const segments = [];
@@ -1075,8 +1091,6 @@ function drawColourbar(fmin, fmax) {
     cbCtx.fillRect(0, j, 16, 1);
   }
   colourbarWrap.style.display = 'flex';
-  cbMax.textContent = fmax.toFixed(1);
-  cbMin.textContent = fmin.toFixed(1);
 }
 
 function draw2D() {
@@ -1135,12 +1149,10 @@ function draw2D() {
     offscreen.getContext('2d').putImageData(imgData, 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(offscreen, ox, oy, size, size);
-    drawColourbar(field.fmin, field.fmax);
   } else if (!state.showContours) {
     // Dark background when neither heatmap nor contours
     ctx.fillStyle = '#12141c';
     ctx.fillRect(ox, oy, size, size);
-    colourbarWrap.style.display = 'none';
   }
 
   // Draw contour lines
@@ -1148,7 +1160,6 @@ function draw2D() {
     if (!state.showHeatmap) {
       ctx.fillStyle = '#12141c';
       ctx.fillRect(ox, oy, size, size);
-      colourbarWrap.style.display = 'none';
     }
     const res = field.res;
     const range = field.fmax - field.fmin || 1;
@@ -1204,6 +1215,10 @@ function draw2D() {
 
   if (!state.showHeatmap && !state.showContours) {
     colourbarWrap.style.display = 'none';
+  }
+  else
+  {
+    drawColourbar(field.fmin, field.fmax);
   }
 
   // Plot border
@@ -1276,7 +1291,8 @@ function draw2D() {
 
   // Gradient at tangent point
   if (state.showGradPt && gradMag > 1e-10) {
-    const arrowLen = size * 0.12;
+    //const arrowLen = size * 0.12;
+    const arrowLen = size * 0.18;
     const nx = gradX / gradMag, ny = gradY / gradMag;
     const px1 = tpx(tp.x), py1 = tpy(tp.y);
     const px2 = px1 + nx * arrowLen;
@@ -1284,13 +1300,13 @@ function draw2D() {
     drawArrow(ctx, px1, py1, px2, py2, '#ffffff', 3, 10);
 
     if (state.showLabels) {
-      ctx.font = '500 16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      ctx.font = '500 20px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      // Place label centre 35% past the arrow tip along the arrow direction
-      const lblGx = px2 + (px2 - px1) * 0.35;
-      const lblGy = py2 + (py2 - py1) * 0.35;
+      // Place label centre 25% past the arrow tip along the arrow direction
+      const lblGx = px2 + (px2 - px1) * 0.25;
+      const lblGy = py2 + (py2 - py1) * 0.25;
       ctx.fillText('∇φ', lblGx, lblGy);
     }
   }
@@ -1311,23 +1327,15 @@ function draw2D() {
     ctx.setLineDash([]);
 
     // Generic point on tangent line
-    const genT = 0.525;
+    const genT = -0.525;
     const gp = { x: tp.x + tx * ext * genT, y: tp.y + ty * ext * genT };
-
-    // Solid opaque line from tangent point to generic point
-    ctx.strokeStyle = '#64b5f6';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(tpx(tp.x), tpy(tp.y));
-    ctx.lineTo(tpx(gp.x), tpy(gp.y));
-    ctx.stroke();
 
     // Right angle symbol
     if (state.showGradPt && gradMag > 1e-10) {
       const symbolSize = 12;
       const nxDir = gradX / gradMag, nyDir = gradY / gradMag;
       const scaleF = size / (XMAX - XMIN);
-      const txPxS = tx * scaleF, tyPxS = -ty * scaleF;
+      const txPxS = -tx * scaleF, tyPxS = ty * scaleF;
       const nxPxS = nxDir * scaleF, nyPxS = -nyDir * scaleF;
       const tLen = Math.sqrt(txPxS*txPxS + tyPxS*tyPxS);
       const nLen = Math.sqrt(nxPxS*nxPxS + nyPxS*nyPxS);
@@ -1338,7 +1346,8 @@ function draw2D() {
         const nyN = nyPxS / nLen * symbolSize;
         const cpx = tpx(tp.x), cpy = tpy(tp.y);
         ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-        ctx.lineWidth = 1.5;
+        //ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2.0;
         ctx.beginPath();
         ctx.moveTo(cpx + txN, cpy + tyN);
         ctx.lineTo(cpx + txN + nxN, cpy + tyN + nyN);
@@ -1349,7 +1358,7 @@ function draw2D() {
 
     // Labels positioned along the continuation of the line segment
     if (state.showLabels) {
-      ctx.font = '500 16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      ctx.font = '500 20px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
       const tpPx = tpx(tp.x), tpPy = tpy(tp.y);
       const gpPx = tpx(gp.x), gpPy = tpy(gp.y);
       const segLen = Math.sqrt((gpPx - tpPx) ** 2 + (gpPy - tpPy) ** 2) || 1;
@@ -1368,13 +1377,22 @@ function draw2D() {
       const lbl1y = gpPy + dySeg * offset;
       ctx.fillStyle = '#64b5f6';
       ctx.fillText('(x, y)', lbl1x, lbl1y);
-    }
 
-    ctx.fillStyle = '#64b5f6';
-    ctx.beginPath();
-    ctx.arc(tpx(gp.x), tpy(gp.y), 4, 0, Math.PI * 2);
-    ctx.fill();
+      //point at end 
+      ctx.fillStyle = '#64b5f6';
+      ctx.beginPath();
+      ctx.arc(tpx(gp.x), tpy(gp.y), 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tangent point vector arrow
+      // make it fall slightly short of endpoint
+      const xfinal = tpx(tp.x) + (tpx(gp.x)-tpx(tp.x))*0.95
+      const yfinal = tpy(tp.y) + (tpy(gp.y)-tpy(tp.y))*0.95
+      drawArrow(ctx, tpx(tp.x), tpy(tp.y), xfinal, yfinal, '#64b5f6', 3, 10);
+
+    }
   }
+
 
   // Tangent point dot
   ctx.fillStyle = '#e53935';
@@ -1824,35 +1842,17 @@ function buildIsosurface(p, c, gridRes) {
     }
   }
 
-  // Filter triangles by domain constraint (discard if any vertex is outside)
-  const domainFn = p.domain || null;
-  let filteredIndices = indices;
-  if (domainFn) {
-    filteredIndices = [];
-    for (let i = 0; i < indices.length; i += 3) {
-      const i0 = indices[i], i1 = indices[i+1], i2 = indices[i+2];
-      const x0 = vertices[i0*3], y0 = vertices[i0*3+1], z0 = vertices[i0*3+2];
-      const x1 = vertices[i1*3], y1 = vertices[i1*3+1], z1 = vertices[i1*3+2];
-      const x2 = vertices[i2*3], y2 = vertices[i2*3+1], z2 = vertices[i2*3+2];
-      if (domainFn(x0,y0,z0) && domainFn(x1,y1,z1) && domainFn(x2,y2,z2)) {
-        filteredIndices.push(i0, i1, i2);
-      }
-    }
-  }
-
   // Store level points (vertex positions on the isosurface, filtered by domain)
   const pts = [];
-  const usedVerts = domainFn ? new Set(filteredIndices) : null;
   for (let i = 0; i < vertices.length; i += 3) {
-    const vi = i / 3;
-    if (domainFn && !usedVerts.has(vi)) continue;
     pts.push({ x: vertices[i], y: vertices[i+1], z: vertices[i+2] });
   }
   state.levelPoints = pts;
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  geometry.setIndex(filteredIndices);
+  geometry.setIndex(indices);
+  //geometry.setIndex(filteredIndices);
   geometry.computeVertexNormals();
   return geometry;
 }
@@ -2045,28 +2045,6 @@ function update3D() {
       tp.z + t1.z * planeSize * 0.6 + t2.z * planeSize * 0.45,
     );
 
-    // Line from tangent point to generic point (thick cylinder)
-    const tpVec = new THREE.Vector3(tp.x, tp.y, tp.z);
-    const lineDir = genPt.clone().sub(tpVec);
-    const lineLen = lineDir.length();
-    if (lineLen > 1e-6) {
-      const lineNorm = lineDir.clone().normalize();
-      const lineCylGeo = new THREE.CylinderGeometry(0.03, 0.03, lineLen, 8);
-      const lineCylMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 });
-      const lineCyl = new THREE.Mesh(lineCylGeo, lineCylMat);
-      lineCyl.position.copy(tpVec.clone().add(lineDir.clone().multiplyScalar(0.5)));
-      const upV = new THREE.Vector3(0, 1, 0);
-      lineCyl.quaternion.setFromUnitVectors(upV, lineNorm);
-      tangentGroup.add(lineCyl);
-    }
-
-    // Generic point sphere
-    const gpSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.07, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0x64b5f6 })
-    );
-    gpSphere.position.copy(genPt);
-    tangentGroup.add(gpSphere);
 
     // Right angle symbol in 3D (shown when both gradient at point and tangent are displayed)
     if (state.showGradPt) {
@@ -2102,13 +2080,54 @@ function update3D() {
 
     // Labels positioned along continuation of the line segment
     if (state.showLabels) {
+
+    // Vector from tangent point to generic point (thick cylinder)
+
+      {
+      const tpVec = new THREE.Vector3(tp.x, tp.y, tp.z);
+      const lineDir = genPt.clone().sub(tpVec);
+      //const lineLen = lineDir.length();
+      const lineLen = 0.90*lineDir.length();
+      if (lineLen > 1e-6) {
+      const lineNorm = lineDir.clone().normalize();
+      const lineCylGeo = new THREE.CylinderGeometry(0.03, 0.03, lineLen, 8);
+      const lineCylMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 });
+      const lineCyl = new THREE.Mesh(lineCylGeo, lineCylMat);
+      // lineCyl.position.copy(tpVec.clone().add(lineDir.clone().multiplyScalar(0.5)));
+      lineCyl.position.copy(tpVec.clone().add(lineDir.clone().multiplyScalar(0.5*0.90)));
+      const upV = new THREE.Vector3(0, 1, 0);
+      lineCyl.quaternion.setFromUnitVectors(upV, lineNorm);
+      tangentGroup.add(lineCyl);
+
+      // Cone head
+      const coneGeo = new THREE.CylinderGeometry(0, 0.08, 0.2, 8);
+      const coneMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 });
+      const cone = new THREE.Mesh(coneGeo, coneMat);
+      cone.position.copy(tpVec.clone().add(lineDir.clone().multiplyScalar(0.90)));
+      cone.quaternion.setFromUnitVectors(upV, lineNorm);
+      tangentGroup.add(cone);
+      }
+    }
+
+    // Generic point sphere
+    const gpSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0x64b5f6 })
+    );
+    gpSphere.position.copy(genPt);
+    tangentGroup.add(gpSphere);
+
+
+
       const tpVec3 = new THREE.Vector3(tp.x, tp.y, tp.z);
       const segDir = genPt.clone().sub(tpVec3);
       const segLen3 = segDir.length() || 1;
       const segNorm = segDir.clone().normalize();
       const lblOffset = 0.225 * segLen3;
+      //ideally want this label to show regardless of tangent display
+      //*but* there is an issue - positioning depends on tangent
       // (x₀,y₀,z₀) label: continue past tp away from gp
-      const ptLabel = makeTextSprite('(x₀,y₀,z₀)', '#e53935', 0.55);
+      const ptLabel = makeTextSprite('(x₀,y₀,z₀)', '#e53935', 0.5);
       ptLabel.position.copy(tpVec3.clone().sub(segNorm.clone().multiplyScalar(lblOffset)));
       tangentGroup.add(ptLabel);
       // (x,y,z) label: continue past gp away from tp
