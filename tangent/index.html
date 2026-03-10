@@ -330,7 +330,15 @@
 
   .slice-controls label {
     font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: 16px;
+    font-size: 20px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .slice-controls cValue {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 20px;
+    width: 70px;
     color: var(--text-dim);
     white-space: nowrap;
   }
@@ -510,7 +518,9 @@
 <div class="canvas-area" id="canvasArea">
   <button class="sidebar-toggle hidden-when-open" id="openBtn" title="Open sidebar">&#9776;</button>
   <div class="slice-controls" id="cControls" style="display:flex;">
-    <label>φ(<b>r</b>) = c, c =</label>
+    <!-- <label>φ(<b>r</b>) = c, c =</label> -->
+    <label>φ(<b>r</b>) = </label>
+    <cValue id="cValue"></cValue>
     <input type="range" min="0" max="600" value="300" id="cSlider">
   </div>
   <canvas id="canvas2d"></canvas>
@@ -709,6 +719,7 @@ const openBtn = document.getElementById('openBtn');
 const fnSelect = document.getElementById('fnSelect');
 const customInput = document.getElementById('customExpr');
 const errorMsg = document.getElementById('errorMsg');
+const cValue = document.getElementById('cValue');
 const cSlider = document.getElementById('cSlider');
 const toggleGradAll = document.getElementById('toggleGradAll');
 const toggleGradPt = document.getElementById('toggleGradPt');
@@ -773,6 +784,8 @@ function restoreDimState(d) {
   toggleFlip.classList.toggle('active', state.flipSign);
   fnSelect.value = state.isCustom ? '' : state.fnIndex;
   cSlider.value = state.cParam;
+  const c = mapC(state.cParam);
+  cValue.textContent = c.toFixed(2);
   currentFnLabel.textContent = getPreset().label;
   return true;
 }
@@ -944,6 +957,7 @@ function resetForPreset() {
       // Start slider at midpoint of field range
       const midC = (cMin + cMax) / 2;
       const rawC = cSliderFromValue(midC);
+      cValue.textContent = midC.toFixed(2);
       cSlider.value = rawC;
       state.cParam = rawC;
   }
@@ -954,6 +968,8 @@ function resetForPreset() {
       cMin = -p.cMax;
       cMax = -p.cMin;
       const rawC = cSliderFromValue(-p.cDef);
+      const c = -p.cDef;
+      cValue.textContent = c.toFixed(2);
       cSlider.value = rawC;
       state.cParam = rawC;
   }
@@ -962,6 +978,8 @@ function resetForPreset() {
       cMin = p.cMin;
       cMax = p.cMax;
       const rawC = cSliderFromValue(p.cDef);
+      const c = p.cDef;
+      cValue.textContent = c.toFixed(2);
       cSlider.value = rawC;
       state.cParam = rawC;
   }
@@ -971,6 +989,7 @@ function resetForPreset() {
 cSlider.addEventListener('input', () => {
   state.cParam = parseInt(cSlider.value);
   const c = mapC(state.cParam);
+  cValue.textContent = c.toFixed(2);
   // Keep tangentPoint — it will be snapped to the new level set in draw2D/update3D
   state.levelPoints = [];
   update();
@@ -1009,6 +1028,8 @@ toggleFlip.addEventListener('click', () => {
   // Set c to -oldC
   const rawC = cSliderFromValue(-oldC);
   cSlider.value = Math.max(0, Math.min(600, rawC));
+  const c = -oldC;
+  cValue.textContent = c.toFixed(2);
   state.cParam = parseInt(cSlider.value);
   state.levelPoints = [];
   currentFnLabel.textContent = getPreset().label;
