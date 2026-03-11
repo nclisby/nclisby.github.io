@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tangents</title>
+<link rel="stylesheet" href="../app.css">
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script> -->
+<script src="../three.min.js"></script>
+</head>
+<body>
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+      <h1>Tangents</h1>
+      <p>Level sets, ∇φ, tangents</p>
+    </div>
+    <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Display</div>
+    <div class="opt-row">
+      <button class="opt-btn active" id="btn2d" data-dim="2">2D</button>
+      <button class="opt-btn" id="btn3d" data-dim="3">3D</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Scalar Field</div>
+    <select class="fn-select" id="fnSelect"></select>
+    <div class="custom-input-wrap">
+      <label>Custom φ(x,y) or φ(x,y,z):</label>
+      <input type="text" class="custom-input" id="customExpr"
+             placeholder="e.g. x^2 + y^2"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn" id="btnOverview">Overview</button>
+      <button class="opt-btn" id="toggleHeatmap">Heat map</button>
+      <button class="opt-btn" id="toggleContours">Level sets</button>
+      <button class="opt-btn" id="toggleTangent">Tangent</button>
+      <button class="opt-btn" id="toggleGradPt">∇φ point</button>
+      <button class="opt-btn" id="toggleGradAll">∇φ</button>
+      <button class="opt-btn" id="toggleLabels">Labels</button>
+      <button class="opt-btn" id="toggleFlip">−φ</button>
+    </div>
+  </div>
+
+  <div class="section" id="colourSection">
+    <div class="section-label">Colour scheme</div>
+    <div class="opt-row">
+      <button class="opt-btn active" data-scheme="palette1">1</button>
+      <button class="opt-btn" data-scheme="palette2">2</button>
+      <button class="opt-btn" data-scheme="palette3">3</button>
+    </div>
+  </div>
+</div>
+
+<div class="canvas-area" id="canvasArea">
+  <button class="sidebar-toggle hidden-when-open" id="openBtn" title="Open sidebar">&#9776;</button>
+  <div class="slice-controls" id="cControls">
+    <label>φ(<b>r</b>) = </label>
+    <span class="c-value" id="cValue"></span>
+    <input type="range" min="0" max="600" value="300" id="cSlider">
+  </div>
+  <canvas id="canvas2d"></canvas>
+  <div id="container3d"></div>
+  <div class="cb-wrap" id="colourbarWrap">
+    <canvas class="colourbar" id="colourbar" width="16" height="200"></canvas>
+  </div>
+  <div class="current-fn" id="currentFnLabel"></div>
+  <div class="info-box" id="infoBox"></div>
+  <div class="hint-overlay" id="hintOverlay">Click the level set to place a tangent point</div>
+</div>
+
+<div class="overview-overlay" id="overviewOverlay">
+  <div class="overview-content" id="overviewContent">
+    <h1>Overview</h1>
+    <p>
+    ∇φ is perpendicular to level sets of the form φ(<b>r</b>) = c.
+    </p>
+    <p>
+    Choose a point <b>r<sub>0</sub></b> on the level set, set the normal vector
+    <b>N</b> to be some multiple of the gradient:
+    <b>N</b>&nbsp;=&nbsp;k&nbsp;∇φ(<b>r<sub>0</sub></b>)
+    </p>
+    <p>
+    Given a generic point <b>r</b> on the tangent, we see that:
+    </p>
+    <p style="text-align:center;">
+    <b>N</b> &bull; (<b>r</b>-<b>r<sub>0</sub></b>) = 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⇒ <b>N</b> &bull; <b>r</b> = <b>N</b> &bull; <b>r<sub>0</sub></b>
+    </p>
+    <p>
+    Thus we have an equation for the tangent line or plane!
+    </p>
+    <p style="text-align:center;">
+    In 2d: &nbsp; &nbsp; &nbsp; N<sub>1</sub> x + N<sub>2</sub> y = N<sub>1</sub> x<sub>0</sub> + N<sub>2</sub> y<sub>0</sub>
+    <br>
+    In 3d: &nbsp; &nbsp; &nbsp;
+    N<sub>1</sub> x + N<sub>2</sub> y + N<sub>3</sub> z = N<sub>1</sub> x<sub>0</sub> + N<sub>2</sub> y<sub>0</sub> + N<sub>3</sub> z<sub>0</sub>
+    </p>
+    <button class="overview-close" id="overviewClose">✕</button>
+  </div>
+</div>
+<script src="../app.js"></script>
+<script src="tangent.js"></script>
+</body>
+</html>

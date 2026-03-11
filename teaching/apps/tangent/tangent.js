@@ -1,0 +1,1728 @@
+(function () {
+'use strict';
+
+// ========== STATE ==========
+const state = {
+  dim: 2,
+  fnIndex: 0,
+  cParam: 100,    // slider raw value, mapped to real c per-function
+  showGradAll: false,
+  showGradPt: false,
+  showTangent: false,
+  showLabels: false,
+  showHeatmap: false,
+  showContours: false,
+  scheme: 'palette1',
+  flipSign: false,
+  isCustom: false,
+  customFn: null,
+  customGx: null,
+  customGy: null,
+  customGz: null,
+  customExpr: '',
+  tangentPoint: null,  // {x,y} or {x,y,z}
+  levelPoints: [],     // computed points on the level curve/surface
+};
+
+// ========== 2D PRESETS ==========
+const presets2d = [
+  { expr: 'x² + y²', label: 'φ(x,y) = x² + y²', fn: (x,y) => x*x + y*y,
+    gx: (x,y) => 2*x, gy: (x,y) => 2*y,
+    cMin: 0.01, cMax: 16, cDef: 2, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+  { expr: 'x² − y²', label: 'φ(x,y) = x² − y²', fn: (x,y) => x*x - y*y,
+    gx: (x,y) => 2*x, gy: (x,y) => -2*y,
+    cMin: -8, cMax: 8, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+  { expr: 'xy', label: 'φ(x,y) = xy', fn: (x,y) => x*y,
+    gx: (x,y) => y, gy: (x,y) => x,
+    cMin: -4, cMax: 4, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+  { expr: 'sin(x) + sin(y)', label: 'φ(x,y) = sin(x) + sin(y)', fn: (x,y) => Math.sin(x) + Math.sin(y),
+    gx: (x,y) => Math.cos(x), gy: (x,y) => Math.cos(y),
+    cMin: -2, cMax: 2, cDef: 0.5, xMin: -6, xMax: 6, yMin: -6, yMax: 6 },
+  { expr: 'sin(xy)', label: 'φ(x,y) = sin(xy)', fn: (x,y) => Math.sin(x*y),
+    gx: (x,y) => y*Math.cos(x*y), gy: (x,y) => x*Math.cos(x*y),
+    cMin: -1, cMax: 1, cDef: 0.5, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+  { expr: 'x³ − 3xy²', label: 'φ(x,y) = x³ − 3xy²', fn: (x,y) => x*x*x - 3*x*y*y,
+    gx: (x,y) => 3*x*x - 3*y*y, gy: (x,y) => -6*x*y,
+    cMin: -8, cMax: 8, cDef: 2, xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
+  { expr: 'eˣ cos(y)', label: 'φ(x,y) = eˣ cos(y)', fn: (x,y) => Math.exp(x)*Math.cos(y),
+    gx: (x,y) => Math.exp(x)*Math.cos(y), gy: (x,y) => -Math.exp(x)*Math.sin(y),
+    cMin: -3, cMax: 3, cDef: 1, xMin: -1.5, xMax: 1.5, yMin: -4.8, yMax: 4.8 },
+  { expr: 'x² + 4y²', label: 'φ(x,y) = x² + 4y²', fn: (x,y) => x*x + 4*y*y,
+    gx: (x,y) => 2*x, gy: (x,y) => 8*y,
+    cMin: 0.01, cMax: 16, cDef: 2, xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+];
+
+// ========== 3D PRESETS ==========
+const presets3d = [
+  { expr: 'x² + y² + z²', label: 'φ(x,y,z) = x² + y² + z²', fn: (x,y,z) => x*x + y*y + z*z,
+    gx: (x,y,z) => 2*x, gy: (x,y,z) => 2*y, gz: (x,y,z) => 2*z,
+    cMin: 0.01, cMax: 9, cDef: 4, xMin: -3., xMax: 3., yMin: -3., yMax: 3., zMin: -3., zMax: 3. },
+  { expr: 'x² + y² − z²', label: 'φ(x,y,z) = x² + y² − z²', fn: (x,y,z) => x*x + y*y - z*z,
+    gx: (x,y,z) => 2*x, gy: (x,y,z) => 2*y, gz: (x,y,z) => -2*z,
+    cMin: -4, cMax: 3, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4, zMin: -3, zMax: 3 },
+  { expr: 'x² + y² − z', label: 'φ(x,y,z) = x² + y² − z', fn: (x,y,z) => x*x + y*y - z,
+    gx: (x,y,z) => 2*x, gy: (x,y,z) => 2*y, gz: (x,y,z) => -1,
+    cMin: -3.8, cMax: 3.8, cDef: 0, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -4, zMax: 4 },
+  { expr: 'xyz', label: 'φ(x,y,z) = xyz', fn: (x,y,z) => x*y*z,
+    gx: (x,y,z) => y*z, gy: (x,y,z) => x*z, gz: (x,y,z) => x*y,
+    cMin: -6, cMax: 6, cDef: 1, xMin: -3, xMax: 3, yMin: -3, yMax: 3, zMin: -3, zMax: 3 },
+  { expr: 'x² + y²/4 + z²/9', label: 'φ(x,y,z) = x² + y²/4 + z²/9', fn: (x,y,z) => x*x + y*y/4 + z*z/9,
+    gx: (x,y,z) => 2*x, gy: (x,y,z) => y/2, gz: (x,y,z) => 2*z/9,
+    cMin: 0.01, cMax: 2, cDef: 1, xMin: -4, xMax: 4, yMin: -4, yMax: 4, zMin: -4,
+    zMax: 4 },
+  { expr: 'sin(x) + sin(y) + sin(z)', label: 'φ(x,y,z) = sin(x)+sin(y)+sin(z)',
+    fn: (x,y,z) => Math.sin(x)+Math.sin(y)+Math.sin(z),
+    gx: (x,y,z) => Math.cos(x), gy: (x,y,z) => Math.cos(y), gz: (x,y,z) => Math.cos(z),
+    cMin: -2.99, cMax: 2.99, cDef: 0, xMin: -4, xMax: 4, yMin: -4, yMax: 4, zMin: -4, zMax: 4 },
+];
+
+function getPresets() { return state.dim === 2 ? presets2d : presets3d; }
+function getPreset() {
+  let p;
+  if (state.isCustom && state.customPreset) {
+    p = state.customPreset;
+  } else {
+    p = getPresets()[state.fnIndex];
+  }
+  if (!state.flipSign) return p;
+  // Return a flipped copy
+  if (state.dim === 2) {
+    return { ...p,
+      label: 'φ(x,y) = −(' + (state.isCustom ? state.customExpr : p.expr) + ')',
+      fn: (x, y) => -p.fn(x, y),
+      gx: (x, y) => -p.gx(x, y),
+      gy: (x, y) => -p.gy(x, y),
+    };
+  } else {
+    return { ...p,
+      label: 'φ(x,y,z) = −(' + (state.isCustom ? state.customExpr : p.expr) + ')',
+      fn: (x, y, z) => -p.fn(x, y, z),
+      gx: (x, y, z) => -p.gx(x, y, z),
+      gy: (x, y, z) => -p.gy(x, y, z),
+      gz: (x, y, z) => -p.gz(x, y, z),
+    };
+  }
+}
+
+// Cached field range for c slider
+let cMin = -1, cMax = 1;
+
+function computeCustomFieldRange() {
+  const p = getPreset();
+  let fmin = Infinity, fmax = -Infinity;
+  if (state.dim === 2) {
+    const n = 30;
+    for (let j = 0; j < n; j++)
+      for (let i = 0; i < n; i++) {
+        const x = p.xMin + (p.xMax - p.xMin) * i / (n - 1);
+        const y = p.yMin + (p.yMax - p.yMin) * j / (n - 1);
+        const v = p.fn(x, y);
+        if (isFinite(v)) { if (v < fmin) fmin = v; if (v > fmax) fmax = v; }
+      }
+  } else {
+    const n = 15;
+    for (let iz = 0; iz < n; iz++)
+      for (let iy = 0; iy < n; iy++)
+        for (let ix = 0; ix < n; ix++) {
+          const x = p.xMin + (p.xMax - p.xMin) * ix / (n - 1);
+          const y = p.yMin + (p.yMax - p.yMin) * iy / (n - 1);
+          const z = p.zMin + (p.zMax - p.zMin) * iz / (n - 1);
+          const v = p.fn(x, y, z);
+          if (isFinite(v)) { if (v < fmin) fmin = v; if (v > fmax) fmax = v; }
+        }
+  }
+  if (!isFinite(fmin)) { fmin = -1; fmax = 1; }
+  if (fmax - fmin < 1e-10) { fmin -= 1; fmax += 1; }
+  cMin = fmin;
+  cMax = fmax;
+}
+
+function mapC(raw) {
+  return cMin + (raw / 600) * (cMax - cMin);
+}
+
+function cSliderFromValue(c) {
+  return Math.round((c - cMin) / (cMax - cMin) * 600);
+}
+
+// ========== DOM ==========
+const panel = document.getElementById('panel');
+const collapseBtn = document.getElementById('collapseBtn');
+const openBtn = document.getElementById('openBtn');
+const fnSelect = document.getElementById('fnSelect');
+const customInput = document.getElementById('customExpr');
+const errorMsg = document.getElementById('errorMsg');
+const cValue = document.getElementById('cValue');
+const cSlider = document.getElementById('cSlider');
+const toggleGradAll = document.getElementById('toggleGradAll');
+const toggleGradPt = document.getElementById('toggleGradPt');
+const toggleTangent = document.getElementById('toggleTangent');
+const toggleLabels = document.getElementById('toggleLabels');
+const toggleFlip = document.getElementById('toggleFlip');
+const toggleHeatmap = document.getElementById('toggleHeatmap');
+const toggleContours = document.getElementById('toggleContours');
+const colourbarWrap = document.getElementById('colourbarWrap');
+const cbCanvas = document.getElementById('colourbar');
+const canvasArea = document.getElementById('canvasArea');
+const canvas2d = document.getElementById('canvas2d');
+const ctx = canvas2d.getContext('2d');
+const container3d = document.getElementById('container3d');
+const currentFnLabel = document.getElementById('currentFnLabel');
+const infoBox = document.getElementById('infoBox');
+const hintOverlay = document.getElementById('hintOverlay');
+
+// ========== SIDEBAR ==========
+collapseBtn.addEventListener('click', () => {
+  panel.classList.add('collapsed');
+  setTimeout(() => { resize(); update(); }, 320);
+});
+openBtn.addEventListener('click', () => {
+  panel.classList.remove('collapsed');
+  setTimeout(() => { resize(); update(); }, 320);
+});
+
+// Saved state per dimension
+const savedDimState = { 2: null, 3: null };
+
+function saveDimState() {
+  savedDimState[state.dim] = {
+    fnIndex: state.fnIndex,
+    cParam: state.cParam,
+    tangentPoint: state.tangentPoint,
+    levelPoints: state.levelPoints,
+    isCustom: state.isCustom,
+    customPreset: state.customPreset,
+    customExpr: state.customExpr,
+    flipSign: state.flipSign,
+    cachedcMin: cMin,
+    cachedcMax: cMax,
+    customInputValue: customInput.value,
+  };
+}
+
+function restoreDimState(d) {
+  const s = savedDimState[d];
+  if (!s) return false;
+  state.fnIndex = s.fnIndex;
+  state.cParam = s.cParam;
+  state.tangentPoint = s.tangentPoint;
+  state.levelPoints = s.levelPoints;
+  state.isCustom = s.isCustom;
+  state.customPreset = s.customPreset;
+  state.customExpr = s.customExpr;
+  state.flipSign = s.flipSign;
+  cMin = s.cachedcMin;
+  cMax = s.cachedcMax;
+  customInput.value = s.customInputValue || '';
+  toggleFlip.classList.toggle('active', state.flipSign);
+  fnSelect.value = state.isCustom ? '' : state.fnIndex;
+  cSlider.value = state.cParam;
+  const c = mapC(state.cParam);
+  cValue.textContent = c.toFixed(2);
+  currentFnLabel.textContent = getPreset().label;
+  return true;
+}
+
+document.querySelectorAll('[data-dim]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const d = parseInt(btn.dataset.dim);
+    if (d === state.dim) return;
+    // Save current dimension state
+    saveDimState();
+    state.dim = d;
+    document.querySelectorAll('[data-dim]').forEach(b =>
+      b.classList.toggle('active', b === btn));
+    customInput.placeholder = d === 2 ? 'e.g. x^2 + y^2' : 'e.g. x^2 + y^2 + z^2';
+    populateSelect();
+    // Try to restore saved state for this dimension
+    if (!restoreDimState(d)) {
+      state.fnIndex = 0;
+      state.isCustom = false;
+      state.flipSign = false;
+      toggleFlip.classList.remove('active');
+      customInput.value = '';
+      errorMsg.textContent = '';
+      customInput.classList.remove('error');
+      resetForPreset();
+    }
+    switchMode();
+    update();
+  });
+});
+
+function populateSelect() {
+  fnSelect.innerHTML = '';
+  getPresets().forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = p.expr;
+    fnSelect.appendChild(opt);
+  });
+  fnSelect.value = state.fnIndex;
+}
+
+fnSelect.addEventListener('change', () => {
+  state.fnIndex = parseInt(fnSelect.value);
+  state.isCustom = false;
+  customInput.value = '';
+  errorMsg.textContent = '';
+  customInput.classList.remove('error');
+  resetForPreset();
+  update();
+});
+
+// ========== EXPRESSION PARSER ==========
+function parseExpr(expr) {
+  let e = expr
+    .replace(/\^/g, '**')
+    .replace(/\u03C0/g, 'Math.PI')
+    .replace(/pi\b/gi, 'Math.PI')
+    .replace(/\be\b/g, 'Math.E')
+    .replace(/\bsin\b/g, 'Math.sin')
+    .replace(/\bcos\b/g, 'Math.cos')
+    .replace(/\btan\b/g, 'Math.tan')
+    .replace(/\bexp\b/g, 'Math.exp')
+    .replace(/\blog\b/g, 'Math.log')
+    .replace(/\bln\b/g, 'Math.log')
+    .replace(/\bsqrt\b/g, 'Math.sqrt')
+    .replace(/\babs\b/g, 'Math.abs')
+    .replace(/\bcosh\b/g, 'Math.cosh')
+    .replace(/\bsinh\b/g, 'Math.sinh')
+    .replace(/\btanh\b/g, 'Math.tanh')
+    .replace(/\basin\b/g, 'Math.asin')
+    .replace(/\bacos\b/g, 'Math.acos')
+    .replace(/\batan2?\b/g, 'Math.atan2');
+  return e;
+}
+
+function makeCustomPreset(expr, dim) {
+  const parsed = parseExpr(expr);
+  if (dim === 2) {
+    const fn = new Function('x', 'y', `"use strict"; return (${parsed});`);
+    // Test
+    const test = fn(1, 1);
+    if (typeof test !== 'number' || !isFinite(test)) throw new Error('Invalid');
+    // Numerical gradient
+    const h = 1e-6;
+    const gx = (x, y) => (fn(x + h, y) - fn(x - h, y)) / (2 * h);
+    const gy = (x, y) => (fn(x, y + h) - fn(x, y - h)) / (2 * h);
+    // Estimate range for c slider
+    let fmin = Infinity, fmax = -Infinity;
+    for (let i = 0; i < 20; i++) {
+      for (let j = 0; j < 20; j++) {
+        const x = -3 + 6 * i / 19, y = -3 + 6 * j / 19;
+        const v = fn(x, y);
+        if (isFinite(v)) { if (v < fmin) fmin = v; if (v > fmax) fmax = v; }
+      }
+    }
+    if (!isFinite(fmin)) { fmin = -4; fmax = 4; }
+    const margin = (fmax - fmin) * 0.1 || 1;
+    return { expr: expr, label: 'φ = ' + expr, fn, gx, gy,
+      cMin: fmin - margin, cMax: fmax + margin, cDef: (fmin + fmax) / 2,
+      xMin: -4, xMax: 4, yMin: -4, yMax: 4 };
+  } else {
+    const fn = new Function('x', 'y', 'z', `"use strict"; return (${parsed});`);
+    const test = fn(1, 1, 1);
+    if (typeof test !== 'number' || !isFinite(test)) throw new Error('Invalid');
+    const h = 1e-6;
+    const gx = (x, y, z) => (fn(x + h, y, z) - fn(x - h, y, z)) / (2 * h);
+    const gy = (x, y, z) => (fn(x, y + h, z) - fn(x, y - h, z)) / (2 * h);
+    const gz = (x, y, z) => (fn(x, y, z + h) - fn(x, y, z - h)) / (2 * h);
+    let fmin = Infinity, fmax = -Infinity;
+    for (let i = 0; i < 10; i++)
+      for (let j = 0; j < 10; j++)
+        for (let k = 0; k < 10; k++) {
+          const x = -3 + 6 * i / 9, y = -3 + 6 * j / 9, z = -3 + 6 * k / 9;
+          const v = fn(x, y, z);
+          if (isFinite(v)) { if (v < fmin) fmin = v; if (v > fmax) fmax = v; }
+        }
+    if (!isFinite(fmin)) { fmin = -4; fmax = 4; }
+    const margin = (fmax - fmin) * 0.1 || 1;
+    return { expr: expr, label: 'φ = ' + expr, fn, gx, gy, gz,
+      cMin: fmin - margin, cMax: fmax + margin, cDef: (fmin + fmax) / 2,
+      xMin: -3.5, xMax: 3.5, yMin: -3.5, yMax: 3.5, zMin: -3.5, zMax: 3.5 };
+  }
+}
+
+customInput.addEventListener('input', () => {
+  const val = customInput.value.trim();
+  if (!val) {
+    errorMsg.textContent = '';
+    customInput.classList.remove('error');
+    if (state.isCustom) {
+      state.isCustom = false;
+      state.fnIndex = 0;
+      fnSelect.value = 0;
+      resetForPreset();
+      update();
+    }
+    return;
+  }
+  try {
+    const preset = makeCustomPreset(val, state.dim);
+    state.customFn = preset.fn;
+    state.customGx = preset.gx;
+    state.customGy = preset.gy;
+    if (state.dim === 3) state.customGz = preset.gz;
+    state.customExpr = val;
+    state.customPreset = preset;
+    state.isCustom = true;
+    errorMsg.textContent = '';
+    customInput.classList.remove('error');
+    fnSelect.value = '';
+    resetForPreset();
+    update();
+  } catch (e) {
+    errorMsg.textContent = 'Invalid expression';
+    customInput.classList.add('error');
+  }
+});
+
+function resetForPreset() {
+  const p = getPreset();
+  state.tangentPoint = null;
+  state.levelPoints = [];
+  hintOverlay.style.opacity = '1';
+  hintOverlay.style.display = '';
+  currentFnLabel.textContent = p.label;
+  if (state.isCustom && state.customPreset) {
+      computeCustomFieldRange();
+      // Start slider at midpoint of field range
+      const midC = (cMin + cMax) / 2;
+      const rawC = cSliderFromValue(midC);
+      cValue.textContent = midC.toFixed(2);
+      cSlider.value = rawC;
+      state.cParam = rawC;
+  }
+  else
+  {
+  if (state.flipSign) 
+  {
+      cMin = -p.cMax;
+      cMax = -p.cMin;
+      const rawC = cSliderFromValue(-p.cDef);
+      const c = -p.cDef;
+      cValue.textContent = c.toFixed(2);
+      cSlider.value = rawC;
+      state.cParam = rawC;
+  }
+  else
+  {
+      cMin = p.cMin;
+      cMax = p.cMax;
+      const rawC = cSliderFromValue(p.cDef);
+      const c = p.cDef;
+      cValue.textContent = c.toFixed(2);
+      cSlider.value = rawC;
+      state.cParam = rawC;
+  }
+  }
+}
+
+cSlider.addEventListener('input', () => {
+  state.cParam = parseInt(cSlider.value);
+  const c = mapC(state.cParam);
+  cValue.textContent = c.toFixed(2);
+  // Keep tangentPoint — it will be snapped to the new level set in draw2D/update3D
+  state.levelPoints = [];
+  update();
+});
+
+function wireToggle(el, key) {
+  el.addEventListener('click', () => {
+    state[key] = !state[key];
+    el.classList.toggle('active', state[key]);
+    update();
+  });
+}
+wireToggle(toggleGradAll, 'showGradAll');
+wireToggle(toggleGradPt, 'showGradPt');
+wireToggle(toggleTangent, 'showTangent');
+wireToggle(toggleLabels, 'showLabels');
+wireToggle(toggleHeatmap, 'showHeatmap');
+wireToggle(toggleContours, 'showContours');
+
+document.querySelectorAll('[data-scheme]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.scheme = btn.dataset.scheme;
+    document.querySelectorAll('[data-scheme]').forEach(b => b.classList.toggle('active', b === btn));
+    update();
+  });
+});
+
+toggleFlip.addEventListener('click', () => {
+  const oldC = mapC(state.cParam);
+  state.flipSign = !state.flipSign;
+  toggleFlip.classList.toggle('active', state.flipSign);
+  // Swap field range
+  const tmp = cMin;
+  cMin = -cMax;
+  cMax = -tmp;
+  // Set c to -oldC
+  const rawC = cSliderFromValue(-oldC);
+  cSlider.value = Math.max(0, Math.min(600, rawC));
+  const c = -oldC;
+  cValue.textContent = c.toFixed(2);
+  state.cParam = parseInt(cSlider.value);
+  state.levelPoints = [];
+  currentFnLabel.textContent = getPreset().label;
+  update();
+});
+
+// ========== 2D RENDERING ==========
+let plotOx, plotOy, plotSize;
+let XMIN, XMAX, YMIN, YMAX;
+
+function resize() {
+  const rect = canvasArea.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas2d.width = rect.width * dpr;
+  canvas2d.height = rect.height * dpr;
+  canvas2d.style.width = rect.width + 'px';
+  canvas2d.style.height = rect.height + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (renderer) {
+    renderer.setSize(rect.width, rect.height);
+    camera.aspect = rect.width / rect.height;
+    camera.updateProjectionMatrix();
+  }
+}
+
+function toPixelX(x) { return plotOx + (x - XMIN) / (XMAX - XMIN) * plotSize; }
+function toPixelY(y) { return plotOy + (1 - (y - YMIN) / (YMAX - YMIN)) * plotSize; }
+function toMathX(px) { return XMIN + (px - plotOx) / plotSize * (XMAX - XMIN); }
+function toMathY(py) { return YMIN + (1 - (py - plotOy) / plotSize) * (YMAX - YMIN); }
+
+function computeLevelCurve2D() {
+  const p = getPreset();
+  const c = mapC(state.cParam);
+  XMIN = p.xMin; XMAX = p.xMax; YMIN = p.yMin; YMAX = p.yMax;
+  const res = 300;
+  const segments = [];
+
+  // Marching squares
+  for (let j = 0; j < res; j++) {
+    for (let i = 0; i < res; i++) {
+      const x0 = XMIN + (XMAX - XMIN) * i / res;
+      const x1 = XMIN + (XMAX - XMIN) * (i + 1) / res;
+      const y0 = YMIN + (YMAX - YMIN) * j / res;
+      const y1 = YMIN + (YMAX - YMIN) * (j + 1) / res;
+      const v00 = p.fn(x0, y0) - c;
+      const v10 = p.fn(x1, y0) - c;
+      const v01 = p.fn(x0, y1) - c;
+      const v11 = p.fn(x1, y1) - c;
+      const b00 = v00 >= 0 ? 1 : 0;
+      const b10 = v10 >= 0 ? 1 : 0;
+      const b01 = v01 >= 0 ? 1 : 0;
+      const b11 = v11 >= 0 ? 1 : 0;
+      const cell = b00 | (b10 << 1) | (b11 << 2) | (b01 << 3);
+      if (cell === 0 || cell === 15) continue;
+
+      const interp = (va, vb) => Math.max(0, Math.min(1, -va / (vb - va + 1e-30)));
+      const top    = { x: x0 + interp(v00, v10) * (x1 - x0), y: y0 };
+      const right  = { x: x1, y: y0 + interp(v10, v11) * (y1 - y0) };
+      const bottom = { x: x0 + interp(v01, v11) * (x1 - x0), y: y1 };
+      const left   = { x: x0, y: y0 + interp(v00, v01) * (y1 - y0) };
+
+      const segs = [];
+      switch(cell) {
+        case 1: case 14: segs.push([left, top]); break;
+        case 2: case 13: segs.push([top, right]); break;
+        case 3: case 12: segs.push([left, right]); break;
+        case 4: case 11: segs.push([right, bottom]); break;
+        case 5: segs.push([left, top], [right, bottom]); break;
+        case 6: case 9: segs.push([top, bottom]); break;
+        case 7: case 8: segs.push([left, bottom]); break;
+        case 10: segs.push([top, right], [left, bottom]); break;
+      }
+      for (const s of segs) segments.push(s);
+    }
+  }
+
+  // Chain segments into ordered points for parametric traversal
+  const points = chainSegments(segments);
+  state.levelPoints = points;
+  return { segments, points };
+}
+
+function chainSegments(segments) {
+  if (segments.length === 0) return [];
+  // Collect midpoints of all segments as fallback ordering
+  const pts = [];
+  for (const s of segments) {
+    pts.push({ x: (s[0].x + s[1].x) / 2, y: (s[0].y + s[1].y) / 2 });
+  }
+
+  // Sort points by angle around centroid for rough ordering
+  if (pts.length < 2) return pts;
+  let cx = 0, cy = 0;
+  for (const p of pts) { cx += p.x; cy += p.y; }
+  cx /= pts.length; cy /= pts.length;
+  pts.sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+
+  // Remove near-duplicate points
+  const filtered = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - filtered[filtered.length-1].x;
+    const dy = pts[i].y - filtered[filtered.length-1].y;
+    if (dx*dx + dy*dy > 1e-10) filtered.push(pts[i]);
+  }
+  return filtered;
+}
+
+// ========== COLOUR MAPS ==========
+const colourMaps = {
+  palette1: [
+    [0.267*1.5,0.004*1.5,0.329*1.5],[0.283*1.5,0.141*1.5,0.458*1.5],[0.254,0.265,0.530],
+    [0.207,0.372,0.553],[0.164,0.471,0.558],[0.128,0.567,0.551],
+    [0.134,0.658,0.517],[0.267,0.749,0.441],[0.478,0.821,0.318],
+    [0.741,0.873,0.150],[0.993,0.906,0.144]
+  ],
+  palette2: [
+    [0.100,0.060,0.628],[0.298,0.010,0.633],[0.492,0.012,0.658],
+    [0.659,0.054,0.604],[0.798,0.143,0.497],[0.899,0.261,0.383],
+    [0.964,0.395,0.275],[0.993,0.545,0.165],[0.983,0.706,0.073],
+    [0.930,0.876,0.122],[0.940,0.975,0.131]
+  ],
+  palette3: [
+    [52/255,107/255,255/255],[4/255,138/255,129/255],[6/255,214/255,160/255],
+    [224/255,176/255,213/255],[229/255,99/255,153/255],[0.8,0.9,0.12]
+  ]
+};
+
+function sampleColourMap(name, t) {
+  const stops = colourMaps[name];
+  t = Math.max(0, Math.min(1, t));
+  const idx = t * (stops.length - 1);
+  const i = Math.floor(idx);
+  const f = idx - i;
+  if (i >= stops.length - 1) return stops[stops.length - 1];
+  return [
+    stops[i][0] + f * (stops[i+1][0] - stops[i][0]),
+    stops[i][1] + f * (stops[i+1][1] - stops[i][1]),
+    stops[i][2] + f * (stops[i+1][2] - stops[i][2]),
+  ];
+}
+
+function colourToCSS(rgb) {
+  return `rgb(${Math.round(rgb[0]*255)},${Math.round(rgb[1]*255)},${Math.round(rgb[2]*255)})`;
+}
+
+function computeField(p, res) {
+  const data = new Float64Array(res * res);
+  let fmin = Infinity, fmax = -Infinity;
+  for (let j = 0; j < res; j++) {
+    const y = YMIN + (YMAX - YMIN) * j / (res - 1);
+    for (let i = 0; i < res; i++) {
+      const x = XMIN + (XMAX - XMIN) * i / (res - 1);
+      const v = p.fn(x, y);
+      data[j * res + i] = v;
+      if (isFinite(v) && v < fmin) fmin = v;
+      if (isFinite(v) && v > fmax) fmax = v;
+    }
+  }
+  return { data, fmin, fmax, res };
+}
+
+function drawColourbar(fmin, fmax) {
+  const cbCtx = cbCanvas.getContext('2d');
+  for (let j = 0; j < 200; j++) {
+    const t = 1 - j / 199;
+    const rgb = sampleColourMap(state.scheme, t);
+    cbCtx.fillStyle = colourToCSS(rgb);
+    cbCtx.fillRect(0, j, 16, 1);
+  }
+  colourbarWrap.style.display = 'flex';
+}
+
+function draw2D() {
+  const rect = canvasArea.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const p = getPreset();
+  XMIN = p.xMin; XMAX = p.xMax; YMIN = p.yMin; YMAX = p.yMax;
+
+  // Square plot area matching reference style
+  const size = Math.min(w, h) * 0.65;
+  const ox = (w - size) / 2;
+  const oy = (h - size) / 2;
+
+  // Coordinate transforms (y correctly oriented: up = positive)
+  const tpx = x => ox + (x - XMIN) / (XMAX - XMIN) * size;
+  const tpy = y => oy + (1 - (y - YMIN) / (YMAX - YMIN)) * size;
+  const tmx = px => XMIN + (px - ox) / size * (XMAX - XMIN);
+  const tmy = py => YMIN + (1 - (py - oy) / size) * (YMAX - YMIN);
+
+  // Store for click handler
+  window._tpx = tpx; window._tpy = tpy;
+  window._tmx = tmx; window._tmy = tmy;
+  window._plotOx = ox; window._plotOy = oy;
+  window._plotW = size; window._plotH = size;
+
+  const c = mapC(state.cParam);
+
+  // Compute field for heatmap/contours
+  let field = null;
+  if (state.showHeatmap || state.showContours) {
+    const hmRes = state.showHeatmap ? Math.min(300, Math.round(size)) : 200;
+    field = computeField(p, hmRes);
+  }
+
+  // Draw heatmap
+  if (state.showHeatmap && field) {
+    const res = field.res;
+    const range = field.fmax - field.fmin || 1;
+    const imgData = ctx.createImageData(res, res);
+    for (let j = 0; j < res; j++) {
+      for (let i = 0; i < res; i++) {
+        const v = field.data[j * res + i];
+        const t = (v - field.fmin) / range;
+        const rgb = sampleColourMap(state.scheme, t);
+        const idx = ((res - 1 - j) * res + i) * 4;
+        imgData.data[idx]   = Math.round(rgb[0] * 255);
+        imgData.data[idx+1] = Math.round(rgb[1] * 255);
+        imgData.data[idx+2] = Math.round(rgb[2] * 255);
+        imgData.data[idx+3] = 255;
+      }
+    }
+    const offscreen = document.createElement('canvas');
+    offscreen.width = res; offscreen.height = res;
+    offscreen.getContext('2d').putImageData(imgData, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(offscreen, ox, oy, size, size);
+  } else if (!state.showContours) {
+    // Dark background when neither heatmap nor contours
+    ctx.fillStyle = '#12141c';
+    ctx.fillRect(ox, oy, size, size);
+  }
+
+  // Draw contour lines
+  if (state.showContours && field) {
+    if (!state.showHeatmap) {
+      ctx.fillStyle = '#12141c';
+      ctx.fillRect(ox, oy, size, size);
+    }
+    const res = field.res;
+    const range = field.fmax - field.fmin || 1;
+    const nLevels = 15;
+    for (let l = 0; l < nLevels; l++) {
+      const threshold = field.fmin + (l + 1) * range / (nLevels + 1);
+      const t = (threshold - field.fmin) / range;
+      const rgb = sampleColourMap(state.scheme, t);
+      ctx.strokeStyle = state.showHeatmap
+        ? 'rgba(255,255,255,0.5)'
+        : colourToCSS(rgb);
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let j = 0; j < res - 1; j++) {
+        for (let i = 0; i < res - 1; i++) {
+          const v00 = field.data[j * res + i];
+          const v10 = field.data[j * res + i + 1];
+          const v01 = field.data[(j+1) * res + i];
+          const v11 = field.data[(j+1) * res + i + 1];
+          const b00 = v00 >= threshold ? 1 : 0;
+          const b10 = v10 >= threshold ? 1 : 0;
+          const b01 = v01 >= threshold ? 1 : 0;
+          const b11 = v11 >= threshold ? 1 : 0;
+          const cell = b00 | (b10 << 1) | (b11 << 2) | (b01 << 3);
+          if (cell === 0 || cell === 15) continue;
+          const cpx = (cx) => ox + cx * size / (res - 1);
+          const cpy = (cy) => oy + (res - 1 - cy) * size / (res - 1);
+          const interp = (va, vb) => (threshold - va) / (vb - va);
+          const top    = [i + interp(v00, v10), j];
+          const right  = [i + 1, j + interp(v10, v11)];
+          const bottom = [i + interp(v01, v11), j + 1];
+          const left   = [i, j + interp(v00, v01)];
+          const segs = [];
+          switch(cell) {
+            case 1: case 14: segs.push([left, top]); break;
+            case 2: case 13: segs.push([top, right]); break;
+            case 3: case 12: segs.push([left, right]); break;
+            case 4: case 11: segs.push([right, bottom]); break;
+            case 5: segs.push([left, top], [right, bottom]); break;
+            case 6: case 9: segs.push([top, bottom]); break;
+            case 7: case 8: segs.push([left, bottom]); break;
+            case 10: segs.push([top, right], [left, bottom]); break;
+          }
+          for (const seg of segs) {
+            ctx.moveTo(cpx(seg[0][0]), cpy(seg[0][1]));
+            ctx.lineTo(cpx(seg[1][0]), cpy(seg[1][1]));
+          }
+        }
+      }
+      ctx.stroke();
+    }
+  }
+
+  if (!state.showHeatmap && !state.showContours) {
+    colourbarWrap.style.display = 'none';
+  }
+  else
+  {
+    drawColourbar(field.fmin, field.fmax);
+  }
+
+  // Plot border
+  ctx.strokeStyle = '#3a3d4d';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(ox, oy, size, size);
+
+  // Axis labels (x, y only — no ticks)
+  ctx.fillStyle = '#8b8fa3';
+  ctx.font = '500 24px system-ui, -apple-system, "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('x', ox + size / 2, oy + size + 20);
+  ctx.fillText('y', ox - 30, oy + size / 2 - 10);
+
+  // Level curve (the selected φ = c)
+  const curveData = computeLevelCurve2D();
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (const s of curveData.segments) {
+    ctx.moveTo(tpx(s[0].x), tpy(s[0].y));
+    ctx.lineTo(tpx(s[1].x), tpy(s[1].y));
+  }
+  ctx.stroke();
+
+  if (state.levelPoints.length === 0) return;
+
+  // Snap tangent point to nearest point on current level set
+  if (state.tangentPoint) {
+    let bestDist = Infinity, bestPt = null;
+    const old = state.tangentPoint;
+    for (const pt of state.levelPoints) {
+      const d = (pt.x - old.x) ** 2 + (pt.y - old.y) ** 2;
+      if (d < bestDist) { bestDist = d; bestPt = pt; }
+    }
+    if (bestPt) state.tangentPoint = bestPt;
+  } else {
+    const midIdx = Math.floor(state.levelPoints.length / 2);
+    state.tangentPoint = state.levelPoints[midIdx];
+    hintOverlay.style.opacity = '0';
+  }
+  const tp = state.tangentPoint;
+  if (!tp) return;
+
+  // Gradient at tangent point
+  const gradX = p.gx(tp.x, tp.y);
+  const gradY = p.gy(tp.x, tp.y);
+  const gradMag = Math.sqrt(gradX * gradX + gradY * gradY);
+
+  // Gradient arrows along curve
+  if (state.showGradAll) {
+    const step = Math.max(1, Math.floor(state.levelPoints.length / 30));
+    const arrowLen = size * 0.06;
+    ctx.save();
+    for (let i = 0; i < state.levelPoints.length; i += step) {
+      const pt = state.levelPoints[i];
+      const gxi = p.gx(pt.x, pt.y);
+      const gyi = p.gy(pt.x, pt.y);
+      const mg = Math.sqrt(gxi*gxi + gyi*gyi);
+      if (mg < 1e-10) continue;
+      const nx = gxi / mg, ny = gyi / mg;
+      const px1 = tpx(pt.x), py1 = tpy(pt.y);
+      const px2 = px1 + nx * arrowLen;
+      const py2 = py1 - ny * arrowLen;
+      drawArrow(ctx, px1, py1, px2, py2, 'rgba(255,255,255,0.8)', 1.8, 7);
+    }
+    ctx.restore();
+  }
+
+  // Gradient at tangent point
+  if (state.showGradPt && gradMag > 1e-10) {
+    const arrowLen = size * 0.18;
+    const nx = gradX / gradMag, ny = gradY / gradMag;
+    const px1 = tpx(tp.x), py1 = tpy(tp.y);
+    const px2 = px1 + nx * arrowLen;
+    const py2 = py1 - ny * arrowLen;
+    drawArrow(ctx, px1, py1, px2, py2, '#ffffff', 3, 10);
+
+    if (state.showLabels) {
+      ctx.font = '500 20px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Place label centre 25% past the arrow tip along the arrow direction
+      const lblGx = px2 + (px2 - px1) * 0.25;
+      const lblGy = py2 + (py2 - py1) * 0.25;
+      ctx.fillText('∇φ', lblGx, lblGy);
+    }
+  }
+
+  // Tangent line
+  if (state.showTangent && gradMag > 1e-10) {
+    const tx = -gradY / gradMag, ty = gradX / gradMag;
+    const ext = Math.max(XMAX - XMIN, YMAX - YMIN) * 0.4;
+    const x1 = tp.x - tx * ext, y1 = tp.y - ty * ext;
+    const x2 = tp.x + tx * ext, y2 = tp.y + ty * ext;
+    ctx.strokeStyle = '#64b5f6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    ctx.moveTo(tpx(x1), tpy(y1));
+    ctx.lineTo(tpx(x2), tpy(y2));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Generic point on tangent line
+    const genT = -0.525;
+    const gp = { x: tp.x + tx * ext * genT, y: tp.y + ty * ext * genT };
+
+    // Right angle symbol
+    if (state.showGradPt && gradMag > 1e-10) {
+      const symbolSize = 12;
+      const nxDir = gradX / gradMag, nyDir = gradY / gradMag;
+      const scaleF = size / (XMAX - XMIN);
+      const txPxS = -tx * scaleF, tyPxS = ty * scaleF;
+      const nxPxS = nxDir * scaleF, nyPxS = -nyDir * scaleF;
+      const tLen = Math.sqrt(txPxS*txPxS + tyPxS*tyPxS);
+      const nLen = Math.sqrt(nxPxS*nxPxS + nyPxS*nyPxS);
+      if (tLen > 0 && nLen > 0) {
+        const txN = txPxS / tLen * symbolSize;
+        const tyN = tyPxS / tLen * symbolSize;
+        const nxN = nxPxS / nLen * symbolSize;
+        const nyN = nyPxS / nLen * symbolSize;
+        const cpx = tpx(tp.x), cpy = tpy(tp.y);
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.moveTo(cpx + txN, cpy + tyN);
+        ctx.lineTo(cpx + txN + nxN, cpy + tyN + nyN);
+        ctx.lineTo(cpx + nxN, cpy + nyN);
+        ctx.stroke();
+      }
+    }
+
+    // Labels positioned along the continuation of the line segment
+    if (state.showLabels) {
+      ctx.font = '500 20px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      const tpPx = tpx(tp.x), tpPy = tpy(tp.y);
+      const gpPx = tpx(gp.x), gpPy = tpy(gp.y);
+      const segLen = Math.sqrt((gpPx - tpPx) ** 2 + (gpPy - tpPy) ** 2) || 1;
+      const dxSeg = (gpPx - tpPx) / segLen;
+      const dySeg = (gpPy - tpPy) / segLen;
+      const offset = 0.225 * segLen;
+      // (x₀,y₀) label: continue past tp in direction away from gp
+      const lbl0x = tpPx - dxSeg * offset;
+      const lbl0y = tpPy - dySeg * offset;
+      ctx.fillStyle = '#e53935';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('(x₀, y₀)', lbl0x, lbl0y);
+      // (x,y) label: continue past gp in direction away from tp
+      const lbl1x = gpPx + dxSeg * offset;
+      const lbl1y = gpPy + dySeg * offset;
+      ctx.fillStyle = '#64b5f6';
+      ctx.fillText('(x, y)', lbl1x, lbl1y);
+
+      ctx.fillStyle = '#64b5f6';
+      ctx.beginPath();
+      ctx.arc(tpx(gp.x), tpy(gp.y), 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tangent point vector arrow
+      // make it fall slightly short of endpoint
+      const xfinal = tpx(tp.x) + (tpx(gp.x)-tpx(tp.x))*0.95
+      const yfinal = tpy(tp.y) + (tpy(gp.y)-tpy(tp.y))*0.95
+      drawArrow(ctx, tpx(tp.x), tpy(tp.y), xfinal, yfinal, '#64b5f6', 3, 10);
+
+    }
+  }
+
+
+  // Tangent point dot
+  ctx.fillStyle = '#e53935';
+  ctx.beginPath();
+  ctx.arc(tpx(tp.x), tpy(tp.y), 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  infoBox.style.display = 'none';
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, colour, lw, headLen) {
+  ctx.save();
+  ctx.strokeStyle = colour;
+  ctx.fillStyle = colour;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const ha = 0.45;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - ha), y2 - headLen * Math.sin(angle - ha));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + ha), y2 - headLen * Math.sin(angle + ha));
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+// 2D click handler
+canvas2d.addEventListener('click', (e) => {
+  if (state.dim !== 2) return;
+  if (!window._tmx) return;
+  const rect = canvasArea.getBoundingClientRect();
+  const px = e.clientX - rect.left;
+  const py = e.clientY - rect.top;
+  const mx = window._tmx(px);
+  const my = window._tmy(py);
+
+  // Find closest level point
+  let bestDist = Infinity, bestPt = null, bestIdx = 0;
+  for (let i = 0; i < state.levelPoints.length; i++) {
+    const pt = state.levelPoints[i];
+    const d = (pt.x - mx) * (pt.x - mx) + (pt.y - my) * (pt.y - my);
+    if (d < bestDist) { bestDist = d; bestPt = pt; bestIdx = i; }
+  }
+  if (bestPt) {
+    // Check if close enough in pixel coords
+    const ppx = window._tpx(bestPt.x), ppy = window._tpy(bestPt.y);
+    const pixDist = Math.sqrt((ppx - px) * (ppx - px) + (ppy - py) * (ppy - py));
+    if (pixDist < 30) {
+      state.tangentPoint = bestPt;
+      hintOverlay.style.opacity = '0';
+      update();
+    }
+  }
+});
+
+// ========== MARCHING CUBES TABLE ==========
+const MC_TRI_TABLE = (function() {
+  const t = new Array(256);
+  t[0]=[];t[255]=[];
+  t[1]=[0,8,3];t[2]=[0,1,9];t[3]=[1,8,3,9,8,1];t[4]=[1,2,10];t[5]=[0,8,3,1,2,10];
+  t[6]=[9,2,10,0,2,9];t[7]=[2,8,3,2,10,8,10,9,8];t[8]=[3,11,2];t[9]=[0,11,2,8,11,0];
+  t[10]=[1,9,0,2,3,11];t[11]=[1,11,2,1,9,11,9,8,11];t[12]=[3,10,1,11,10,3];
+  t[13]=[0,10,1,0,8,10,8,11,10];t[14]=[3,9,0,3,11,9,11,10,9];t[15]=[9,8,10,10,8,11];
+  t[16]=[4,7,8];t[17]=[4,3,0,7,3,4];t[18]=[0,1,9,8,4,7];t[19]=[4,1,9,4,7,1,7,3,1];
+  t[20]=[1,2,10,8,4,7];t[21]=[3,4,7,3,0,4,1,2,10];t[22]=[9,2,10,9,0,2,8,4,7];
+  t[23]=[2,10,9,2,9,7,2,7,3,7,9,4];t[24]=[8,4,7,3,11,2];t[25]=[11,4,7,11,2,4,2,0,4];
+  t[26]=[9,0,1,8,4,7,2,3,11];t[27]=[4,7,11,9,4,11,9,11,2,9,2,1];
+  t[28]=[3,10,1,3,11,10,7,8,4];t[29]=[1,11,10,1,4,11,1,0,4,7,11,4];
+  t[30]=[4,7,8,9,0,11,9,11,10,11,0,3];t[31]=[4,7,11,4,11,9,9,11,10];
+  t[32]=[9,5,4];t[33]=[9,5,4,0,8,3];t[34]=[0,5,4,1,5,0];t[35]=[8,5,4,8,3,5,3,1,5];
+  t[36]=[1,2,10,9,5,4];t[37]=[3,0,8,1,2,10,4,9,5];t[38]=[5,2,10,5,4,2,4,0,2];
+  t[39]=[2,10,5,3,2,5,3,5,4,3,4,8];t[40]=[9,5,4,2,3,11];t[41]=[0,11,2,0,8,11,4,9,5];
+  t[42]=[0,5,4,0,1,5,2,3,11];t[43]=[2,1,5,2,5,8,2,8,11,4,8,5];
+  t[44]=[10,3,11,10,1,3,9,5,4];t[45]=[4,9,5,0,8,1,8,10,1,8,11,10];
+  t[46]=[5,4,0,5,0,11,5,11,10,11,0,3];t[47]=[5,4,8,5,8,10,10,8,11];
+  t[48]=[9,7,8,5,7,9];t[49]=[9,3,0,9,5,3,5,7,3];t[50]=[0,7,8,0,1,7,1,5,7];
+  t[51]=[1,5,3,3,5,7];t[52]=[9,7,8,9,5,7,10,1,2];t[53]=[10,1,2,9,5,0,5,3,0,5,7,3];
+  t[54]=[8,0,2,8,2,5,8,5,7,10,5,2];t[55]=[2,10,5,2,5,3,3,5,7];
+  t[56]=[7,9,5,7,8,9,3,11,2];t[57]=[9,5,7,9,7,2,9,2,0,2,7,11];
+  t[58]=[2,3,11,0,1,8,1,7,8,1,5,7];t[59]=[11,2,1,11,1,7,7,1,5];
+  t[60]=[9,5,8,8,5,7,10,1,3,10,3,11];t[61]=[5,7,0,5,0,9,7,11,0,1,0,10,11,10,0];
+  t[62]=[11,10,0,11,0,3,10,5,0,8,0,7,5,7,0];t[63]=[11,10,5,7,11,5];
+  t[64]=[10,6,5];t[65]=[0,8,3,5,10,6];t[66]=[9,0,1,5,10,6];t[67]=[1,8,3,1,9,8,5,10,6];
+  t[68]=[1,6,5,2,6,1];t[69]=[1,6,5,1,2,6,3,0,8];t[70]=[9,6,5,9,0,6,0,2,6];
+  t[71]=[5,9,8,5,8,2,5,2,6,3,2,8];t[72]=[2,3,11,10,6,5];t[73]=[11,0,8,11,2,0,10,6,5];
+  t[74]=[0,1,9,2,3,11,5,10,6];t[75]=[5,10,6,1,9,2,9,11,2,9,8,11];
+  t[76]=[6,3,11,6,5,3,5,1,3];t[77]=[0,8,11,0,11,5,0,5,1,5,11,6];
+  t[78]=[3,11,6,0,3,6,0,6,5,0,5,9];t[79]=[6,5,9,6,9,11,11,9,8];
+  t[80]=[5,10,6,4,7,8];t[81]=[4,3,0,4,7,3,6,5,10];t[82]=[1,9,0,5,10,6,8,4,7];
+  t[83]=[10,6,5,1,9,7,1,7,3,7,9,4];t[84]=[6,1,2,6,5,1,4,7,8];
+  t[85]=[1,2,5,5,2,6,3,0,4,3,4,7];t[86]=[8,4,7,9,0,5,0,6,5,0,2,6];
+  t[87]=[7,3,9,7,9,4,3,2,9,5,9,6,2,6,9];t[88]=[3,11,2,7,8,4,10,6,5];
+  t[89]=[5,10,6,4,7,2,4,2,0,2,7,11];t[90]=[0,1,9,4,7,8,2,3,11,5,10,6];
+  t[91]=[9,2,1,9,11,2,9,4,11,7,11,4,5,10,6];t[92]=[8,4,7,3,11,5,3,5,1,5,11,6];
+  t[93]=[5,1,11,5,11,6,1,0,11,7,11,4,0,4,11];t[94]=[0,5,9,0,6,5,0,3,6,11,6,3,8,4,7];
+  t[95]=[6,5,9,6,9,11,4,7,9,7,11,9];
+  t[96]=[10,4,9,6,4,10];t[97]=[4,10,6,4,9,10,0,8,3];t[98]=[10,0,1,10,6,0,6,4,0];
+  t[99]=[8,3,1,8,1,6,8,6,4,6,1,10];t[100]=[1,4,9,1,2,4,2,6,4];
+  t[101]=[3,0,8,1,2,9,2,4,9,2,6,4];t[102]=[0,2,4,4,2,6];t[103]=[8,3,2,8,2,4,4,2,6];
+  t[104]=[10,4,9,10,6,4,11,2,3];t[105]=[0,8,2,2,8,11,4,9,10,4,10,6];
+  t[106]=[3,11,2,0,1,6,0,6,4,6,1,10];t[107]=[6,4,1,6,1,10,4,8,1,2,1,11,8,11,1];
+  t[108]=[9,6,4,9,3,6,9,1,3,11,6,3];t[109]=[8,11,1,8,1,0,11,6,1,9,1,4,6,4,1];
+  t[110]=[3,11,6,3,6,0,0,6,4];t[111]=[6,4,8,11,6,8];
+  t[112]=[7,10,6,7,8,10,8,9,10];t[113]=[0,7,3,0,10,7,0,9,10,6,7,10];
+  t[114]=[10,6,7,1,10,7,1,7,8,1,8,0];t[115]=[10,6,7,10,7,1,1,7,3];
+  t[116]=[1,2,6,1,6,8,1,8,9,8,6,7];t[117]=[2,6,9,2,9,1,6,7,9,0,9,3,7,3,9];
+  t[118]=[7,8,0,7,0,6,6,0,2];t[119]=[7,3,2,6,7,2];
+  t[120]=[2,3,11,10,6,8,10,8,9,8,6,7];t[121]=[2,0,7,2,7,11,0,9,7,6,7,10,9,10,7];
+  t[122]=[1,8,0,1,7,8,1,10,7,6,7,10,2,3,11];t[123]=[11,2,1,11,1,7,10,6,1,6,7,1];
+  t[124]=[8,9,6,8,6,7,9,1,6,11,6,3,1,3,6];t[125]=[0,9,1,11,6,7];
+  t[126]=[7,8,0,7,0,6,3,11,0,11,6,0];t[127]=[7,11,6];
+  t[128]=[7,6,11];t[129]=[3,0,8,11,7,6];t[130]=[0,1,9,11,7,6];t[131]=[8,1,9,8,3,1,11,7,6];
+  t[132]=[10,1,2,6,11,7];t[133]=[1,2,10,3,0,8,6,11,7];t[134]=[2,9,0,2,10,9,6,11,7];
+  t[135]=[6,11,7,2,10,3,10,8,3,10,9,8];t[136]=[7,2,3,6,2,7];t[137]=[7,0,8,7,6,0,6,2,0];
+  t[138]=[2,7,6,2,3,7,0,1,9];t[139]=[1,6,2,1,8,6,1,9,8,8,7,6];
+  t[140]=[10,7,6,10,1,7,1,3,7];t[141]=[10,7,6,1,7,10,1,8,7,1,0,8];
+  t[142]=[0,3,7,0,7,10,0,10,9,6,10,7];t[143]=[7,6,10,7,10,8,8,10,9];
+  t[144]=[6,8,4,11,8,6];t[145]=[3,6,11,3,0,6,0,4,6];t[146]=[8,6,11,8,4,6,9,0,1];
+  t[147]=[9,4,6,9,6,3,9,3,1,11,3,6];t[148]=[6,8,4,6,11,8,2,10,1];
+  t[149]=[1,2,10,3,0,11,0,6,11,0,4,6];t[150]=[4,11,8,4,6,11,0,2,9,2,10,9];
+  t[151]=[10,9,3,10,3,2,9,4,3,11,3,6,4,6,3];t[152]=[8,2,3,8,4,2,4,6,2];
+  t[153]=[0,4,2,4,6,2];t[154]=[1,9,0,2,3,4,2,4,6,4,3,8];t[155]=[1,9,4,1,4,2,2,4,6];
+  t[156]=[8,1,3,8,6,1,8,4,6,6,10,1];t[157]=[10,1,0,10,0,6,6,0,4];
+  t[158]=[4,6,3,4,3,8,6,10,3,0,3,9,10,9,3];t[159]=[10,9,4,6,10,4];
+  t[160]=[4,9,5,7,6,11];t[161]=[0,8,3,4,9,5,11,7,6];t[162]=[5,0,1,5,4,0,7,6,11];
+  t[163]=[11,7,6,8,3,4,3,5,4,3,1,5];t[164]=[9,5,4,10,1,2,7,6,11];
+  t[165]=[6,11,7,1,2,10,0,8,3,4,9,5];t[166]=[7,6,11,5,4,10,4,2,10,4,0,2];
+  t[167]=[3,4,8,3,5,4,3,2,5,10,5,2,11,7,6];t[168]=[7,2,3,7,6,2,5,4,9];
+  t[169]=[9,5,4,0,8,6,0,6,2,6,8,7];t[170]=[3,6,2,3,7,6,1,5,0,5,4,0];
+  t[171]=[6,2,8,6,8,7,2,1,8,4,8,5,1,5,8];t[172]=[9,5,4,10,1,6,1,7,6,1,3,7];
+  t[173]=[1,6,10,1,7,6,1,0,7,8,7,0,9,5,4];t[174]=[4,0,10,4,10,5,0,3,10,6,10,7,3,7,10];
+  t[175]=[7,6,10,7,10,8,5,4,10,4,8,10];
+  t[176]=[6,9,5,6,11,9,11,8,9];t[177]=[3,6,11,0,6,3,0,5,6,0,9,5];
+  t[178]=[0,11,8,0,5,11,0,1,5,5,6,11];t[179]=[6,11,3,6,3,5,5,3,1];
+  t[180]=[1,2,10,9,5,11,9,11,8,11,5,6];t[181]=[0,11,3,0,6,11,0,9,6,5,6,9,1,2,10];
+  t[182]=[11,8,5,11,5,6,8,0,5,10,5,2,0,2,5];t[183]=[6,11,3,6,3,5,2,10,3,10,5,3];
+  t[184]=[5,8,9,5,2,8,5,6,2,3,8,2];t[185]=[9,5,6,9,6,0,0,6,2];
+  t[186]=[1,5,8,1,8,0,5,6,8,3,8,2,6,2,8];t[187]=[1,5,6,2,1,6];
+  t[188]=[1,3,6,1,6,10,3,8,6,5,6,9,8,9,6];t[189]=[10,1,0,10,0,6,9,5,0,5,6,0];
+  t[190]=[0,3,8,5,6,10];t[191]=[10,5,6];
+  t[192]=[11,5,10,7,5,11];t[193]=[11,5,10,11,7,5,8,3,0];t[194]=[5,11,7,5,10,11,1,9,0];
+  t[195]=[10,7,5,10,11,7,9,8,1,8,3,1];t[196]=[11,1,2,11,7,1,7,5,1];
+  t[197]=[0,8,3,1,2,7,1,7,5,7,2,11];t[198]=[9,7,5,9,2,7,9,0,2,2,11,7];
+  t[199]=[7,5,2,7,2,11,5,9,2,3,2,8,9,8,2];t[200]=[2,5,10,2,3,5,3,7,5];
+  t[201]=[8,2,0,8,5,2,8,7,5,10,2,5];t[202]=[9,0,1,5,10,3,5,3,7,3,10,2];
+  t[203]=[9,8,2,9,2,1,8,7,2,10,2,5,7,5,2];t[204]=[1,3,5,3,7,5];
+  t[205]=[0,8,7,0,7,1,1,7,5];t[206]=[9,0,3,9,3,5,5,3,7];t[207]=[9,8,7,5,9,7];
+  t[208]=[5,8,4,5,10,8,10,11,8];t[209]=[5,0,4,5,11,0,5,10,11,11,3,0];
+  t[210]=[0,1,9,8,4,10,8,10,11,10,4,5];t[211]=[10,11,4,10,4,5,11,3,4,9,4,1,3,1,4];
+  t[212]=[2,5,1,2,8,5,2,11,8,4,5,8];t[213]=[0,4,11,0,11,3,4,5,11,2,11,1,5,1,11];
+  t[214]=[0,2,5,0,5,9,2,11,5,4,5,8,11,8,5];t[215]=[9,4,5,2,11,3];
+  t[216]=[2,5,10,3,5,2,3,4,5,3,8,4];t[217]=[5,10,2,5,2,4,4,2,0];
+  t[218]=[3,10,2,3,5,10,3,8,5,4,5,8,0,1,9];t[219]=[5,10,2,5,2,4,1,9,2,9,4,2];
+  t[220]=[8,4,5,8,5,3,3,5,1];t[221]=[0,4,5,1,0,5];t[222]=[8,4,5,8,5,3,9,0,5,0,3,5];
+  t[223]=[9,4,5];
+  t[224]=[4,11,7,4,9,11,9,10,11];t[225]=[0,8,3,4,9,7,9,11,7,9,10,11];
+  t[226]=[1,10,11,1,11,4,1,4,0,7,4,11];t[227]=[3,1,4,3,4,8,1,10,4,7,4,11,10,11,4];
+  t[228]=[4,11,7,9,11,4,9,2,11,9,1,2];t[229]=[9,7,4,9,11,7,9,1,11,2,11,1,0,8,3];
+  t[230]=[11,7,4,11,4,2,2,4,0];t[231]=[11,7,4,11,4,2,8,3,4,3,2,4];
+  t[232]=[2,9,10,2,7,9,2,3,7,7,4,9];t[233]=[9,10,7,9,7,4,10,2,7,8,7,0,2,0,7];
+  t[234]=[3,7,10,3,10,2,7,4,10,1,10,0,4,0,10];t[235]=[1,10,2,8,7,4];
+  t[236]=[4,9,1,4,1,7,7,1,3];t[237]=[4,9,1,4,1,7,0,8,1,8,7,1];
+  t[238]=[4,0,3,7,4,3];t[239]=[4,8,7];
+  t[240]=[9,10,8,10,11,8];t[241]=[3,0,9,3,9,11,11,9,10];t[242]=[0,1,10,0,10,8,8,10,11];
+  t[243]=[3,1,10,11,3,10];t[244]=[1,2,11,1,11,9,9,11,8];t[245]=[3,0,9,3,9,11,1,2,9,2,11,9];
+  t[246]=[0,2,11,8,0,11];t[247]=[3,2,11];t[248]=[2,3,8,2,8,10,10,8,9];
+  t[249]=[9,10,2,0,9,2];t[250]=[2,3,8,2,8,10,0,1,8,1,10,8];t[251]=[1,10,2];
+  t[252]=[1,3,8,9,1,8];t[253]=[0,9,1];t[254]=[0,3,8];
+  return t;
+})();
+
+// ========== 3D RENDERING ==========
+let scene, camera, renderer;
+let threeInited = false;
+let isoMesh = null;
+let gradGroup = null;
+let tangentGroup = null;
+let pointGroup = null;
+let azimuth = -Math.PI / 3, elevation = Math.PI / 5, radius = 10;
+
+function initThree() {
+  if (threeInited) return;
+  threeInited = true;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f1117);
+
+  const rect = canvasArea.getBoundingClientRect();
+  camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 200);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(rect.width, rect.height);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container3d.appendChild(renderer.domElement);
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+  dirLight.position.set(5, 5, 10);
+  scene.add(dirLight);
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+  dirLight2.position.set(-5, -3, -5);
+  scene.add(dirLight2);
+
+  // Axes
+  const axisMat = new THREE.LineBasicMaterial({ color: 0x4a4d5d });
+  const axLen = 4;
+  const xGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-axLen, 0, 0), new THREE.Vector3(axLen, 0, 0)]);
+  scene.add(new THREE.Line(xGeo, axisMat));
+  const yGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, -axLen, 0), new THREE.Vector3(0, axLen, 0)]);
+  scene.add(new THREE.Line(yGeo, axisMat));
+  const zGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, -axLen), new THREE.Vector3(0, 0, axLen)]);
+  scene.add(new THREE.Line(zGeo, axisMat));
+
+  addAxisLabel('x', axLen + 0.3, 0, 0);
+  addAxisLabel('y', 0, axLen + 0.3, 0);
+  addAxisLabel('z', 0, 0, axLen + 0.3);
+
+  initOrbitControls();
+  updateCam();
+}
+
+function makeTextSprite(text, color, size) {
+  const canvas = document.createElement('canvas');
+  const cx = canvas.getContext('2d');
+  const fontSize = 64;
+  const font = `bold ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+  cx.font = font;
+  const metrics = cx.measureText(text);
+  const textW = Math.ceil(metrics.width) + 16; // padding
+  const textH = fontSize + 16;
+  // Size canvas to fit (power of 2 not required for CanvasTexture)
+  canvas.width = textW;
+  canvas.height = textH;
+  // Must re-set font after resize
+  cx.font = font;
+  cx.fillStyle = color || '#8b8fa3';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.fillText(text, textW / 2, textH / 2);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(material);
+  const aspect = textW / textH;
+  const s = size || 0.6;
+  sprite.scale.set(s * aspect, s, 0.6);
+  return sprite;
+}
+
+function addAxisLabel(text, x, y, z) {
+  const label = makeTextSprite(text, '#8b8fa3');
+  label.position.set(x, y, z);
+  scene.add(label);
+}
+
+function updateCam() {
+  camera.position.x = radius * Math.cos(elevation) * Math.cos(azimuth);
+  camera.position.y = radius * Math.cos(elevation) * Math.sin(azimuth);
+  camera.position.z = radius * Math.sin(elevation);
+  camera.up.set(0, 0, 1);
+  camera.lookAt(0, 0, 0);
+}
+
+function initOrbitControls() {
+  let isPinching = false;
+  let isDown = false, prevX, prevY;
+
+  const el = container3d;
+
+  el.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch' && !e.isPrimary) return;
+    // Check if clicking on isosurface for point selection
+    if (state.dim === 3 && isoMesh) {
+      const rect = canvasArea.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(isoMesh);
+      if (intersects.length > 0) {
+        const pt = intersects[0].point;
+        state.tangentPoint = { x: pt.x, y: pt.y, z: pt.z };
+        hintOverlay.style.opacity = '0';
+        // Find closest level point index
+        let bestDist = Infinity, bestIdx = 0;
+        for (let i = 0; i < state.levelPoints.length; i++) {
+          const lp = state.levelPoints[i];
+          const d = (lp.x-pt.x)**2 + (lp.y-pt.y)**2 + (lp.z-pt.z)**2;
+          if (d < bestDist) { bestDist = d; bestIdx = i; }
+        }
+        update3D();
+        return;
+      }
+    }
+    isDown = true; prevX = e.clientX; prevY = e.clientY;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove', e => {
+    if (!isDown) return;
+    azimuth -= (e.clientX - prevX) * 0.008;
+    elevation = Math.max(-Math.PI/2 + 0.05,
+      Math.min(Math.PI/2 - 0.05,
+        elevation + (e.clientY - prevY) * 0.008));
+    prevX = e.clientX; prevY = e.clientY;
+    updateCam();
+  });
+  el.addEventListener('pointerup', () => isDown = false);
+  el.addEventListener('pointercancel', () => isDown = false);
+
+  el.addEventListener('wheel', e => {
+    e.preventDefault();
+    radius = Math.max(3, Math.min(30, radius + e.deltaY * 0.01));
+    updateCam();
+  }, { passive: false });
+
+  let lastPinchDist = 0;
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      isPinching = true;
+      isDown = false;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDist = Math.sqrt(dx*dx + dy*dy);
+    }
+  }, { passive: false });
+  el.addEventListener('touchmove', e => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (lastPinchDist > 0) {
+        radius = Math.max(3, Math.min(30, radius + (lastPinchDist - dist) * 0.03));
+        updateCam();
+      }
+      lastPinchDist = dist;
+    }
+  }, { passive: false });
+  el.addEventListener('touchend', e => {
+    if (e.touches.length < 2) { isPinching = false; lastPinchDist = 0; }
+  }, { passive: false });
+}
+
+// Marching cubes for isosurface
+function buildIsosurface(p, c, gridRes) {
+  const nx = gridRes, ny = gridRes, nz = gridRes;
+  const xMin = p.xMin, xMax = p.xMax, yMin = p.yMin, yMax = p.yMax, zMin = p.zMin, zMax = p.zMax;
+  const dx = (xMax - xMin) / (nx - 1);
+  const dy = (yMax - yMin) / (ny - 1);
+  const dz = (zMax - zMin) / (nz - 1);
+
+  // Sample field
+  const field = new Float32Array(nx * ny * nz);
+  for (let iz = 0; iz < nz; iz++) {
+    for (let iy = 0; iy < ny; iy++) {
+      for (let ix = 0; ix < nx; ix++) {
+        const x = xMin + ix * dx;
+        const y = yMin + iy * dy;
+        const z = zMin + iz * dz;
+        field[iz * ny * nx + iy * nx + ix] = p.fn(x, y, z) - c;
+      }
+    }
+  }
+
+  const vertices = [];
+  const vertexMap = new Map();
+
+  function getFieldVal(ix, iy, iz) {
+    return field[iz * ny * nx + iy * nx + ix];
+  }
+
+  function interp(ix1, iy1, iz1, ix2, iy2, iz2) {
+    // Unique edge key: sort endpoint indices and concatenate
+    const a = ix1 * ny * nz + iy1 * nz + iz1;
+    const b = ix2 * ny * nz + iy2 * nz + iz2;
+    const key = a < b ? `${a}_${b}` : `${b}_${a}`;
+    if (vertexMap.has(key)) return vertexMap.get(key);
+    const v1 = getFieldVal(ix1, iy1, iz1);
+    const v2 = getFieldVal(ix2, iy2, iz2);
+    const t = Math.max(0, Math.min(1, -v1 / (v2 - v1 + 1e-30)));
+    const x = xMin + (ix1 + t * (ix2 - ix1)) * dx;
+    const y = yMin + (iy1 + t * (iy2 - iy1)) * dy;
+    const z = zMin + (iz1 + t * (iz2 - iz1)) * dz;
+    const idx = vertices.length / 3;
+    vertices.push(x, y, z);
+    vertexMap.set(key, idx);
+    return idx;
+  }
+
+  const indices = [];
+
+  for (let iz = 0; iz < nz - 1; iz++) {
+    for (let iy = 0; iy < ny - 1; iy++) {
+      for (let ix = 0; ix < nx - 1; ix++) {
+        const v = [
+          getFieldVal(ix, iy, iz),
+          getFieldVal(ix+1, iy, iz),
+          getFieldVal(ix+1, iy+1, iz),
+          getFieldVal(ix, iy+1, iz),
+          getFieldVal(ix, iy, iz+1),
+          getFieldVal(ix+1, iy, iz+1),
+          getFieldVal(ix+1, iy+1, iz+1),
+          getFieldVal(ix, iy+1, iz+1),
+        ];
+
+        let cubeIndex = 0;
+        for (let i = 0; i < 8; i++) {
+          if (v[i] < 0) cubeIndex |= (1 << i);
+        }
+
+        if (cubeIndex === 0 || cubeIndex === 255) continue;
+
+        const edges = MC_TRI_TABLE[cubeIndex];
+        if (!edges) continue;
+
+        const cornerCoords = [
+          [ix, iy, iz], [ix+1, iy, iz], [ix+1, iy+1, iz], [ix, iy+1, iz],
+          [ix, iy, iz+1], [ix+1, iy, iz+1], [ix+1, iy+1, iz+1], [ix, iy+1, iz+1]
+        ];
+        const edgePairs = [
+          [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]
+        ];
+
+        for (let i = 0; i < edges.length; i += 3) {
+          const e0 = edges[i], e1 = edges[i+1], e2 = edges[i+2];
+          if (e0 < 0) break;
+          const p0 = edgePairs[e0], p1 = edgePairs[e1], p2 = edgePairs[e2];
+          const v0 = interp(...cornerCoords[p0[0]], ...cornerCoords[p0[1]]);
+          const v1 = interp(...cornerCoords[p1[0]], ...cornerCoords[p1[1]]);
+          const v2 = interp(...cornerCoords[p2[0]], ...cornerCoords[p2[1]]);
+          indices.push(v0, v1, v2);
+        }
+      }
+    }
+  }
+
+  // Store level points (vertex positions on the isosurface, filtered by domain)
+  const pts = [];
+  for (let i = 0; i < vertices.length; i += 3) {
+    pts.push({ x: vertices[i], y: vertices[i+1], z: vertices[i+2] });
+  }
+  state.levelPoints = pts;
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function update3D() {
+  if (!threeInited) return;
+  const p = getPreset();
+  const c = mapC(state.cParam);
+
+  // Clean up old objects
+  if (isoMesh) { scene.remove(isoMesh); isoMesh.geometry.dispose(); isoMesh.material.dispose(); isoMesh = null; }
+  if (gradGroup) { scene.remove(gradGroup); gradGroup.traverse(ch => { if (ch.geometry) ch.geometry.dispose(); if (ch.material) ch.material.dispose(); }); gradGroup = null; }
+  if (tangentGroup) { scene.remove(tangentGroup); tangentGroup.traverse(ch => { if (ch.geometry) ch.geometry.dispose(); if (ch.material) ch.material.dispose(); }); tangentGroup = null; }
+  if (pointGroup) { scene.remove(pointGroup); pointGroup.traverse(ch => { if (ch.geometry) ch.geometry.dispose(); if (ch.material) ch.material.dispose(); }); pointGroup = null; }
+
+  // Build isosurface
+  const isoGeo = buildIsosurface(p, c, 50);
+  const idxCount = isoGeo.index ? isoGeo.index.count : 0;
+  if (idxCount > 0) {
+    const isoMat = new THREE.MeshPhongMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.55,
+      side: THREE.DoubleSide, shininess: 40, depthWrite: false
+    });
+    isoMesh = new THREE.Mesh(isoGeo, isoMat);
+    scene.add(isoMesh);
+  }
+
+  if (state.levelPoints.length === 0) return;
+
+  // Snap tangent point to nearest point on current isosurface
+  if (state.tangentPoint) {
+    let bestDist = Infinity, bestPt = null;
+    const old = state.tangentPoint;
+    for (const pt of state.levelPoints) {
+      const d = (pt.x - old.x) ** 2 + (pt.y - old.y) ** 2 + (pt.z - old.z) ** 2;
+      if (d < bestDist) { bestDist = d; bestPt = pt; }
+    }
+    if (bestPt) state.tangentPoint = bestPt;
+  } else {
+    const midIdx = Math.floor(state.levelPoints.length / 2);
+    state.tangentPoint = state.levelPoints[midIdx];
+    hintOverlay.style.opacity = '0';
+  }
+  const tp = state.tangentPoint;
+  if (!tp) return;
+
+  const gx = p.gx(tp.x, tp.y, tp.z);
+  const gy = p.gy(tp.x, tp.y, tp.z);
+  const gz = p.gz(tp.x, tp.y, tp.z);
+  const gMag = Math.sqrt(gx*gx + gy*gy + gz*gz);
+
+  // Gradient arrows on surface
+  if (state.showGradAll && state.levelPoints.length > 0) {
+    gradGroup = new THREE.Group();
+    const arrowLen = 0.5;
+    // Threshold: cube root of box volume / 50
+    const boxVol = (p.xMax - p.xMin) * (p.yMax - p.yMin) * (p.zMax - p.zMin);
+    const threshold = Math.cbrt(boxVol) / 10;
+    const threshSq = threshold * threshold;
+    // Circular buffer of last 3 added points
+    const recent = [null, null, null];
+    let recentIdx = 0;
+
+    for (let i = 0; i < state.levelPoints.length; i++) {
+      const pt = state.levelPoints[i];
+      // Check distance to recent points
+      let tooClose = false;
+      for (let r = 0; r < 3; r++) {
+        if (!recent[r]) continue;
+        const dx = pt.x - recent[r].x, dy = pt.y - recent[r].y, dz = pt.z - recent[r].z;
+        if (dx*dx + dy*dy + dz*dz < threshSq) { tooClose = true; break; }
+      }
+      if (tooClose) continue;
+
+      const gxi = p.gx(pt.x, pt.y, pt.z);
+      const gyi = p.gy(pt.x, pt.y, pt.z);
+      const gzi = p.gz(pt.x, pt.y, pt.z);
+      const mg = Math.sqrt(gxi*gxi + gyi*gyi + gzi*gzi);
+      if (mg < 1e-10) continue;
+
+      // Add to recent buffer (overwrite oldest)
+      recent[recentIdx] = pt;
+      recentIdx = (recentIdx + 1) % 3;
+
+      const dir = new THREE.Vector3(gxi/mg, gyi/mg, gzi/mg);
+      const origin = new THREE.Vector3(pt.x, pt.y, pt.z);
+      const arrowGeo = new THREE.BufferGeometry().setFromPoints([
+        origin, origin.clone().add(dir.clone().multiplyScalar(arrowLen))
+      ]);
+      const arrowLine = new THREE.Line(arrowGeo, new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 }));
+      gradGroup.add(arrowLine);
+
+      // Small cone for arrowhead
+      const coneGeo = new THREE.CylinderGeometry(0, 0.06, 0.15, 6);
+      const coneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const cone = new THREE.Mesh(coneGeo, coneMat);
+      const tipPos = origin.clone().add(dir.clone().multiplyScalar(arrowLen));
+      cone.position.copy(tipPos);
+      const up = new THREE.Vector3(0, 1, 0);
+      const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
+      cone.quaternion.copy(quat);
+      gradGroup.add(cone);
+    }
+    scene.add(gradGroup);
+  }
+
+  // Point marker
+  pointGroup = new THREE.Group();
+  const sphereGeo = new THREE.SphereGeometry(0.1, 16, 16);
+  const sphereMat = new THREE.MeshBasicMaterial({ color: 0xe53935 });
+  const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+  sphere.position.set(tp.x, tp.y, tp.z);
+  pointGroup.add(sphere);
+  scene.add(pointGroup);
+
+  // Gradient at point
+  if (state.showGradPt && gMag > 1e-10) {
+    if (!tangentGroup) tangentGroup = new THREE.Group();
+    const dir = new THREE.Vector3(gx/gMag, gy/gMag, gz/gMag);
+    const origin = new THREE.Vector3(tp.x, tp.y, tp.z);
+    const arrowLen = 1.2;
+    // Thick cylinder for the arrow shaft
+    const shaftGeo = new THREE.CylinderGeometry(0.03, 0.03, arrowLen, 8);
+    const shaftMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const shaft = new THREE.Mesh(shaftGeo, shaftMat);
+    const midPt = origin.clone().add(dir.clone().multiplyScalar(arrowLen / 2));
+    shaft.position.copy(midPt);
+    const upVec = new THREE.Vector3(0, 1, 0);
+    shaft.quaternion.setFromUnitVectors(upVec, dir);
+    tangentGroup.add(shaft);
+
+    // Cone head
+    const coneGeo = new THREE.CylinderGeometry(0, 0.08, 0.2, 8);
+    const coneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const cone = new THREE.Mesh(coneGeo, coneMat);
+    cone.position.copy(origin.clone().add(dir.clone().multiplyScalar(arrowLen)));
+    cone.quaternion.setFromUnitVectors(upVec, dir);
+    tangentGroup.add(cone);
+
+    if (state.showLabels) {
+      const gradLabel = makeTextSprite('∇φ', '#ffffff', 0.5);
+      gradLabel.position.copy(origin.clone().add(dir.clone().multiplyScalar(arrowLen * 1.225)));
+      tangentGroup.add(gradLabel);
+    }
+  }
+
+  // Tangent plane
+  if (state.showTangent && gMag > 1e-10) {
+    if (!tangentGroup) tangentGroup = new THREE.Group();
+    const n = new THREE.Vector3(gx/gMag, gy/gMag, gz/gMag);
+    const planeSize = 2.0;
+
+    // Find two tangent vectors perpendicular to normal
+    let t1 = new THREE.Vector3(1, 0, 0);
+    if (Math.abs(n.dot(t1)) > 0.9) t1 = new THREE.Vector3(0, 1, 0);
+    t1.cross(n).normalize();
+    const t2 = new THREE.Vector3().crossVectors(n, t1).normalize();
+
+    // Build plane quad
+    const corners = [
+      new THREE.Vector3(tp.x - t1.x*planeSize - t2.x*planeSize, tp.y - t1.y*planeSize - t2.y*planeSize, tp.z - t1.z*planeSize - t2.z*planeSize),
+      new THREE.Vector3(tp.x + t1.x*planeSize - t2.x*planeSize, tp.y + t1.y*planeSize - t2.y*planeSize, tp.z + t1.z*planeSize - t2.z*planeSize),
+      new THREE.Vector3(tp.x + t1.x*planeSize + t2.x*planeSize, tp.y + t1.y*planeSize + t2.y*planeSize, tp.z + t1.z*planeSize + t2.z*planeSize),
+      new THREE.Vector3(tp.x - t1.x*planeSize + t2.x*planeSize, tp.y - t1.y*planeSize + t2.y*planeSize, tp.z - t1.z*planeSize + t2.z*planeSize),
+    ];
+
+    const planeGeo = new THREE.BufferGeometry();
+    const verts = new Float32Array(12);
+    for (let i = 0; i < 4; i++) {
+      verts[i*3] = corners[i].x; verts[i*3+1] = corners[i].y; verts[i*3+2] = corners[i].z;
+    }
+    planeGeo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    planeGeo.setIndex([0,1,2, 0,2,3]);
+    planeGeo.computeVertexNormals();
+    const planeMat = new THREE.MeshBasicMaterial({
+      color: 0x64b5f6, transparent: true, opacity: 0.2,
+      side: THREE.DoubleSide, depthWrite: false
+    });
+    tangentGroup.add(new THREE.Mesh(planeGeo, planeMat));
+
+    // Plane border
+    const borderGeo = new THREE.BufferGeometry().setFromPoints([...corners, corners[0]]);
+    const borderMat = new THREE.LineBasicMaterial({ color: 0x64b5f6, transparent: true, opacity: 0.5 });
+    tangentGroup.add(new THREE.Line(borderGeo, borderMat));
+
+    // Generic point on tangent plane
+    const genPt = new THREE.Vector3(
+      tp.x + t1.x * planeSize * 0.6 + t2.x * planeSize * 0.45,
+      tp.y + t1.y * planeSize * 0.6 + t2.y * planeSize * 0.45,
+      tp.z + t1.z * planeSize * 0.6 + t2.z * planeSize * 0.45,
+    );
+
+
+    // Right angle symbol in 3D (shown when both gradient at point and tangent are displayed)
+    if (state.showGradPt) {
+      const symLen = 0.2;
+      const raRadius = 0.015; // half the other cylinders
+      const toGen = genPt.clone().sub(new THREE.Vector3(tp.x, tp.y, tp.z)).normalize();
+      const p1 = new THREE.Vector3(tp.x, tp.y, tp.z).add(toGen.clone().multiplyScalar(symLen));
+      const p2 = p1.clone().add(n.clone().multiplyScalar(symLen));
+      const p3 = new THREE.Vector3(tp.x, tp.y, tp.z).add(n.clone().multiplyScalar(symLen));
+      const raMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const upRA = new THREE.Vector3(0, 1, 0);
+      // Segment p1 → p2
+      const d1 = p2.clone().sub(p1);
+      const len1 = d1.length();
+      if (len1 > 1e-6) {
+        const dir1 = d1.clone().normalize();
+        const cyl1 = new THREE.Mesh(new THREE.CylinderGeometry(raRadius, raRadius, len1, 6), raMat);
+        cyl1.position.copy(p1.clone().add(d1.clone().multiplyScalar(0.5)));
+        cyl1.quaternion.setFromUnitVectors(upRA, dir1);
+        tangentGroup.add(cyl1);
+      }
+      // Segment p2 → p3
+      const d2 = p3.clone().sub(p2);
+      const len2 = d2.length();
+      if (len2 > 1e-6) {
+        const dir2 = d2.clone().normalize();
+        const cyl2 = new THREE.Mesh(new THREE.CylinderGeometry(raRadius, raRadius, len2, 6), raMat);
+        cyl2.position.copy(p2.clone().add(d2.clone().multiplyScalar(0.5)));
+        cyl2.quaternion.setFromUnitVectors(upRA, dir2);
+        tangentGroup.add(cyl2);
+      }
+    }
+
+    // Labels positioned along continuation of the line segment
+    if (state.showLabels) {
+
+    // Vector from tangent point to generic point (thick cylinder)
+
+      {
+      const tpVec = new THREE.Vector3(tp.x, tp.y, tp.z);
+      const lineDir = genPt.clone().sub(tpVec);
+      const lineLen = 0.90*lineDir.length();
+      if (lineLen > 1e-6) {
+      const lineNorm = lineDir.clone().normalize();
+      const lineCylGeo = new THREE.CylinderGeometry(0.03, 0.03, lineLen, 8);
+      const lineCylMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 });
+      const lineCyl = new THREE.Mesh(lineCylGeo, lineCylMat);
+      // lineCyl.position.copy(tpVec.clone().add(lineDir.clone().multiplyScalar(0.5)));
+      lineCyl.position.copy(tpVec.clone().add(lineDir.clone().multiplyScalar(0.5*0.90)));
+      const upV = new THREE.Vector3(0, 1, 0);
+      lineCyl.quaternion.setFromUnitVectors(upV, lineNorm);
+      tangentGroup.add(lineCyl);
+
+      // Cone head
+      const coneGeo = new THREE.CylinderGeometry(0, 0.08, 0.2, 8);
+      const coneMat = new THREE.MeshBasicMaterial({ color: 0x64b5f6 });
+      const cone = new THREE.Mesh(coneGeo, coneMat);
+      cone.position.copy(tpVec.clone().add(lineDir.clone().multiplyScalar(0.90)));
+      cone.quaternion.setFromUnitVectors(upV, lineNorm);
+      tangentGroup.add(cone);
+      }
+    }
+
+    // Generic point sphere
+    const gpSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0x64b5f6 })
+    );
+    gpSphere.position.copy(genPt);
+    tangentGroup.add(gpSphere);
+
+
+
+      const tpVec3 = new THREE.Vector3(tp.x, tp.y, tp.z);
+      const segDir = genPt.clone().sub(tpVec3);
+      const segLen3 = segDir.length() || 1;
+      const segNorm = segDir.clone().normalize();
+      const lblOffset = 0.225 * segLen3;
+      // (x₀,y₀,z₀) label: continue past tp away from gp
+      const ptLabel = makeTextSprite('(x₀,y₀,z₀)', '#e53935', 0.5);
+      ptLabel.position.copy(tpVec3.clone().sub(segNorm.clone().multiplyScalar(lblOffset)));
+      tangentGroup.add(ptLabel);
+      // (x,y,z) label: continue past gp away from tp
+      const gpLabel = makeTextSprite('(x,y,z)', '#64b5f6', 0.5);
+      gpLabel.position.copy(genPt.clone().add(segNorm.clone().multiplyScalar(lblOffset)));
+      tangentGroup.add(gpLabel);
+    }
+  }
+
+  if (tangentGroup) scene.add(tangentGroup);
+  infoBox.style.display = 'none';
+}
+
+// ========== MODE SWITCH ==========
+function switchMode() {
+  const is2d = state.dim === 2;
+  // Show/hide 2D-only sidebar options
+  toggleHeatmap.style.display = is2d ? '' : 'none';
+  toggleContours.style.display = is2d ? '' : 'none';
+  // Colour section: show at bottom always, but in 3D it's less relevant — keep visible for both
+  document.getElementById('colourSection').style.display = is2d ? '' : 'none';
+
+  if (is2d) {
+    canvas2d.style.display = 'block';
+    container3d.style.display = 'none';
+  } else {
+    canvas2d.style.display = 'none';
+    container3d.style.display = 'block';
+    colourbarWrap.style.display = 'none';
+    initThree();
+    const rect = canvasArea.getBoundingClientRect();
+    if (renderer && rect.width > 0 && rect.height > 0) {
+      renderer.setSize(rect.width, rect.height);
+      camera.aspect = rect.width / rect.height;
+      camera.updateProjectionMatrix();
+    }
+  }
+  currentFnLabel.textContent = getPreset().label;
+}
+
+function update() {
+  if (state.dim === 2) {
+    draw2D();
+  } else {
+    update3D();
+  }
+}
+
+// ========== ANIMATION LOOP ==========
+(function animate() {
+  if (state.dim === 3 && renderer) renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+})();
+
+// ========== INIT ==========
+populateSelect();
+resetForPreset();
+switchMode();
+resize();
+update();
+window.addEventListener('resize', () => { resize(); update(); });
+
+})();
