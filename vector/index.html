@@ -870,14 +870,22 @@ function computeScalarField(res, type) {
   fmin = -maxf;
   fmax = maxf;
 
+  // if value is zero to within numerical error, increase the size of the
+  // interval.
+  if (fmax< 0.01) {
+    const mid = (fmin + fmax) / 2;
+    fmin = -1.00;
+    fmax = 1.0;
+  }
+
   // Enforce a minimum range so that floating point noise
   // doesn't get amplified into the full colour scale
   // for fields with constant or near-constant div/curl.
-  if (fmax - fmin < 0.01) {
-    const mid = (fmin + fmax) / 2;
-    fmin = mid - 0.005;
-    fmax = mid + 0.005;
-  }
+  //if (fmax - fmin < 0.01) {
+  //  const mid = (fmin + fmax) / 2;
+  //  fmin = mid - 0.005;
+  //  fmax = mid + 0.005;
+  //}
   return { data, fmin, fmax, res };
 }
 
