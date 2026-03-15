@@ -759,11 +759,13 @@ var ScalarFieldApp = (function () {
     var el = dom.containerSurface;
     el.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'touch' && !e.isPrimary) return;
+      e.preventDefault();
       isDown = true; prevX = e.clientX; prevY = e.clientY;
       el.setPointerCapture(e.pointerId);
     });
     el.addEventListener('pointermove', function (e) {
       if (!isDown) return;
+      e.preventDefault();
       azimuth -= (e.clientX - prevX) * 0.008;
       elevation = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05,
         elevation + (e.clientY - prevY) * 0.008));
