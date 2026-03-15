@@ -458,13 +458,17 @@
 
   /* ---------- Active Mode ---------- */
   #active-view { display: none; }
-  #active-view.active { display: flex; flex-direction: column; min-height: 100vh; }
+  #active-view.active {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh; /* fits within the visible viewport on mobile */
+    overflow: hidden;
+  }
   #active-view.phase-work  { background: var(--active-work-bg);  transition: background 1s ease; }
   #active-view.phase-break { background: var(--active-break-bg); transition: background 1s ease; }
 
   .active-header {
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;
     z-index: 100;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -478,19 +482,20 @@
 
   .active-main {
     flex: 1;
+    min-height: 0; /* allow flex child to shrink */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 24px;
+    padding: 24px;
     text-align: center;
-    gap: 16px;
+    gap: clamp(8px, 2vh, 20px);
   }
 
   .active-phase { display: none; }
 
   .timer-display {
-    font-size: clamp(94px, 23vw, 156px);
+    font-size: clamp(72px, min(23vw, 22vh), 156px);
     font-weight: 700;
     letter-spacing: -4px;
     color: var(--timer-color);
@@ -499,7 +504,7 @@
   }
 
   .active-activity {
-    font-size: clamp(29px, 6.5vw, 44px);
+    font-size: clamp(22px, min(6.5vw, 6vh), 44px);
     font-weight: 600;
     color: var(--text);
     letter-spacing: -0.4px;
@@ -508,7 +513,7 @@
   }
 
   .active-next {
-    font-size: 19px;
+    font-size: clamp(14px, min(2.5vw, 2.5vh), 19px);
     color: var(--text-2);
     max-width: 500px;
   }
