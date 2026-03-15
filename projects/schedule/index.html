@@ -1222,7 +1222,7 @@ function buildShareURL() {
   if (firstMins !== DEFAULT_START_HOUR * 60) params.set("start", firstMins);
   if (tailCount > 0) params.set("tail", tailCount);
 
-  return `https://clisby.net/projects/pomodoro/?${params.toString()}`;
+  return `https://clisby.net/projects/schedule/?${params.toString()}`;
 }
 
 function copyShareLink() {
@@ -1235,8 +1235,8 @@ function copyShareLink() {
 
 function shareViaEmail() {
   const url  = buildShareURL();
-  const subj = encodeURIComponent("Pomodoro Schedule");
-  const body = encodeURIComponent(`Here's my Pomodoro schedule:\n\n${url}`);
+  const subj = encodeURIComponent("My schedule");
+  const body = encodeURIComponent(`Here's my schedule:\n\n${url}`);
   window.location.href = `mailto:?subject=${subj}&body=${body}`;
   closeAllDropdowns();
 }
