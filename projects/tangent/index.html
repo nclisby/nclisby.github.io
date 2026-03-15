@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tangents</title>
+
+<!-- Three.js r128 (required for 3D mode) -->
+<script src="../shared-assets/three-r128.min.js"></script>
+
+<!-- Shared design system -->
+<link rel="stylesheet" href="../teaching-app-assets/teaching-app.css">
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+      <h1>Tangents</h1>
+      <p>Level sets, ∇φ, tangents</p>
+    </div>
+    <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
+  </div>
+
+  <!-- Display dimension -->
+  <div class="section">
+    <div class="section-label">Display</div>
+    <div class="opt-row">
+      <button class="opt-btn active" id="btn2d" data-dim="2">2D</button>
+      <button class="opt-btn" id="btn3d" data-dim="3">3D</button>
+    </div>
+  </div>
+
+  <!-- Scalar field selection -->
+  <div class="section">
+    <div class="section-label">Scalar Field</div>
+    <select class="fn-select" id="fnSelect"></select>
+    <div class="custom-input-wrap">
+      <label>Custom φ(x,y) or φ(x,y,z):</label>
+      <input type="text" class="custom-input" id="customExpr"
+             placeholder="e.g. x^2 + y^2"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+  </div>
+
+  <!-- Feature toggles -->
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn" id="btnHelp">Help</button>
+      <button class="opt-btn" id="btnOverview">Overview</button>
+      <button class="opt-btn" id="toggleHeatmap">Heat map</button>
+      <button class="opt-btn" id="toggleContours">Level sets</button>
+      <button class="opt-btn" id="toggleTangent">Tangent</button>
+      <button class="opt-btn" id="toggleGradPt">∇φ point</button>
+      <button class="opt-btn" id="toggleGradAll">∇φ</button>
+      <button class="opt-btn" id="toggleLabels">Labels</button>
+      <button class="opt-btn" id="toggleFlip">−φ</button>
+    </div>
+  </div>
+
+  <!-- Colour scheme (2D only) -->
+  <div class="section" id="colourSection">
+    <div class="section-label">Colour scheme</div>
+    <div class="opt-row">
+      <button class="opt-btn active" data-scheme="palette1">1</button>
+      <button class="opt-btn" data-scheme="palette2">2</button>
+      <button class="opt-btn" data-scheme="palette3">3</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== Main visualisation area ===== -->
+
+<div class="canvas-area" id="canvasArea">
+  <button class="sidebar-toggle hidden-when-open" id="openBtn" title="Open sidebar">&#9776;</button>
+
+  <!-- Level-set slider (floating over canvas) -->
+  <div class="slice-controls" id="cControls" style="display:flex;">
+    <label>φ(<b>r</b>) = </label>
+    <cValue id="cValue"></cValue>
+    <input type="range" min="0" max="600" value="300" id="cSlider">
+  </div>
+
+  <!-- 2D canvas -->
+  <canvas id="canvas2d"></canvas>
+
+  <!-- 3D container (Three.js renderer is appended here) -->
+  <div id="container3d"></div>
+
+  <!-- Colour bar -->
+  <div class="cb-wrap" id="colourbarWrap" style="display:none;">
+    <canvas class="colourbar" id="colourbar" width="16" height="200"></canvas>
+  </div>
+
+  <!-- Function label -->
+  <div class="current-fn" id="currentFnLabel"></div>
+
+  <!-- Info box -->
+  <div class="info-box" id="infoBox" style="display:none;"></div>
+</div>
+
+
+<!-- ===== Help overlay ===== -->
+
+<div class="overlay" id="helpOverlay">
+  <button class="overlay-close" id="helpClose">✕</button>
+  <div class="overlay-content" id="helpContent">
+    <h1>Help</h1>
+    <p>
+    Click on the level set to place a tangent point.
+    </p>
+    <p>
+    Experiment with options in the sidebar to show the tangent line or plane,
+    the gradient, and labels.
+    </p>
+    <p>
+    Switch between 2d and 3d modes.
+    </p>
+    <p>
+    You can enter standard custom functions in the text box. 
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Overview overlay ===== -->
+
+<div class="overlay" id="overviewOverlay">
+  <button class="overlay-close" id="overviewClose">✕</button>
+  <div class="overlay-content" id="overviewContent">
+    <h1>Overview</h1>
+    <p>
+    ∇φ is perpendicular to level sets of the form φ(<b>r</b>) = c.
+    </p>
+    <p>
+    Given a point <b>r<sub>0</sub></b> on the level set, set the normal vector
+    <b>N</b> to be some multiple of the gradient:
+    <b>N</b>&nbsp;=&nbsp;k&nbsp;∇φ(<b>r<sub>0</sub></b>)
+    </p>
+    <p>
+    Given a generic point <b>r</b> on the tangent, we see that:
+    </p>
+    <p style="text-align:center;">
+    <b>N</b> &bull; (<b>r</b>-<b>r<sub>0</sub></b>) = 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⇒ <b>N</b> &bull; <b>r</b> = <b>N</b> &bull; <b>r<sub>0</sub></b>
+    </p>
+    <p>
+    Thus we have an equation for the tangent line or plane!
+    </p>
+    <p style="text-align:center;">
+    In 2d: &nbsp; &nbsp; &nbsp; N<sub>1</sub> x + N<sub>2</sub> y  = N<sub>1</sub> x<sub>0</sub> + N<sub>2</sub> y<sub>0</sub>
+    <br>
+    In 3d: &nbsp; &nbsp; &nbsp;
+     N<sub>1</sub> x + N<sub>2</sub> y + N<sub>3</sub> z = N<sub>1</sub> x<sub>0</sub> + N<sub>2</sub> y<sub>0</sub> + N<sub>3</sub> z<sub>0</sub>
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Scripts ===== -->
+<script src="../teaching-app-assets/teaching-app.js"></script>
+<script src="tangent.js"></script>
+<script>TangentApp.init();</script>
+
+</body>
+</html>

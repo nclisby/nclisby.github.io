@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Vector Fields</title>
+
+<!-- Three.js r128 (required for 3D mode) -->
+<script src="../shared-assets/three-r128.min.js"></script>
+
+<!-- Shared design system -->
+<link rel="stylesheet" href="../teaching-app-assets/teaching-app.css">
+
+<!-- App-specific styles -->
+<style>
+  /* Custom input rows for vector components (Fx, Fy, [Fz]) */
+  .custom-inputs-row { display: flex; gap: 6px; margin-top: 6px; }
+  .custom-inputs-row .custom-input-col { flex: 1; }
+  .custom-inputs-row .custom-input-col label {
+    font-size: 13px; color: var(--text-dim); display: block; margin-bottom: 3px;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+
+  /* Secondary overlay label (below function label) */
+  .overlay-label {
+    position: absolute; top: 42px; right: 12px;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 22px;
+    color: var(--text-dim);
+    background: rgba(15,17,23,0.85);
+    padding: 4px 10px; border-radius: var(--radius);
+    pointer-events: none; backdrop-filter: blur(4px);
+    display: none;
+  }
+
+  /* Colour bar min/max labels */
+  .cb-max, .cb-min {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 16px;
+    color: var(--text-dim);
+    text-align: center;
+    width: 60px;
+  }
+  .cb-max { margin-bottom: 100px; }
+  .cb-min { margin-top: 100px; }
+
+  .sub-options { margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+      <h1>Vector fields</h1>
+      <p>F, ∇·F, ∇×F</p>
+    </div>
+    <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
+  </div>
+
+  <!-- Display dimension -->
+  <div class="section">
+    <div class="section-label">Display</div>
+    <div class="opt-row">
+      <button class="opt-btn active" data-mode="2d">2D</button>
+      <button class="opt-btn" data-mode="3d">3D</button>
+    </div>
+  </div>
+
+  <!-- Field selection -->
+  <div class="section">
+    <div class="section-label">Field</div>
+    <select class="fn-select" id="fnSelect"></select>
+    <div class="custom-input-wrap" id="customWrap2d">
+      <label>Custom F(x, y):</label>
+      <div class="custom-inputs-row">
+        <div class="custom-input-col">
+          <label>F&#8339; =</label>
+          <input type="text" class="custom-input" id="customFx" placeholder="e.g. -y"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="custom-input-col">
+          <label>F&#7527; =</label>
+          <input type="text" class="custom-input" id="customFy" placeholder="e.g. x"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="error-msg" id="errorMsg2d"></div>
+    </div>
+    <div class="custom-input-wrap" id="customWrap3d" style="display:none;">
+      <label>Custom F(x, y, z):</label>
+      <div class="custom-inputs-row">
+        <div class="custom-input-col">
+          <label>F&#8339; =</label>
+          <input type="text" class="custom-input" id="customFx3" placeholder="-y"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="custom-input-col">
+          <label>F&#7527; =</label>
+          <input type="text" class="custom-input" id="customFy3" placeholder="x"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="custom-input-col">
+          <label>F&#7530; =</label>
+          <input type="text" class="custom-input" id="customFz3" placeholder="1"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="error-msg" id="errorMsg3d"></div>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn" id="btnHelp">Help</button>
+      <button class="opt-btn" id="btnOverview">Overview</button>
+      <button class="opt-btn" id="toggleFlip">−F</button>
+      <button class="opt-btn" id="toggleLabels">Point</button>
+      <button class="opt-btn" id="toggleDiv">∇·F</button>
+      <button class="opt-btn" id="toggleCurl">∇×F</button>
+    </div>
+    <div class="sub-options" id="overlayOptions" style="display:none;">
+      <div class="section-label" style="margin-top:6px;">Overlay</div>
+      <div class="opt-row">
+        <button class="opt-btn" id="toggleOverlayHeatmap">Heat map</button>
+        <button class="opt-btn" id="toggleOverlayLevelSets">Level sets</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Colour scheme -->
+  <div class="section" id="colourSection" style="display:none;">
+    <div class="section-label">Colour scheme</div>
+    <div class="opt-row">
+      <button class="opt-btn active" data-scheme="palette1">1</button>
+      <button class="opt-btn" data-scheme="palette2">2</button>
+      <button class="opt-btn" data-scheme="palette3">3</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== Main visualisation area ===== -->
+
+<div class="canvas-area" id="canvasArea">
+  <button class="sidebar-toggle hidden-when-open" id="openBtn" title="Open sidebar">&#9776;</button>
+
+  <!-- 2D canvas -->
+  <canvas id="canvas2d"></canvas>
+
+  <!-- 3D container -->
+  <div id="container3d" style="display:none;"></div>
+
+  <!-- Function label -->
+  <div class="current-fn" id="currentFnLabel"></div>
+
+  <!-- Overlay label (∇·F or ∇×F) -->
+  <div class="overlay-label" id="overlayLabel"></div>
+
+  <!-- Colour bar -->
+  <div class="cb-wrap" id="colourbarWrap">
+    <div class="cb-max" id="cbMax"></div>
+    <canvas class="colourbar" id="colourbar" width="16" height="200"></canvas>
+    <div class="cb-min" id="cbMin"></div>
+  </div>
+</div>
+
+
+<!-- ===== Help overlay ===== -->
+
+<div class="overlay" id="helpOverlay">
+  <button class="overlay-close" id="helpClose">✕</button>
+  <div class="overlay-content">
+    <h1>Help</h1>
+    <p>
+    This app visualises vector fields in 2D and 3D.
+    </p>
+    <p>
+    Select a preset field from the dropdown, or enter custom component
+    expressions in the text boxes.
+    </p>
+    <p>
+    Selecting <b>Point</b> gives the vector field at a particular point.
+    </p>
+    <p>
+    In 2D mode, toggle ∇·F (divergence) or ∇×F (curl) to overlay a
+    heat map or contour plot of the corresponding scalar field.
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Overview overlay ===== -->
+
+<div class="overlay" id="overviewOverlay">
+  <button class="overlay-close" id="overviewClose">✕</button>
+  <div class="overlay-content">
+    <h1>Overview</h1>
+    <p>
+    A vector field <b>F</b> assigns a vector to each point in space.
+    </p>
+    <p>
+    The <em>divergence</em> ∇·<b>F</b> measures how much the field
+    spreads out or converges at a point. In 2D:
+    </p>
+    <p style="text-align:center;">
+    ∇·<b>F</b> = ∂F<sub>x</sub>/∂x + ∂F<sub>y</sub>/∂y
+    </p>
+    <p>
+    The <em>curl</em> ∇×<b>F</b> tells us how the vector field swirls/rotates. 
+    In 2D only the z-component is non-zero:
+    </p>
+    <p style="text-align:center;">
+    (∇×<b>F</b>)<sub>z</sub> = ∂F<sub>y</sub>/∂x − ∂F<sub>x</sub>/∂y
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Scripts ===== -->
+<script src="../teaching-app-assets/teaching-app.js"></script>
+<script src="vector-fields.js"></script>
+<script>VFApp.init();</script>
+
+</body>
+</html>

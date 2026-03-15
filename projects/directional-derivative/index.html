@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Directional Derivatives</title>
+
+<!-- Three.js r128 (required for 3D mode) -->
+<script src="../shared-assets/three-r128.min.js"></script>
+
+<!-- Shared design system -->
+<link rel="stylesheet" href="../teaching-app-assets/teaching-app.css">
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+      <h1>Directional derivatives</h1>
+      <p>D&#x1D64;f = ∇f · û</p>
+    </div>
+    <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
+  </div>
+
+  <!-- Scalar field selection -->
+  <div class="section">
+    <div class="section-label">Function</div>
+    <select class="fn-select" id="fnSelect"></select>
+    <div class="custom-input-wrap">
+      <label>Custom f(x, y):</label>
+      <input type="text" class="custom-input" id="customExpr"
+             placeholder="e.g. sin(x*y)"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+  </div>
+
+  <!-- Options (merged display + options) -->
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn" id="btnHelp">Help</button>
+      <button class="opt-btn" id="btnOverview">Overview</button>
+      <button class="opt-btn" id="toggleHeatmap">Heat map</button>
+      <button class="opt-btn" id="toggleLevelSets">Level sets</button>
+      <button class="opt-btn" id="toggleGrad">∇f</button>
+      <button class="opt-btn" id="toggleSurface">Surface</button>
+      <button class="opt-btn" id="toggleFlip">−f</button>
+      <button class="opt-btn" id="toggleLabels">Labels</button>
+    </div>
+  </div>
+
+  <!-- Colour scheme -->
+  <div class="section" id="colourSection">
+    <div class="section-label">Colour scheme</div>
+    <div class="opt-row">
+      <button class="opt-btn active" data-scheme="palette1">1</button>
+      <button class="opt-btn" data-scheme="palette2">2</button>
+      <button class="opt-btn" data-scheme="palette3">3</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== Main visualisation area ===== -->
+
+<div class="canvas-area" id="canvasArea">
+  <button class="sidebar-toggle hidden-when-open" id="openBtn" title="Open sidebar">&#9776;</button>
+
+  <!-- Angle slider (floating over canvas) -->
+  <div class="slice-controls" id="angleControls" style="display:flex;">
+    <label>θ =</label>
+    <input type="range" min="0" max="360" value="0" id="angleSlider">
+    <span class="control-value" id="angleValue">0°</span>
+  </div>
+
+  <!-- 2D canvas -->
+  <canvas id="canvas2d"></canvas>
+
+  <!-- 3D container (Three.js renderer is appended here) -->
+  <div id="container3d"></div>
+
+  <!-- Colour bar -->
+  <div class="cb-wrap" id="colourbarWrap" style="display:none;">
+    <canvas class="colourbar" id="colourbar" width="16" height="200"></canvas>
+  </div>
+
+  <!-- Function label -->
+  <div class="current-fn" id="currentFnLabel"></div>
+
+  <!-- Info box -->
+  <div class="info-box" id="infoBox" style="display:none;"></div>
+</div>
+
+
+<!-- ===== Help overlay ===== -->
+
+<div class="overlay" id="helpOverlay">
+  <button class="overlay-close" id="helpClose">✕</button>
+  <div class="overlay-content" id="helpContent">
+    <h1>Help</h1>
+    <p>
+    Click on the left plot to place a point. The line through the
+    point in the direction û is shown, and the 1D slice f along
+    that line is plotted on the right.
+    </p>
+    <p>
+    Use the θ slider at the top to change the direction û.
+    </p>
+    <p>
+    Toggle options in the sidebar to show the heat map, level sets,
+    gradient vector, or 3D surface.
+    </p>
+    <p>
+    You can enter custom functions in the text box.
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Overview overlay ===== -->
+
+<div class="overlay" id="overviewOverlay">
+  <button class="overlay-close" id="overviewClose">✕</button>
+  <div class="overlay-content" id="overviewContent">
+    <h1>Overview</h1>
+    <p>
+    The directional derivative D<sub>û</sub>f measures the rate of change
+    of f at a point in the direction of a unit vector û.
+    </p>
+    <p style="text-align:center;">
+    D<sub>û</sub>f(<b>r<sub>0</sub></b>) = ∇f(<b>r<sub>0</sub></b>) · û
+    </p>
+    <p>
+    Here ∇f is the gradient vector, and û = (cos θ, sin θ).
+    </p>
+    <p>
+    The right-hand plot shows f restricted to the line through
+    <b>r<sub>0</sub></b> in the direction û, parameterised by arc length s.
+    The slope of this 1D curve at s = 0 is exactly D<sub>û</sub>f.
+    </p>
+    <p>
+    When ∇f is displayed, the projection of ∇f onto û gives the
+    directional derivative geometrically.
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Scripts ===== -->
+<script src="../teaching-app-assets/teaching-app.js"></script>
+<script src="directional-derivative.js"></script>
+<script>DDApp.init();</script>
+
+</body>
+</html>
