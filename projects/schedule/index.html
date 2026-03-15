@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Schedule</title>
+
+<!-- ============================================================
+     STYLES
+     ============================================================ -->
+<style>
+  /* ---------- Reset & Base ---------- */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --radius: 8px;
+    --radius-sm: 5px;
+    --transition: 0.18s ease;
+
+    /* Light theme */
+    --bg:           #f5f5f7;
+    --surface:      #ffffff;
+    --surface2:     #f0f0f2;
+    --border:       #d1d1d6;
+    --text:         #1c1c1e;
+    --text-2:       #6e6e73;
+    --text-3:       #aeaeb2;
+    --accent:       #007aff;
+    --accent-hover: #0066d6;
+    --danger:       #ff3b30;
+    --danger-hover: #d63028;
+    --success:      #34c759;
+    --timer-color:  #1c1c1e;
+    --shadow:       0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-sm:    0 1px 2px rgba(0,0,0,0.06);
+    --active-work-bg:  #f0faf2;
+    --active-break-bg: #fff5f5;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:           #000000;
+      --surface:      #1c1c1e;
+      --surface2:     #2c2c2e;
+      --border:       #3a3a3c;
+      --text:         #f5f5f7;
+      --text-2:       #98989d;
+      --text-3:       #636366;
+      --accent:       #0a84ff;
+      --accent-hover: #409cff;
+      --danger:       #ff453a;
+      --danger-hover: #ff6961;
+      --success:      #32d74b;
+      --timer-color:  #f5f5f7;
+      --shadow:       0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+      --shadow-sm:    0 1px 2px rgba(0,0,0,0.3);
+      --active-work-bg:  #0d2e14;
+      --active-break-bg: #2e0d0d;
+    }
+  }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font);
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Layout ---------- */
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ---------- Header ---------- */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-clock {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 80px;
+    letter-spacing: -0.3px;
+  }
+
+  .header-left  { display: flex; align-items: center; gap: 12px; flex: 1; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition), opacity var(--transition);
+    white-space: nowrap;
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn:hover { background: var(--border); }
+
+  .btn-accent {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+  }
+  .btn-danger:hover { background: var(--danger-hover); border-color: var(--danger-hover); }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--accent);
+  }
+  .btn-ghost:hover { background: var(--surface2); }
+
+  .btn-start {
+    padding: 14px 48px;
+    font-size: 20px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    letter-spacing: -0.3px;
+  }
+
+  /* ---------- Dropdowns (custom) ---------- */
+  .dropdown { position: relative; }
+
+  .dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .dropdown-trigger:hover { background: var(--surface2); }
+  .dropdown-trigger .chevron { font-size: 10px; color: var(--text-2); transition: transform 0.15s; }
+  .dropdown.open .chevron { transform: rotate(180deg); }
+
+  .dropdown-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    z-index: 200;
+    padding: 6px;
+  }
+  .dropdown.open .dropdown-panel { display: block; }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    transition: background var(--transition);
+  }
+  .dropdown-item:hover { background: var(--surface2); }
+  .dropdown-item.danger { color: var(--danger); }
+
+  .dropdown-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+  .dropdown-sub {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dropdown-sub label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+  .dropdown-sub-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ---------- Select (native) ---------- */
+  select {
+    padding: 7px 28px 7px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    transition: background var(--transition);
+  }
+  select:hover { background-color: var(--surface2); }
+  select:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Main Content ---------- */
+  .main {
+    flex: 1;
+    padding: 28px 24px 40px;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ---------- Edit Mode ---------- */
+  .edit-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .edit-controls-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .controls-label {
+    font-size: 13px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  .start-area {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+
+  /* ---------- Schedule Table ---------- */
+  .schedule-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .schedule-table thead th {
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-2);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .schedule-table thead th:first-child  { width: 32px; text-align: center; padding-left: 8px; }
+  .schedule-table thead th:nth-child(2) { width: 140px; }
+  .schedule-table thead th:last-child   { width: 48px; text-align: center; }
+
+  .schedule-table tbody tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .schedule-table tbody tr:last-child { border-bottom: none; }
+  .schedule-table tbody tr:hover { background: var(--surface2); }
+
+  .schedule-table td { padding: 5px 8px; }
+  .schedule-table td:first-child  { padding-left: 8px; padding-right: 4px; text-align: center; width: 32px; }
+  .schedule-table td:nth-child(2) { padding-left: 6px; }
+  .schedule-table td:last-child   { padding-right: 10px; text-align: center; }
+
+  .schedule-input {
+    width: 100%;
+    padding: 7px 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text);
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .schedule-input:hover  { border-color: var(--border); background: var(--surface); }
+  .schedule-input:focus  { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
+
+  .schedule-input.time-input { font-variant-numeric: tabular-nums; }
+
+  .row-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-3);
+    font-size: 16px;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+    line-height: 1;
+  }
+  .row-delete:hover { background: var(--danger); color: #fff; }
+
+  /* ---------- Drag handle ---------- */
+  .drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 28px;
+    color: var(--text-3);
+    cursor: grab;
+    font-size: 14px;
+    border-radius: 4px;
+    transition: color var(--transition), background var(--transition);
+    user-select: none;
+  }
+  .drag-handle:hover { color: var(--text-2); background: var(--surface2); }
+  .drag-handle:active { cursor: grabbing; }
+
+  /* Drag states */
+  .schedule-table tbody tr.dragging {
+    opacity: 0.4;
+  }
+  .schedule-table tbody tr.drag-over-above td {
+    border-top: 2px solid var(--accent);
+  }
+  .schedule-table tbody tr.drag-over-below td {
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .schedule-add-row {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ---------- Sound Checkbox ---------- */
+  .sound-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .sound-label input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+  }
+
+  /* ---------- Overlays ---------- */
+  .overlay-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 400;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .overlay-backdrop.open { display: flex; }
+
+  .overlay-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    padding: 28px 32px;
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .overlay-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .overlay-body {
+    font-size: 14px;
+    color: var(--text-2);
+    line-height: 1.65;
+    margin-bottom: 22px;
+  }
+  .overlay-body h3 { color: var(--text); font-size: 14px; margin: 14px 0 4px; }
+  .overlay-body p  { margin-bottom: 8px; }
+
+  .overlay-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .overlay-input {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    margin-bottom: 18px;
+    transition: border-color var(--transition);
+  }
+  .overlay-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.15); }
+
+  /* ---------- Active Mode ---------- */
+  #active-view { display: none; }
+  #active-view.active { display: flex; flex-direction: column; min-height: 100vh; }
+  #active-view.phase-work  { background: var(--active-work-bg);  transition: background 1s ease; }
+  #active-view.phase-break { background: var(--active-break-bg); transition: background 1s ease; }
+
+  .active-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .active-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .active-phase { display: none; }
+
+  .timer-display {
+    font-size: clamp(94px, 23vw, 156px);
+    font-weight: 700;
+    letter-spacing: -4px;
+    color: var(--timer-color);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .active-activity {
+    font-size: clamp(29px, 6.5vw, 44px);
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.4px;
+    max-width: 600px;
+    line-height: 1.3;
+  }
+
+  .active-next {
+    font-size: 19px;
+    color: var(--text-2);
+    max-width: 500px;
+  }
+  .active-next span { color: var(--text); font-weight: 500; }
+
+  .complete-msg {
+    font-size: clamp(28px, 7vw, 48px);
+    font-weight: 700;
+    color: var(--success);
+    letter-spacing: -0.5px;
+  }
+
+  /* ---------- Inline confirm (for delete row, etc.) ---------- */
+  .inline-confirm {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  /* ---------- Scrollbar ---------- */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 600px) {
+    .header { padding: 0 14px; gap: 10px; }
+    .main   { padding: 18px 14px 32px; }
+    .header-clock { font-size: 15px; min-width: 64px; }
+    .edit-controls { gap: 8px; }
+    .dropdown-trigger, .btn { font-size: 13px; padding: 6px 10px; }
+    .overlay-box { padding: 22px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HTML
+     ============================================================ -->
+
+<!-- ===== EDIT VIEW ===== -->
+<div id="edit-view" class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-clock" id="edit-clock">8:00am</div>
+
+      <!-- Schedules dropdown -->
+      <div class="dropdown" id="dd-schedules">
+        <button class="dropdown-trigger" onclick="toggleDropdown('dd-schedules')">
+          Schedules <span class="chevron">▾</span>
+        </button>
+        <div class="dropdown-panel" id="dd-schedules-panel">
+          <div id="schedules-list">
+            <div class="dropdown-item" style="color:var(--text-3); font-style:italic;">No saved schedules</div>
+          </div>
+          <div class="dropdown-sub" id="schedule-actions" style="display:none;">
+            <div class="dropdown-sub-btns">
+              <button class="btn btn-accent" style="flex:1" onclick="loadSelectedSchedule()">Load</button>
+              <button class="btn btn-danger" style="flex:1" onclick="showDeleteConfirm()">Delete</button>
+            </div>
+            <div id="delete-confirm" style="display:none; flex-direction:column; gap:6px;">
+              <span style="font-size:13px; color:var(--text-2);">Are you sure?</span>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-danger" style="flex:1" onclick="deleteSelectedSchedule()">Yes</button>
+                <button class="btn" style="flex:1" onclick="closeAllDropdowns()">No</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block length -->
+      <div class="edit-controls-group">
+        <span class="controls-label">Work</span>
+        <select id="sel-work" onchange="onSettingChange()">
+          <option value="5">5 min</option>
+          <option value="10">10 min</option>
+          <option value="15">15 min</option>
+          <option value="20">20 min</option>
+          <option value="25" selected>25 min</option>
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+          <option value="60">60 min</option>
+        </select>
+      </div>
+
+      <!-- Break length -->
+      <div class="edit-controls-group">
+        <span class="controls-label">Break</span>
+        <select id="sel-break" onchange="onSettingChange()">
+          <option value="3">3 min</option>
+          <option value="5" selected>5 min</option>
+          <option value="10">10 min</option>
+          <option value="15">15 min</option>
+          <option value="20">20 min</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- Sound -->
+      <label class="sound-label">
+        <input type="checkbox" id="chk-sound"> Sound
+      </label>
+
+      <!-- Share dropdown -->
+      <div class="dropdown" id="dd-share">
+        <button class="dropdown-trigger" onclick="toggleDropdown('dd-share')">
+          Share <span class="chevron">▾</span>
+        </button>
+        <div class="dropdown-panel" style="right:0; left:auto; min-width:180px;">
+          <div class="dropdown-item" onclick="shareViaEmail()">✉ Share via email</div>
+          <div class="dropdown-item" onclick="copyShareLink()">⧉ Copy share link</div>
+        </div>
+      </div>
+
+      <!-- Save -->
+      <button class="btn" onclick="promptSave()">Save</button>
+
+      <!-- Reset -->
+      <button class="btn" onclick="promptReset()">Reset</button>
+
+      <!-- Help -->
+      <button class="btn" onclick="showHelp()">?</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Start button -->
+    <div class="start-area">
+      <button class="btn btn-accent btn-start" onclick="startActive()">Start</button>
+    </div>
+
+    <!-- Schedule table -->
+    <div class="schedule-wrap">
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Start Time</th>
+            <th>Activity</th>
+            <th title="Remove row">×</th>
+          </tr>
+        </thead>
+        <tbody id="schedule-body"></tbody>
+      </table>
+      <div class="schedule-add-row">
+        <button class="btn" onclick="addRow()">+ Add row</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===== ACTIVE VIEW ===== -->
+<div id="active-view">
+  <header class="active-header">
+    <div class="header-clock" id="active-clock">8:00am</div>
+    <button class="btn" onclick="stopActive()">Edit</button>
+  </header>
+  <main class="active-main" id="active-main">
+    <div class="active-phase" id="active-phase">Work</div>
+    <div class="timer-display" id="timer-display">25:00</div>
+    <div class="active-activity" id="active-activity">Do things!</div>
+    <div class="active-next" id="active-next">Next activity: <span>—</span></div>
+  </main>
+</div>
+
+<!-- ===== OVERLAYS ===== -->
+
+<!-- Save overlay -->
+<div class="overlay-backdrop" id="overlay-save">
+  <div class="overlay-box">
+    <div class="overlay-title">Save Schedule</div>
+    <input class="overlay-input" id="save-name-input" type="text" placeholder="Schedule name…" maxlength="60">
+    <div class="overlay-actions">
+      <button class="btn" onclick="closeOverlay('overlay-save')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveSchedule()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset confirm overlay -->
+<div class="overlay-backdrop" id="overlay-reset">
+  <div class="overlay-box">
+    <div class="overlay-title">Reset Everything?</div>
+    <div class="overlay-body">This will clear all rows and restore default settings. This cannot be undone.</div>
+    <div class="overlay-actions">
+      <button class="btn" onclick="closeOverlay('overlay-reset')">Cancel</button>
+      <button class="btn btn-danger" onclick="doReset()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help overlay -->
+<div class="overlay-backdrop" id="overlay-help">
+  <div class="overlay-box" style="max-width:520px;">
+    <div class="overlay-title">Pomodoro Schedule</div>
+    <div class="overlay-body">
+      <p>A simple timer to keep you on track through a scheduled day, using the Pomodoro technique of focused work blocks followed by short breaks.</p>
+      <h3>Edit Mode</h3>
+      <p>Fill in your schedule: each row has a <strong>Start Time</strong> and an optional <strong>Activity</strong>. Start times are auto-calculated from your chosen work and break lengths, but you can edit them manually — times below will update automatically.</p>
+      <p>Use the <strong>Work</strong> and <strong>Break</strong> dropdowns to set block lengths. Schedules can be saved locally and loaded later, or shared via a link.</p>
+      <h3>Active Mode</h3>
+      <p>Press <strong>Start</strong> to begin. The timer counts down your current work block, then automatically starts the break. The current activity and next activity are shown below the timer.</p>
+      <p>Press <strong>Edit</strong> at any time to return to the schedule. Pressing Start again resumes from where you left off.</p>
+      <h3>Sound</h3>
+      <p>Enable the <strong>Sound</strong> checkbox to hear a chime when each block transitions.</p>
+    </div>
+    <div class="overlay-actions">
+      <button class="btn btn-accent" onclick="closeOverlay('overlay-help')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--text); color:var(--bg); padding:9px 18px; border-radius:20px;
+  font-size:13px; font-weight:500; opacity:0; transition:opacity 0.22s, transform 0.22s;
+  z-index:999; pointer-events:none; white-space:nowrap;
+"></div>
+
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+"use strict";
+
+/* ----------------------------------------------------------------
+   STATE
+   ---------------------------------------------------------------- */
+const DEFAULT_WORK_MIN  = 25;
+const DEFAULT_BREAK_MIN = 5;
+const DEFAULT_START_HOUR = 8;
+const DEFAULT_ROWS = 22;
+
+let state = {
+  workMin:  DEFAULT_WORK_MIN,
+  breakMin: DEFAULT_BREAK_MIN,
+  rows: [],          // [{time: "8:00am", activity: ""}]
+  sound: false,
+};
+
+// Active session state
+let session = {
+  timerInterval: null,
+};
+
+/* ----------------------------------------------------------------
+   INIT
+   ---------------------------------------------------------------- */
+function init() {
+  loadFromURL();
+  buildDefaultRows();
+  renderTable();
+  updateClocks();
+  setInterval(updateClocks, 10000);
+  document.addEventListener("click", globalClickHandler);
+
+  // Sync selects
+  document.getElementById("sel-work").value  = state.workMin;
+  document.getElementById("sel-break").value = state.breakMin;
+  document.getElementById("chk-sound").checked = state.sound;
+  document.getElementById("chk-sound").addEventListener("change", e => { state.sound = e.target.checked; });
+}
+
+/* ----------------------------------------------------------------
+   URL LOADING (share links)
+   ---------------------------------------------------------------- */
+function loadFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("rows")) return;
+
+  try {
+    const w = parseInt(params.get("work"));
+    const b = parseInt(params.get("break"));
+    if (!isNaN(w) && [5,10,15,20,25,30,45,60].includes(w)) state.workMin  = w;
+    if (!isNaN(b) && [3,5,10,15,20].includes(b))           state.breakMin = b;
+
+    const blockSize = state.workMin + state.breakMin;
+
+    // Origin: encoded start-of-day in minutes, falling back to default
+    const startParam = parseInt(params.get("start"));
+    const firstMins  = !isNaN(startParam) ? startParam : DEFAULT_START_HOUR * 60;
+    const defaultTimeForIndex = i => minsToTimeStr(firstMins + i * blockSize);
+
+    const decoded = JSON.parse(atob(params.get("rows")));
+    if (!Array.isArray(decoded)) return;
+
+    // Restore explicit rows, filling in default times where omitted
+    state.rows = decoded.map((r, i) => ({
+      time:     r.t || defaultTimeForIndex(i),
+      activity: r.a || "",
+    }));
+
+    // Append trailing default rows
+    const tail = parseInt(params.get("tail") || "0");
+    for (let i = 0; i < tail; i++) {
+      const idx = state.rows.length;
+      state.rows.push({ time: defaultTimeForIndex(idx), activity: "" });
+    }
+  } catch(e) { /* ignore bad URL params */ }
+}
+
+/* ----------------------------------------------------------------
+   DEFAULT ROWS
+   ---------------------------------------------------------------- */
+function buildDefaultRows() {
+  if (state.rows.length) return; // already loaded (from URL or save)
+  state.rows = [];
+  let minutesSinceMidnight = DEFAULT_START_HOUR * 60;
+  const blockSize = state.workMin + state.breakMin;
+  for (let i = 0; i < DEFAULT_ROWS; i++) {
+    state.rows.push({ time: minsToTimeStr(minutesSinceMidnight), activity: "" });
+    minutesSinceMidnight += blockSize;
+  }
+}
+
+/* ----------------------------------------------------------------
+   TIME UTILITIES
+   ---------------------------------------------------------------- */
+function minsToTimeStr(totalMins) {
+  totalMins = ((totalMins % 1440) + 1440) % 1440;
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  const ampm = h < 12 ? "am" : "pm";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2,"0")}${ampm}`;
+}
+
+function timeStrToMins(str) {
+  str = str.trim().toLowerCase();
+  const match = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/);
+  if (!match) return null;
+  let h = parseInt(match[1]);
+  const m = parseInt(match[2]);
+  const ampm = match[3];
+  if (m < 0 || m > 59) return null;
+  if (ampm === "pm" && h !== 12) h += 12;
+  if (ampm === "am" && h === 12) h = 0;
+  if (h < 0 || h > 23) return null;
+  return h * 60 + m;
+}
+
+function formatClock(date) {
+  let h = date.getHours(), m = date.getMinutes();
+  const ampm = h < 12 ? "am" : "pm";
+  h = h % 12 === 0 ? 12 : h % 12;
+  return `${h}:${String(m).padStart(2,"0")}${ampm}`;
+}
+
+function updateClocks() {
+  const t = formatClock(new Date());
+  document.getElementById("edit-clock").textContent   = t;
+  document.getElementById("active-clock").textContent = t;
+}
+
+/* ----------------------------------------------------------------
+   TABLE RENDER
+   ---------------------------------------------------------------- */
+function renderTable() {
+  const tbody = document.getElementById("schedule-body");
+  tbody.innerHTML = "";
+  state.rows.forEach((row, i) => {
+    const tr = document.createElement("tr");
+    tr.draggable = true;
+    tr.dataset.index = i;
+    tr.innerHTML = `
+      <td><span class="drag-handle" title="Drag to reorder">⠿</span></td>
+      <td><input class="schedule-input time-input" type="text" value="${escHtml(row.time)}"
+            data-row="${i}" data-col="time"
+            onchange="onTimeEdit(${i}, this.value)"
+            onblur="onTimeBlur(${i}, this)"></td>
+      <td><input class="schedule-input" type="text" value="${escHtml(row.activity)}"
+            placeholder="Activity…"
+            data-row="${i}" data-col="activity"
+            oninput="state.rows[${i}].activity = this.value"></td>
+      <td><button class="row-delete" onclick="deleteRow(${i})" title="Remove row">×</button></td>
+    `;
+    // Drag events
+    tr.addEventListener("dragstart",  onDragStart);
+    tr.addEventListener("dragend",    onDragEnd);
+    tr.addEventListener("dragover",   onDragOver);
+    tr.addEventListener("dragleave",  onDragLeave);
+    tr.addEventListener("drop",       onDrop);
+    tbody.appendChild(tr);
+  });
+}
+
+/* ----------------------------------------------------------------
+   DRAG AND DROP
+   ---------------------------------------------------------------- */
+let dragSrcIndex = null;
+
+function onDragStart(e) {
+  dragSrcIndex = parseInt(this.dataset.index);
+  this.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", dragSrcIndex); // required for Firefox
+}
+
+function onDragEnd() {
+  dragSrcIndex = null;
+  clearDragStyles();
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  clearDragStyles();
+  const targetIndex = parseInt(this.dataset.index);
+  if (targetIndex === dragSrcIndex) return;
+  // Show insertion line above or below based on cursor position
+  const rect = this.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  if (e.clientY < midY) {
+    this.classList.add("drag-over-above");
+  } else {
+    this.classList.add("drag-over-below");
+  }
+}
+
+function onDragLeave() {
+  this.classList.remove("drag-over-above", "drag-over-below");
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const targetIndex = parseInt(this.dataset.index);
+  if (dragSrcIndex === null || targetIndex === dragSrcIndex) {
+    clearDragStyles();
+    return;
+  }
+
+  // Determine insert position: above or below target
+  const rect = this.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  let insertBefore = e.clientY < midY; // true = insert above target
+
+  // Remove dragged row from array
+  const [moved] = state.rows.splice(dragSrcIndex, 1);
+
+  // Adjust target index after removal
+  let insertAt = targetIndex;
+  if (dragSrcIndex < targetIndex) insertAt--; // array shifted left
+  if (!insertBefore) insertAt++;              // drop below target
+
+  insertAt = Math.max(0, Math.min(insertAt, state.rows.length));
+  state.rows.splice(insertAt, 0, moved);
+
+  // Recompute all times from first row
+  recomputeAllTimes();
+  clearDragStyles();
+  renderTable();
+}
+
+function clearDragStyles() {
+  document.querySelectorAll("#schedule-body tr").forEach(tr => {
+    tr.classList.remove("dragging", "drag-over-above", "drag-over-below");
+  });
+}
+
+function recomputeAllTimes() {
+  if (!state.rows.length) return;
+  const firstMins = timeStrToMins(state.rows[0].time) ?? (DEFAULT_START_HOUR * 60);
+  const blockSize = state.workMin + state.breakMin;
+  for (let i = 0; i < state.rows.length; i++) {
+    state.rows[i].time = minsToTimeStr(firstMins + i * blockSize);
+  }
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+/* ----------------------------------------------------------------
+   ROW EDITING
+   ---------------------------------------------------------------- */
+function onTimeEdit(rowIndex, value) {
+  const mins = timeStrToMins(value);
+  if (mins === null) return; // invalid – leave as-is, blur will restore
+
+  state.rows[rowIndex].time = minsToTimeStr(mins);
+
+  // Update all rows below
+  const blockSize = state.workMin + state.breakMin;
+  let cursor = mins + blockSize;
+  for (let i = rowIndex + 1; i < state.rows.length; i++) {
+    state.rows[i].time = minsToTimeStr(cursor);
+    cursor += blockSize;
+  }
+  renderTable();
+}
+
+function onTimeBlur(rowIndex, input) {
+  const mins = timeStrToMins(input.value);
+  if (mins === null) {
+    // Restore valid value
+    input.value = state.rows[rowIndex].time;
+  }
+}
+
+function onSettingChange() {
+  state.workMin  = parseInt(document.getElementById("sel-work").value);
+  state.breakMin = parseInt(document.getElementById("sel-break").value);
+
+  // Recompute times from first row down
+  const firstMins = timeStrToMins(state.rows[0]?.time) ?? (DEFAULT_START_HOUR * 60);
+  const blockSize = state.workMin + state.breakMin;
+  for (let i = 0; i < state.rows.length; i++) {
+    state.rows[i].time = minsToTimeStr(firstMins + i * blockSize);
+  }
+  renderTable();
+}
+
+function addRow() {
+  const blockSize = state.workMin + state.breakMin;
+  let lastMins = DEFAULT_START_HOUR * 60;
+  if (state.rows.length) {
+    const t = timeStrToMins(state.rows[state.rows.length - 1].time);
+    if (t !== null) lastMins = t + blockSize;
+  }
+  state.rows.push({ time: minsToTimeStr(lastMins), activity: "" });
+  renderTable();
+  // Scroll to bottom
+  const tbody = document.getElementById("schedule-body");
+  tbody.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function deleteRow(i) {
+  state.rows.splice(i, 1);
+  recomputeAllTimes();
+  renderTable();
+}
+
+/* ----------------------------------------------------------------
+   DROPDOWNS
+   ---------------------------------------------------------------- */
+function toggleDropdown(id) {
+  const dd = document.getElementById(id);
+  const wasOpen = dd.classList.contains("open");
+  closeAllDropdowns();
+  if (!wasOpen) {
+    dd.classList.add("open");
+    if (id === "dd-schedules") refreshSchedulesList();
+  }
+}
+
+function closeAllDropdowns() {
+  document.querySelectorAll(".dropdown.open").forEach(d => d.classList.remove("open"));
+  document.getElementById("delete-confirm").style.display = "none";
+  document.getElementById("schedule-actions").style.display = "none";
+}
+
+function globalClickHandler(e) {
+  if (!e.target.closest(".dropdown")) closeAllDropdowns();
+}
+
+/* ----------------------------------------------------------------
+   SCHEDULES (localStorage)
+   ---------------------------------------------------------------- */
+function getSavedSchedules() {
+  try { return JSON.parse(localStorage.getItem("pomodoro_schedules") || "{}"); }
+  catch(e) { return {}; }
+}
+
+function saveSchedulesToStorage(obj) {
+  localStorage.setItem("pomodoro_schedules", JSON.stringify(obj));
+}
+
+let selectedScheduleName = null;
+
+function refreshSchedulesList() {
+  const saved = getSavedSchedules();
+  const names = Object.keys(saved);
+  const list  = document.getElementById("schedules-list");
+  const actions = document.getElementById("schedule-actions");
+
+  list.innerHTML = "";
+  selectedScheduleName = null;
+  actions.style.display = "none";
+  document.getElementById("delete-confirm").style.display = "none";
+
+  if (!names.length) {
+    list.innerHTML = `<div class="dropdown-item" style="color:var(--text-3); font-style:italic;">No saved schedules</div>`;
+    return;
+  }
+
+  names.forEach(name => {
+    const item = document.createElement("div");
+    item.className = "dropdown-item";
+    item.textContent = name;
+    item.onclick = () => selectSchedule(name);
+    list.appendChild(item);
+  });
+}
+
+function selectSchedule(name) {
+  selectedScheduleName = name;
+  document.querySelectorAll("#schedules-list .dropdown-item").forEach(el => {
+    el.style.fontWeight = el.textContent === name ? "700" : "";
+    el.style.color = el.textContent === name ? "var(--accent)" : "";
+  });
+  document.getElementById("schedule-actions").style.display = "flex";
+  document.getElementById("delete-confirm").style.display = "none";
+}
+
+function loadSelectedSchedule() {
+  if (!selectedScheduleName) return;
+  const saved = getSavedSchedules()[selectedScheduleName];
+  if (!saved) return;
+
+  state.workMin  = saved.workMin  || DEFAULT_WORK_MIN;
+  state.breakMin = saved.breakMin || DEFAULT_BREAK_MIN;
+  state.rows     = saved.rows || [];
+  document.getElementById("sel-work").value  = state.workMin;
+  document.getElementById("sel-break").value = state.breakMin;
+  renderTable();
+  closeAllDropdowns();
+  showToast(`Loaded "${selectedScheduleName}"`);
+}
+
+function showDeleteConfirm() {
+  document.getElementById("delete-confirm").style.display = "flex";
+}
+
+function deleteSelectedSchedule() {
+  if (!selectedScheduleName) return;
+  const saved = getSavedSchedules();
+  delete saved[selectedScheduleName];
+  saveSchedulesToStorage(saved);
+  closeAllDropdowns();
+  showToast(`Deleted "${selectedScheduleName}"`);
+}
+
+function promptSave() {
+  const inp = document.getElementById("save-name-input");
+  inp.value = "";
+  openOverlay("overlay-save");
+  setTimeout(() => inp.focus(), 80);
+}
+
+function saveSchedule() {
+  const name = document.getElementById("save-name-input").value.trim();
+  if (!name) { showToast("Please enter a name"); return; }
+  const saved = getSavedSchedules();
+  saved[name] = { workMin: state.workMin, breakMin: state.breakMin, rows: state.rows };
+  saveSchedulesToStorage(saved);
+  closeOverlay("overlay-save");
+  showToast(`Saved "${name}"`);
+}
+
+/* ----------------------------------------------------------------
+   RESET
+   ---------------------------------------------------------------- */
+function promptReset() { openOverlay("overlay-reset"); }
+
+function doReset() {
+  state.workMin  = DEFAULT_WORK_MIN;
+  state.breakMin = DEFAULT_BREAK_MIN;
+  state.sound    = false;
+  state.rows     = [];
+  document.getElementById("sel-work").value  = DEFAULT_WORK_MIN;
+  document.getElementById("sel-break").value = DEFAULT_BREAK_MIN;
+  document.getElementById("chk-sound").checked = false;
+  buildDefaultRows();
+  renderTable();
+  closeOverlay("overlay-reset");
+  showToast("Reset to defaults");
+}
+
+/* ----------------------------------------------------------------
+   SHARE
+   ---------------------------------------------------------------- */
+function buildShareURL() {
+  const blockSize = state.workMin + state.breakMin;
+
+  // Use the actual first row's time as the reference origin.
+  // A row's time is "default" iff it equals origin + i * blockSize.
+  const firstMins = state.rows.length ? (timeStrToMins(state.rows[0].time) ?? DEFAULT_START_HOUR * 60) : DEFAULT_START_HOUR * 60;
+  const defaultTimeForIndex = i => minsToTimeStr(firstMins + i * blockSize);
+
+  // Find last row that has content or a time that deviates from the origin-based default
+  let lastMeaningful = -1;
+  for (let i = 0; i < state.rows.length; i++) {
+    const hasActivity    = state.rows[i].activity.trim() !== "";
+    const hasModifiedTime = state.rows[i].time !== defaultTimeForIndex(i);
+    if (hasActivity || hasModifiedTime) lastMeaningful = i;
+  }
+
+  // Rows to encode explicitly; trailing empty+default rows become just a count
+  const explicitRows = state.rows.slice(0, lastMeaningful + 1);
+  const tailCount    = state.rows.length - explicitRows.length;
+
+  // For each explicit row, omit the time if it matches the origin-based default
+  const encoded = explicitRows.map((r, i) => {
+    const obj = { a: r.activity };
+    if (r.time !== defaultTimeForIndex(i)) obj.t = r.time;
+    return obj;
+  });
+
+  const rowsEncoded = btoa(JSON.stringify(encoded));
+  const params = new URLSearchParams({ rows: rowsEncoded });
+  if (state.workMin  !== DEFAULT_WORK_MIN)  params.set("work",  state.workMin);
+  if (state.breakMin !== DEFAULT_BREAK_MIN) params.set("break", state.breakMin);
+  // Only include start if it differs from the hardcoded default
+  if (firstMins !== DEFAULT_START_HOUR * 60) params.set("start", firstMins);
+  if (tailCount > 0) params.set("tail", tailCount);
+
+  return `https://clisby.net/projects/pomodoro/?${params.toString()}`;
+}
+
+function copyShareLink() {
+  const url = buildShareURL();
+  navigator.clipboard.writeText(url).then(() => showToast("Link copied!")).catch(() => {
+    prompt("Copy this link:", url);
+  });
+  closeAllDropdowns();
+}
+
+function shareViaEmail() {
+  const url  = buildShareURL();
+  const subj = encodeURIComponent("Pomodoro Schedule");
+  const body = encodeURIComponent(`Here's my Pomodoro schedule:\n\n${url}`);
+  window.location.href = `mailto:?subject=${subj}&body=${body}`;
+  closeAllDropdowns();
+}
+
+/* ----------------------------------------------------------------
+   ACTIVE MODE  (clock-anchored)
+   ---------------------------------------------------------------- */
+
+// Returns the schedule as a flat list of events with absolute minute times:
+// [{startMins, endMins, phase: "work"|"break", rowIndex}]
+// rowIndex is the index into state.rows for work blocks; -1 for breaks.
+function buildScheduleEvents() {
+  const blockSize = state.workMin + state.breakMin;
+  const events = [];
+  state.rows.forEach((row, i) => {
+    const startMins = timeStrToMins(row.time);
+    if (startMins === null) return;
+    const workEnd  = startMins + state.workMin;
+    const breakEnd = startMins + blockSize;
+    events.push({ startMins, endMins: workEnd,  phase: "work",  rowIndex: i });
+    // Only add break if there's a next row (no trailing break after last block)
+    if (i < state.rows.length - 1) {
+      events.push({ startMins: workEnd, endMins: breakEnd, phase: "break", rowIndex: i });
+    }
+  });
+  return events;
+}
+
+// Given the current wall-clock time in minutes-since-midnight, return:
+// { status: "before", secsUntilStart, firstRow }
+// { status: "active", phase, rowIndex, secsLeft, nextRowIndex }
+// { status: "complete" }
+function computeClockState(nowMins) {
+  const events = buildScheduleEvents();
+  if (!events.length) return { status: "complete" };
+
+  const firstStart = events[0].startMins;
+  const lastEnd    = events[events.length - 1].endMins;
+
+  if (nowMins < firstStart) {
+    return {
+      status: "before",
+      secsUntilStart: Math.round((firstStart - nowMins) * 60),
+      firstRow: state.rows[0],
+    };
+  }
+
+  if (nowMins >= lastEnd) {
+    return { status: "complete" };
+  }
+
+  // Find the event containing nowMins
+  for (let i = 0; i < events.length; i++) {
+    const ev = events[i];
+    if (nowMins >= ev.startMins && nowMins < ev.endMins) {
+      const secsLeft = Math.round((ev.endMins - nowMins) * 60);
+      // Next work block row index (skip the upcoming break if in work phase)
+      let nextRowIndex = -1;
+      if (ev.phase === "work") {
+        nextRowIndex = ev.rowIndex + 1 < state.rows.length ? ev.rowIndex + 1 : -1;
+      } else {
+        // In a break — next work block is rowIndex + 1
+        nextRowIndex = ev.rowIndex + 1 < state.rows.length ? ev.rowIndex + 1 : -1;
+      }
+      return {
+        status: "active",
+        phase: ev.phase,
+        rowIndex: ev.rowIndex,
+        secsLeft,
+        nextRowIndex,
+      };
+    }
+  }
+
+  return { status: "complete" };
+}
+
+function nowMins() {
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+}
+
+function startActive() {
+  if (!state.rows.length) { showToast("Add some rows first!"); return; }
+  showActiveView();
+  // Restore the active-main structure in case showComplete() replaced it
+  resetActiveMain();
+  tick();
+  startInterval();
+}
+
+function stopActive() {
+  clearInterval(session.timerInterval);
+  session.timerInterval = null;
+  showEditView();
+}
+
+function showEditView() {
+  document.getElementById("edit-view").style.display = "";
+  const av = document.getElementById("active-view");
+  av.classList.remove("active", "phase-work", "phase-break");
+}
+
+function showActiveView() {
+  document.getElementById("edit-view").style.display = "none";
+  document.getElementById("active-view").classList.add("active");
+}
+
+function startInterval() {
+  clearInterval(session.timerInterval);
+  session.timerInterval = setInterval(tick, 1000);
+}
+
+// Track previous phase/rowIndex to detect transitions for chime
+let _prevPhase = null;
+let _prevRowIndex = null;
+
+function tick() {
+  const cs = computeClockState(nowMins());
+
+  if (cs.status === "complete") {
+    clearInterval(session.timerInterval);
+    showComplete();
+    return;
+  }
+
+  const phaseEl    = document.getElementById("active-phase");
+  const timerEl    = document.getElementById("timer-display");
+  const activityEl = document.getElementById("active-activity");
+  const nextEl     = document.getElementById("active-next");
+  if (!phaseEl) return; // DOM replaced by showComplete
+
+  if (cs.status === "before") {
+    // Chime suppressed — no transition yet
+    _prevPhase = null; _prevRowIndex = null;
+
+    phaseEl.textContent = "";
+    phaseEl.classList.remove("break");
+    const m = Math.ceil(cs.secsUntilStart / 60);
+    timerEl.textContent = `${m}`;
+    const firstActivity = state.rows[0]?.activity?.trim();
+    activityEl.textContent = `Starting at ${escHtml(state.rows[0]?.time || "")}`;
+    nextEl.innerHTML = firstActivity
+      ? `First activity: <span>${escHtml(firstActivity)}</span>`
+      : ``;
+    return;
+  }
+
+  // status === "active"
+  // Detect phase/row transition → play chime
+  if (_prevPhase !== null &&
+      (cs.phase !== _prevPhase || cs.rowIndex !== _prevRowIndex)) {
+    playChime();
+  }
+  _prevPhase    = cs.phase;
+  _prevRowIndex = cs.rowIndex;
+
+  const m = Math.ceil(cs.secsLeft / 60);
+  timerEl.textContent = `${m}`;
+
+  if (cs.phase === "work") {
+    phaseEl.textContent = "Work";
+    phaseEl.classList.remove("break");
+    activityEl.textContent = state.rows[cs.rowIndex]?.activity?.trim() || "Do things!";
+    document.getElementById("active-view").classList.add("phase-work");
+    document.getElementById("active-view").classList.remove("phase-break");
+  } else {
+    phaseEl.textContent = "Break";
+    phaseEl.classList.add("break");
+    activityEl.textContent = "Take a break!";
+    document.getElementById("active-view").classList.add("phase-break");
+    document.getElementById("active-view").classList.remove("phase-work");
+  }
+
+  if (cs.nextRowIndex >= 0) {
+    const nextActivity = state.rows[cs.nextRowIndex]?.activity?.trim() || "Do things!";
+    nextEl.innerHTML = `Next activity: <span>${escHtml(nextActivity)}</span>`;
+  } else {
+    nextEl.innerHTML = `Next activity: <span>—</span>`;
+  }
+}
+
+function resetActiveMain() {
+  const main = document.getElementById("active-main");
+  // Only rebuild if showComplete() has replaced the contents
+  if (!document.getElementById("active-phase")) {
+    main.innerHTML = `
+      <div class="active-phase" id="active-phase">Work</div>
+      <div class="timer-display" id="timer-display">--:--</div>
+      <div class="active-activity" id="active-activity"></div>
+      <div class="active-next" id="active-next"></div>
+    `;
+  }
+}
+
+function showComplete() {
+  clearInterval(session.timerInterval);
+  _prevPhase = null; _prevRowIndex = null;
+  const main = document.getElementById("active-main");
+  main.innerHTML = `
+    <div class="complete-msg">Schedule complete!</div>
+    <p style="color:var(--text-2); margin-top:12px;">Great work today.</p>
+    <button class="btn btn-accent" style="margin-top:24px;" onclick="stopActive()">Back to Edit</button>
+  `;
+}
+
+/* ----------------------------------------------------------------
+   SOUND  (Web Audio API)
+   ---------------------------------------------------------------- */
+let audioCtx = null;
+
+function playChime() {
+  if (!state.sound) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = audioCtx;
+
+    const freqs = [523.25, 659.25, 783.99]; // C5, E5, G5 — pleasant major chord arpeggio
+    freqs.forEach((freq, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const t0 = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.35, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.8);
+      osc.start(t0);
+      osc.stop(t0 + 0.85);
+    });
+  } catch(e) { /* audio not available */ }
+}
+
+/* ----------------------------------------------------------------
+   OVERLAYS
+   ---------------------------------------------------------------- */
+function openOverlay(id) {
+  document.getElementById(id).classList.add("open");
+}
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove("open");
+}
+function showHelp() { openOverlay("overlay-help"); }
+
+// Close overlay on backdrop click
+document.querySelectorAll(".overlay-backdrop").forEach(el => {
+  el.addEventListener("click", e => {
+    if (e.target === el) closeOverlay(el.id);
+  });
+});
+
+// Save on Enter
+document.getElementById("save-name-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") saveSchedule();
+});
+
+/* ----------------------------------------------------------------
+   TOAST
+   ---------------------------------------------------------------- */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.style.opacity = "1";
+  el.style.transform = "translateX(-50%) translateY(0)";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateX(-50%) translateY(20px)";
+  }, 2400);
+}
+
+/* ----------------------------------------------------------------
+   BOOT
+   ---------------------------------------------------------------- */
+init();
+</script>
+</body>
+</html>
