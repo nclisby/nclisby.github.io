@@ -773,13 +773,15 @@
   <div class="overlay-box" style="max-width:520px;">
     <div class="overlay-title">Daily Schedule</div>
     <div class="overlay-body">
-      <p>A simple timer to keep you on track through a scheduled day, using the Pomodoro technique of focused work blocks followed by short breaks.</p>
+      <p>A simple timer that allows you to schedule focused work blocks
+      interspersed with short breaks.</p>
       <h3>Edit Mode</h3>
       <p>Fill in your schedule: each row has a <strong>Start Time</strong> and an optional <strong>Activity</strong>. Start times are auto-calculated from your chosen work and break lengths, but you can edit them manually — times below will update automatically.</p>
       <p>Use the <strong>Work</strong> and <strong>Break</strong> dropdowns to set block lengths. Schedules can be saved locally and loaded later, or shared via a link.</p>
       <h3>Active Mode</h3>
       <p>Press <strong>Start</strong> to begin. The timer counts down your current work block, then automatically starts the break. The current activity and next activity are shown below the timer.</p>
-      <p>Press <strong>Edit</strong> at any time to return to the schedule. Pressing Start again resumes from where you left off.</p>
+      <p>Press <strong>Edit</strong> at any time to return to the schedule.
+      Pressing Start restarts active mode .</p>
       <h3>Sound</h3>
       <p>Enable the <strong>Sound</strong> checkbox to hear a chime when each block transitions.</p>
     </div>
@@ -1757,11 +1759,11 @@ function showComplete() {
   clearInterval(session.timerInterval);
   _prevPhase = null; _prevRowIndex = null;
   playChime();
-  sendNotification("Schedule complete!", "Great work today.");
+  sendNotification("Schedule complete.", "Great job!");
   const main = document.getElementById("active-main");
   main.innerHTML = `
-    <div class="complete-msg">Schedule complete!</div>
-    <p style="color:var(--text-2); margin-top:12px;">Great work today.</p>
+    <div class="complete-msg">Schedule complete.</div>
+    <p style="color:var(--text-2); margin-top:12px;">Great job!</p>
     <button class="btn btn-accent" style="margin-top:24px;" onclick="stopActive()">Back to Edit</button>
   `;
 }
