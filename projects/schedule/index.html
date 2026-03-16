@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1c1c1e">
-<title>Daily schedule</title>
+<title>Daily Schedule</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
 
 <!-- ============================================================
      STYLES
@@ -761,6 +759,7 @@ const DEFAULT_WORK_MIN  = 25;
 const DEFAULT_BREAK_MIN = 5;
 const DEFAULT_START_HOUR = 8;
 const DEFAULT_ROWS = 22;
+const SCHEDULE_VERSION = 1;  // increment when URL/save format changes
 
 let state = {
   workMin:  DEFAULT_WORK_MIN,
@@ -801,6 +800,13 @@ function loadFromURL() {
   const params = new URLSearchParams(window.location.search);
   if (!params.has("rows")) return;
 
+  // Version defaults to 1 if absent (for links generated before versioning)
+  const v = parseInt(params.get("v") || "1");
+  if (v === 1) loadFromURL_v1(params);
+  // Future versions: else if (v === 2) loadFromURL_v2(params);
+}
+
+function loadFromURL_v1(params) {
   try {
     const w = parseInt(params.get("work"));
     const b = parseInt(params.get("break"));
@@ -1140,14 +1146,22 @@ function loadSelectedSchedule() {
   const saved = getSavedSchedules()[selectedScheduleName];
   if (!saved) return;
 
-  state.workMin  = saved.workMin  || DEFAULT_WORK_MIN;
-  state.breakMin = saved.breakMin || DEFAULT_BREAK_MIN;
-  state.rows     = saved.rows || [];
-  document.getElementById("sel-work").value  = state.workMin;
-  document.getElementById("sel-break").value = state.breakMin;
+  // Version defaults to 1 if absent (saved before versioning was added)
+  const v = saved.version || 1;
+  if (v === 1) loadSavedSchedule_v1(saved);
+  // Future versions: else if (v === 2) loadSavedSchedule_v2(saved);
+
   renderTable();
   closeAllDropdowns();
   showToast(`Loaded "${selectedScheduleName}"`);
+}
+
+function loadSavedSchedule_v1(saved) {
+  state.workMin  = saved.workMin  || DEFAULT_WORK_MIN;
+  state.breakMin = saved.breakMin || DEFAULT_BREAK_MIN;
+  state.rows     = saved.rows     || [];
+  document.getElementById("sel-work").value  = state.workMin;
+  document.getElementById("sel-break").value = state.breakMin;
 }
 
 function showDeleteConfirm() {
@@ -1174,7 +1188,12 @@ function saveSchedule() {
   const name = document.getElementById("save-name-input").value.trim();
   if (!name) { showToast("Please enter a name"); return; }
   const saved = getSavedSchedules();
-  saved[name] = { workMin: state.workMin, breakMin: state.breakMin, rows: state.rows };
+  saved[name] = {
+    version:  SCHEDULE_VERSION,
+    workMin:  state.workMin,
+    breakMin: state.breakMin,
+    rows:     state.rows,
+  };
   saveSchedulesToStorage(saved);
   closeOverlay("overlay-save");
   showToast(`Saved "${name}"`);
@@ -1230,7 +1249,7 @@ function buildShareURL() {
   });
 
   const rowsEncoded = btoa(JSON.stringify(encoded));
-  const params = new URLSearchParams({ rows: rowsEncoded });
+  const params = new URLSearchParams({ v: SCHEDULE_VERSION, rows: rowsEncoded });
   if (state.workMin  !== DEFAULT_WORK_MIN)  params.set("work",  state.workMin);
   if (state.breakMin !== DEFAULT_BREAK_MIN) params.set("break", state.breakMin);
   // Only include start if it differs from the hardcoded default
@@ -1515,7 +1534,6 @@ function sendNotification(title, body) {
       new Notification(title, {
         body: body || "",
         icon: "icon.svg",
-        silent: true,
         tag: "schedule-transition",
       });
     } catch(e) { /* not available */ }

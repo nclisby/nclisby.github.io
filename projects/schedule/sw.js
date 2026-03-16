@@ -32,9 +32,8 @@ self.addEventListener("message", event => {
         body: body || "",
         icon: "icon.svg",
         badge: "icon.svg",
-        silent: true,   // app handles sound via Web Audio
         tag: "schedule-transition",   // replace previous notification
-        renotify: false,
+        renotify: true,               // vibrate/sound even if replacing same tag
       })
     );
   }
