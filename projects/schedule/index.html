@@ -863,8 +863,8 @@ function loadFromURL_v1(params) {
   try {
     const w = parseInt(params.get("work"));
     const b = parseInt(params.get("break"));
-    if (!isNaN(w) && [5,10,15,20,25,30,45,60].includes(w)) state.workMin  = w;
-    if (!isNaN(b) && [3,5,10,15,20].includes(b))           state.breakMin = b;
+    if (!isNaN(w) && [5,10,15,20,25,30,40,50,60].includes(w)) state.workMin  = w;
+    if (!isNaN(b) && [1,2,3,5,10,15,20].includes(b))          state.breakMin = b;
 
     const blockSize = state.workMin + state.breakMin;
     const startParam = parseInt(params.get("start"));
@@ -1423,8 +1423,8 @@ function buildShareURL() {
   // Total row count only needed if it differs from DEFAULT_ROWS
   const rowsEncoded = btoa(JSON.stringify(sparse));
   const params = new URLSearchParams({ v: SCHEDULE_VERSION, rows: rowsEncoded });
-  if (state.workMin  !== DEFAULT_WORK_MIN)  params.set("work",  state.workMin);
-  if (state.breakMin !== DEFAULT_BREAK_MIN) params.set("break", state.breakMin);
+  params.set("work",  state.workMin);
+  params.set("break", state.breakMin);
   if (firstMins !== DEFAULT_START_HOUR * 60) params.set("start", firstMins);
   if (regular.length !== DEFAULT_ROWS) params.set("n", regular.length);
   const finMins = finRow ? (timeStrToMins(finRow.time) ?? defaultFinishMins) : defaultFinishMins;
