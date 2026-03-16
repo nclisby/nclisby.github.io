@@ -714,8 +714,8 @@
             <th></th>
             <th>Start Time</th>
             <th>Activity</th>
-            <th title="Insert row below">+</th>
-            <th title="Remove row">×</th>
+            <th title="Insert row below"><button class="row-insert" onclick="insertRowBefore()" title="Insert row at start">+</button></th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="schedule-body"></tbody>
@@ -1057,21 +1057,26 @@ function onDrop(e) {
   // Determine insert position: above or below target
   const rect = this.getBoundingClientRect();
   const midY = rect.top + rect.height / 2;
-  let insertBefore = e.clientY < midY; // true = insert above target
+  const insertBefore = e.clientY < midY;
 
-  // Remove dragged row from array
-  const [moved] = state.rows.splice(dragSrcIndex, 1);
+  // Extract just the activities from regular rows (times stay fixed)
+  const regular = state.rows.filter(r => !r.isFinish);
+  const activities = regular.map(r => r.activity);
 
-  // Adjust target index after removal
+  // Reorder activities: remove from src, insert at destination
+  const [moved] = activities.splice(dragSrcIndex, 1);
   let insertAt = targetIndex;
-  if (dragSrcIndex < targetIndex) insertAt--; // array shifted left
-  if (!insertBefore) insertAt++;              // drop below target
+  if (dragSrcIndex < targetIndex) insertAt--;
+  if (!insertBefore) insertAt++;
+  insertAt = Math.max(0, Math.min(insertAt, activities.length));
+  activities.splice(insertAt, 0, moved);
 
-  insertAt = Math.max(0, Math.min(insertAt, state.rows.length));
-  state.rows.splice(insertAt, 0, moved);
+  // Write activities back — times are untouched
+  let ai = 0;
+  for (let i = 0; i < state.rows.length; i++) {
+    if (!state.rows[i].isFinish) state.rows[i].activity = activities[ai++];
+  }
 
-  // Recompute all times from first row
-  recomputeAllTimes();
   clearDragStyles();
   renderTable();
 }
@@ -1200,6 +1205,15 @@ function recomputeFromFirstRow() {
     state.rows[i].time = minsToTimeStr(cursor);
     if (!state.rows[i].isFinish) cursor += blockSize;
   }
+  renderTable();
+}
+
+function insertRowBefore() {
+  // Insert a new row before the first row, one block earlier
+  const blockSize = state.workMin + state.breakMin;
+  const firstMins = timeStrToMins(state.rows[0]?.time) ?? (DEFAULT_START_HOUR * 60);
+  const newMins   = firstMins - blockSize;
+  state.rows.unshift({ time: minsToTimeStr(newMins), activity: "" });
   renderTable();
 }
 
@@ -1474,18 +1488,17 @@ function buildScheduleEvents() {
 // { status: "active", phase, rowIndex, secsLeft, nextRowIndex }
 // { status: "complete" }
 function computeClockState(nowMins) {
-  const finRow = state.rows.find(r => r.isFinish);
-  const finMins = finRow ? timeStrToMins(finRow.time) : null;
-
-  // Complete if at or past finish time
-  if (finMins !== null && nowMins >= finMins) {
-    return { status: "complete" };
-  }
-
   const events = buildScheduleEvents();
   if (!events.length) return { status: "complete" };
 
   const firstStart = events[0].startMins;
+
+  // Complete if at or past the start of the final break
+  const lastEvent = events[events.length - 1];
+  const completeAt = (lastEvent.phase === "break") ? lastEvent.startMins : lastEvent.endMins;
+  if (nowMins >= completeAt) {
+    return { status: "complete" };
+  }
 
   if (nowMins < firstStart) {
     return {
