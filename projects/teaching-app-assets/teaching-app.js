@@ -1329,7 +1329,7 @@ var TeachingApp = (function () {
       e.stopPropagation(); e.preventDefault();
       if (!active) {
         active = true; btn.classList.add('active'); updateSizes();
-        if (isTouch(e)) {
+        if (isTouch(e) || e.pointerType === 'pen') {
           var centre = getCanvasCentre();
           var clamped = clampToCanvas(centre.x, centre.y);
           pointerX = clamped.x; pointerY = clamped.y;
