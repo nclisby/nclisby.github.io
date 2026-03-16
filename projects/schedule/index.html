@@ -826,6 +826,9 @@ let session = {
    ---------------------------------------------------------------- */
 function init() {
   loadFromURL();
+  if (window.location.search) {
+    history.replaceState(null, "", window.location.pathname);
+  }
   buildDefaultRows();
   renderTable();
   updateClocks();
