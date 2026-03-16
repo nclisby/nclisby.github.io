@@ -72,6 +72,7 @@
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     max-width: 100vw;
+    overscroll-behavior: none;
   }
 
   /* ---------- Layout ---------- */
@@ -1002,6 +1003,11 @@ function renderTable() {
       tr.addEventListener("dragover",   onDragOver);
       tr.addEventListener("dragleave",  onDragLeave);
       tr.addEventListener("drop",       onDrop);
+      // Touch drag — attach to the handle element after innerHTML is set
+      const handle = tr.querySelector(".drag-handle");
+      handle.addEventListener("touchstart",  onTouchDragStart, { passive: true });
+      handle.addEventListener("touchmove",   onTouchDragMove,  { passive: false });
+      handle.addEventListener("touchend",    onTouchDragEnd,   { passive: true });
     }
     tbody.appendChild(tr);
   });
@@ -1088,6 +1094,80 @@ function clearDragStyles() {
   document.querySelectorAll("#schedule-body tr").forEach(tr => {
     tr.classList.remove("dragging", "drag-over-above", "drag-over-below");
   });
+}
+
+/* ----------------------------------------------------------------
+   TOUCH DRAG  (for mobile)
+   ---------------------------------------------------------------- */
+let touchDragSrcIndex = null;
+let touchDragCurrentTarget = null;
+
+function onTouchDragStart(e) {
+  const tr = e.currentTarget.closest("tr");
+  touchDragSrcIndex = parseInt(tr.dataset.index);
+  tr.classList.add("dragging");
+}
+
+function onTouchDragMove(e) {
+  if (touchDragSrcIndex === null) return;
+  e.preventDefault(); // prevent scroll while dragging
+
+  const touch = e.touches[0];
+  // Temporarily hide the dragging row so elementFromPoint finds the target beneath
+  const srcTr = document.querySelector(`#schedule-body tr[data-index="${touchDragSrcIndex}"]`);
+  if (srcTr) srcTr.style.pointerEvents = "none";
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (srcTr) srcTr.style.pointerEvents = "";
+
+  const targetTr = el?.closest("#schedule-body tr");
+  if (!targetTr || targetTr === touchDragCurrentTarget) return;
+
+  clearDragStyles();
+  srcTr?.classList.add("dragging");
+
+  const targetIndex = parseInt(targetTr.dataset.index);
+  if (isNaN(targetIndex) || targetIndex === touchDragSrcIndex) return;
+  if (state.rows[targetIndex]?.isFinish) return;
+
+  touchDragCurrentTarget = targetTr;
+  const rect = targetTr.getBoundingClientRect();
+  if (touch.clientY < rect.top + rect.height / 2) {
+    targetTr.classList.add("drag-over-above");
+  } else {
+    targetTr.classList.add("drag-over-below");
+  }
+}
+
+function onTouchDragEnd(e) {
+  if (touchDragSrcIndex === null) return;
+
+  const targetTr = touchDragCurrentTarget;
+  if (targetTr) {
+    const targetIndex = parseInt(targetTr.dataset.index);
+    const insertBefore = targetTr.classList.contains("drag-over-above");
+
+    if (!isNaN(targetIndex) && targetIndex !== touchDragSrcIndex &&
+        !state.rows[targetIndex]?.isFinish) {
+      // Same activity-reorder logic as mouse drop
+      const regular = state.rows.filter(r => !r.isFinish);
+      const activities = regular.map(r => r.activity);
+      const [moved] = activities.splice(touchDragSrcIndex, 1);
+      let insertAt = targetIndex;
+      if (touchDragSrcIndex < targetIndex) insertAt--;
+      if (!insertBefore) insertAt++;
+      insertAt = Math.max(0, Math.min(insertAt, activities.length));
+      activities.splice(insertAt, 0, moved);
+      let ai = 0;
+      for (let i = 0; i < state.rows.length; i++) {
+        if (!state.rows[i].isFinish) state.rows[i].activity = activities[ai++];
+      }
+    }
+  }
+
+  touchDragSrcIndex = null;
+  touchDragCurrentTarget = null;
+  clearDragStyles();
+  renderTable();
 }
 
 function recomputeAllTimes() {
