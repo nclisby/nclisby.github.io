@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pomodoro Schedule</title>
+<meta name="theme-color" content="#1c1c1e">
+<title>Daily Schedule</title>
+<link rel="manifest" href="manifest.json">
 
 <!-- ============================================================
      STYLES
@@ -717,7 +719,7 @@
 <!-- Help overlay -->
 <div class="overlay-backdrop" id="overlay-help">
   <div class="overlay-box" style="max-width:520px;">
-    <div class="overlay-title">Pomodoro Schedule</div>
+    <div class="overlay-title">Daily Schedule</div>
     <div class="overlay-body">
       <p>A simple timer to keep you on track through a scheduled day, using the Pomodoro technique of focused work blocks followed by short breaks.</p>
       <h3>Edit Mode</h3>
@@ -780,6 +782,7 @@ function init() {
   updateClocks();
   setInterval(updateClocks, 10000); // edit mode clock; active mode uses tick()
   document.addEventListener("click", globalClickHandler);
+  registerServiceWorker();
   requestNotificationPermission();
 
   // Sync selects
@@ -1469,13 +1472,25 @@ function showComplete() {
 /* ----------------------------------------------------------------
    NOTIFICATIONS
    ---------------------------------------------------------------- */
+/* ----------------------------------------------------------------
+   SERVICE WORKER REGISTRATION
+   ---------------------------------------------------------------- */
+let swRegistration = null;
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("sw.js")
+    .then(reg => {
+      swRegistration = reg;
+    })
+    .catch(() => { /* SW not available — silent fallback */ });
+}
+
+/* ----------------------------------------------------------------
+   NOTIFICATIONS  (routed via Service Worker for background support)
+   ---------------------------------------------------------------- */
 function requestNotificationPermission() {
-  if (!("Notification" in window)) return;
-  if (Notification.permission === "default") {
-    // Defer the prompt until the user first presses Start,
-    // to avoid a cold permission dialog on page load.
-    // (called from startActive instead)
-  }
+  // Called at init — does nothing until user gesture
 }
 
 function askNotificationPermission() {
@@ -1488,13 +1503,21 @@ function askNotificationPermission() {
 function sendNotification(title, body) {
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
-  try {
-    new Notification(title, {
-      body: body || "",
-      icon: "", // no icon — keeps it minimal
-      silent: true, // we handle sound ourselves via Web Audio
-    });
-  } catch(e) { /* notifications not available in this context */ }
+
+  // Prefer SW-based notification (works in background)
+  if (swRegistration && swRegistration.active) {
+    swRegistration.active.postMessage({ type: "NOTIFY", title, body: body || "" });
+  } else {
+    // Fallback: direct Notification (foreground only)
+    try {
+      new Notification(title, {
+        body: body || "",
+        icon: "icon.svg",
+        silent: true,
+        tag: "schedule-transition",
+      });
+    } catch(e) { /* not available */ }
+  }
 }
 
 /* ----------------------------------------------------------------

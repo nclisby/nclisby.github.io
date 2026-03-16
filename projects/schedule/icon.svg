@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Wood grain gradient for case -->
+    <linearGradient id="wood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#5c3a1e"/>
+      <stop offset="30%"  stop-color="#7a4e2d"/>
+      <stop offset="50%"  stop-color="#8b5e3c"/>
+      <stop offset="70%"  stop-color="#7a4e2d"/>
+      <stop offset="100%" stop-color="#5c3a1e"/>
+    </linearGradient>
+    <!-- Clock face gradient -->
+    <radialGradient id="face" cx="50%" cy="45%" r="55%">
+      <stop offset="0%"   stop-color="#fffdf5"/>
+      <stop offset="100%" stop-color="#e8e0cc"/>
+    </radialGradient>
+    <!-- Pendulum bob gradient -->
+    <radialGradient id="bob" cx="35%" cy="35%" r="60%">
+      <stop offset="0%"   stop-color="#f0c040"/>
+      <stop offset="100%" stop-color="#b8860b"/>
+    </radialGradient>
+    <!-- Glass window -->
+    <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#c8e8f8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#90c8e8" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Background (app icon background) ── -->
+  <rect width="512" height="512" rx="80" fill="#3b2010"/>
+
+  <!-- ── Base / plinth ── -->
+  <rect x="128" y="448" width="256" height="44" rx="6" fill="url(#wood)"/>
+  <rect x="118" y="444" width="276" height="12" rx="4" fill="#4a2c10"/>
+  <!-- base moulding highlight -->
+  <rect x="128" y="444" width="256" height="3" rx="2" fill="#a0704a" opacity="0.5"/>
+
+  <!-- ── Main case body ── -->
+  <rect x="158" y="180" width="196" height="268" rx="4" fill="url(#wood)"/>
+  <!-- Side shadow lines for depth -->
+  <rect x="158" y="180" width="10" height="268" rx="2" fill="#3d2008" opacity="0.4"/>
+  <rect x="344" y="180" width="10" height="268" rx="2" fill="#3d2008" opacity="0.4"/>
+  <!-- Centre panel inset -->
+  <rect x="178" y="200" width="156" height="228" rx="3" fill="#4a2c10" opacity="0.35"/>
+
+  <!-- ── Pendulum window (glass) ── -->
+  <rect x="192" y="210" width="128" height="200" rx="8" fill="url(#glass)" stroke="#6b3d18" stroke-width="4"/>
+  <!-- Glass sheen -->
+  <rect x="198" y="216" width="40" height="188" rx="4" fill="white" opacity="0.07"/>
+
+  <!-- ── Pendulum rod ── -->
+  <rect x="253" y="218" width="6" height="165" rx="3" fill="#c8a040" opacity="0.9"/>
+
+  <!-- ── Pendulum bob ── -->
+  <ellipse cx="256" cy="396" rx="28" ry="22" fill="url(#bob)"/>
+  <ellipse cx="248" cy="389" rx="8" ry="6" fill="#f8d870" opacity="0.5"/>
+
+  <!-- ── Hood / top case ── -->
+  <!-- Hood body -->
+  <rect x="138" y="80" width="236" height="108" rx="4" fill="url(#wood)"/>
+  <!-- Hood side columns -->
+  <rect x="138" y="84" width="22" height="100" rx="3" fill="#6b3d18"/>
+  <rect x="352" y="84" width="22" height="100" rx="3" fill="#6b3d18"/>
+  <!-- Hood top moulding -->
+  <rect x="128" y="72" width="256" height="16" rx="4" fill="#5c3318"/>
+  <rect x="128" y="72" width="256" height="4" rx="2" fill="#a07050" opacity="0.4"/>
+
+  <!-- ── Pediment (arched top) ── -->
+  <path d="M138,72 Q256,10 374,72 Z" fill="#5c3318"/>
+  <path d="M148,72 Q256,22 364,72" fill="none" stroke="#7a4e2d" stroke-width="4"/>
+  <!-- Finial -->
+  <ellipse cx="256" cy="16" rx="10" ry="14" fill="#7a4e2d"/>
+  <ellipse cx="256" cy="10" rx="5" ry="7" fill="#a07050"/>
+
+  <!-- ── Clock face ── -->
+  <circle cx="256" cy="138" r="58" fill="url(#face)" stroke="#6b3d18" stroke-width="5"/>
+  <!-- Minute track -->
+  <circle cx="256" cy="138" r="52" fill="none" stroke="#b8a880" stroke-width="1.5" stroke-dasharray="2 7.1" opacity="0.6"/>
+
+  <!-- Roman numerals — key hours -->
+  <!-- XII -->
+  <text x="256" y="100" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#3b2010" font-weight="bold">XII</text>
+  <!-- III -->
+  <text x="296" y="143" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#3b2010" font-weight="bold">III</text>
+  <!-- VI -->
+  <text x="256" y="184" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#3b2010" font-weight="bold">VI</text>
+  <!-- IX -->
+  <text x="216" y="143" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#3b2010" font-weight="bold">IX</text>
+
+  <!-- Hour markers (other hours) -->
+  <g stroke="#8b7355" stroke-width="2" opacity="0.7">
+    <!-- I -->  <line x1="273" y1="90"  x2="270" y2="97"/>
+    <!-- II --> <line x1="287" y1="97"  x2="282" y2="103"/>
+    <!-- IV --> <line x1="300" y1="155" x2="294" y2="157"/>
+    <!-- V -->  <line x1="299" y1="168" x2="293" y2="165"/>
+    <!-- VII --><line x1="272" y1="181" x2="270" y2="174"/>
+    <!-- VIII--><line x1="258" y1="183" x2="258" y2="176"/><!-- already VI -->
+    <!-- X -->  <line x1="228" y1="176" x2="232" y2="170"/>
+    <!-- XI --> <line x1="216" y1="160" x2="222" y2="157"/>
+  </g>
+
+  <!-- Clock hands — showing ~10:10 (classic "smile" position) -->
+  <!-- Hour hand (pointing ~10) -->
+  <line x1="256" y1="138" x2="230" y2="112"
+        stroke="#2c1a08" stroke-width="5" stroke-linecap="round"/>
+  <!-- Minute hand (pointing ~2) -->
+  <line x1="256" y1="138" x2="278" y2="100"
+        stroke="#2c1a08" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Centre pin -->
+  <circle cx="256" cy="138" r="5" fill="#5c3318"/>
+  <circle cx="256" cy="138" r="2.5" fill="#c8a040"/>
+
+  <!-- ── Trunk moulding (hood to body join) ── -->
+  <rect x="148" y="184" width="216" height="12" rx="3" fill="#4a2c10"/>
+  <rect x="148" y="184" width="216" height="3" rx="1" fill="#9a6040" opacity="0.4"/>
+</svg>

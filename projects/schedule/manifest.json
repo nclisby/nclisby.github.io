@@ -1,0 +1,19 @@
+{
+  "name": "Daily Schedule",
+  "short_name": "Schedule",
+  "description": "A clock-anchored schedule and Pomodoro timer",
+  "start_url": "/projects/schedule/",
+  "scope": "/projects/schedule/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#1c1c1e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
