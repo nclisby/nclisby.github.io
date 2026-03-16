@@ -645,21 +645,21 @@
       </div>
     </div>
 
-    <!-- Sound -->
-    <label class="sound-label">
-      <input type="checkbox" id="chk-sound"> Sound
-    </label>
-
     <!-- Share dropdown -->
     <div class="dropdown" id="dd-share">
       <button class="dropdown-trigger" onclick="toggleDropdown('dd-share')">
         Share <span class="chevron">▾</span>
       </button>
-      <div class="dropdown-panel" style="left:0; min-width:180px;">
+      <div class="dropdown-panel" style="right:0; left:auto; min-width:180px;">
         <div class="dropdown-item" onclick="shareViaEmail()">✉ Share via email</div>
         <div class="dropdown-item" onclick="copyShareLink()">⧉ Copy share link</div>
       </div>
     </div>
+
+    <!-- Sound -->
+    <label class="sound-label">
+      <input type="checkbox" id="chk-sound"> Sound
+    </label>
 
     <!-- Save -->
     <button class="btn" onclick="promptSave()">Save</button>
