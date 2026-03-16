@@ -861,29 +861,36 @@ function loadFromURL_v1(params) {
     if (!isNaN(b) && [3,5,10,15,20].includes(b))           state.breakMin = b;
 
     const blockSize = state.workMin + state.breakMin;
-
     const startParam = parseInt(params.get("start"));
     const firstMins  = !isNaN(startParam) ? startParam : DEFAULT_START_HOUR * 60;
     const defaultTimeForIndex = i => minsToTimeStr(firstMins + i * blockSize);
 
-    const decoded = JSON.parse(atob(params.get("rows")));
-    if (!Array.isArray(decoded)) return;
+    // Total row count
+    const nParam = parseInt(params.get("n"));
+    const rowCount = !isNaN(nParam) ? nParam : DEFAULT_ROWS;
 
-    // Restore explicit regular rows
-    state.rows = decoded.map((r, i) => ({
-      time:     r.t || defaultTimeForIndex(i),
-      activity: r.a || "",
-    }));
+    // Decode sparse entries
+    const sparse = JSON.parse(atob(params.get("rows")));
+    if (!Array.isArray(sparse)) return;
 
-    // Append trailing default rows
-    const tail = parseInt(params.get("tail") || "0");
-    for (let i = 0; i < tail; i++) {
-      const idx = state.rows.length;
-      state.rows.push({ time: defaultTimeForIndex(idx), activity: "" });
+    // Build sparse lookup map by index
+    const sparseMap = {};
+    for (const entry of sparse) {
+      if (typeof entry.i === "number") sparseMap[entry.i] = entry;
+    }
+
+    // Reconstruct full regular rows array
+    state.rows = [];
+    for (let i = 0; i < rowCount; i++) {
+      const entry = sparseMap[i];
+      state.rows.push({
+        time:     entry?.t || defaultTimeForIndex(i),
+        activity: entry?.a || "",
+      });
     }
 
     // Restore finish row
-    const defaultFinishMins = firstMins + state.rows.length * blockSize;
+    const defaultFinishMins = firstMins + rowCount * blockSize;
     const finParam  = parseInt(params.get("finish"));
     const finMins   = !isNaN(finParam) ? finParam : defaultFinishMins;
     state.rows.push({ time: minsToTimeStr(finMins), activity: "", isFinish: true });
@@ -1378,34 +1385,28 @@ function buildShareURL() {
 
   const firstMins = regular.length ? (timeStrToMins(regular[0].time) ?? DEFAULT_START_HOUR * 60) : DEFAULT_START_HOUR * 60;
   const defaultTimeForIndex = i => minsToTimeStr(firstMins + i * blockSize);
-  // Default finish time = firstMins + regular.length * blockSize
-  const defaultFinishMins = firstMins + regular.length * blockSize;
+  const defaultFinishMins   = firstMins + regular.length * blockSize;
 
-  // Find last regular row that has content or non-default time
-  let lastMeaningful = -1;
+  // Sparse encoding: only store rows that have an activity or a non-default time.
+  // Each entry carries its index so the decoder can reconstruct the full array.
+  const sparse = [];
   for (let i = 0; i < regular.length; i++) {
     const hasActivity     = regular[i].activity.trim() !== "";
     const hasModifiedTime = regular[i].time !== defaultTimeForIndex(i);
-    if (hasActivity || hasModifiedTime) lastMeaningful = i;
+    if (hasActivity || hasModifiedTime) {
+      const obj = { i, a: regular[i].activity };
+      if (hasModifiedTime) obj.t = regular[i].time;
+      sparse.push(obj);
+    }
   }
 
-  // Encode explicit regular rows; trailing default empty rows become tail count
-  const explicitRows = regular.slice(0, lastMeaningful + 1);
-  const tailCount    = regular.length - explicitRows.length;
-
-  const encoded = explicitRows.map((r, i) => {
-    const obj = { a: r.activity };
-    if (r.time !== defaultTimeForIndex(i)) obj.t = r.time;
-    return obj;
-  });
-
-  const rowsEncoded = btoa(JSON.stringify(encoded));
+  // Total row count only needed if it differs from DEFAULT_ROWS
+  const rowsEncoded = btoa(JSON.stringify(sparse));
   const params = new URLSearchParams({ v: SCHEDULE_VERSION, rows: rowsEncoded });
   if (state.workMin  !== DEFAULT_WORK_MIN)  params.set("work",  state.workMin);
   if (state.breakMin !== DEFAULT_BREAK_MIN) params.set("break", state.breakMin);
   if (firstMins !== DEFAULT_START_HOUR * 60) params.set("start", firstMins);
-  if (tailCount > 0) params.set("tail", tailCount);
-  // Only encode finish time if it differs from the default
+  if (regular.length !== DEFAULT_ROWS) params.set("n", regular.length);
   const finMins = finRow ? (timeStrToMins(finRow.time) ?? defaultFinishMins) : defaultFinishMins;
   if (finMins !== defaultFinishMins) params.set("finish", finMins);
 
