@@ -778,8 +778,9 @@ function init() {
   buildDefaultRows();
   renderTable();
   updateClocks();
-  setInterval(updateClocks, 10000);
+  setInterval(updateClocks, 10000); // edit mode clock; active mode uses tick()
   document.addEventListener("click", globalClickHandler);
+  requestNotificationPermission();
 
   // Sync selects
   document.getElementById("sel-work").value  = state.workMin;
@@ -1330,6 +1331,7 @@ function nowMins() {
 
 function startActive() {
   if (!state.rows.length) { showToast("Add some rows first!"); return; }
+  askNotificationPermission();
   showActiveView();
   // Restore the active-main structure in case showComplete() replaced it
   resetActiveMain();
@@ -1365,6 +1367,7 @@ let _prevRowIndex = null;
 
 function tick() {
   const cs = computeClockState(nowMins());
+  updateClocks(); // keep clock in sync with every timer tick
 
   if (cs.status === "complete") {
     clearInterval(session.timerInterval);
@@ -1395,10 +1398,19 @@ function tick() {
   }
 
   // status === "active"
-  // Detect phase/row transition → play chime
+  // Detect phase/row transition → chime + notification
   if (_prevPhase !== null &&
       (cs.phase !== _prevPhase || cs.rowIndex !== _prevRowIndex)) {
     playChime();
+    if (cs.phase === "work") {
+      const activity = state.rows[cs.rowIndex]?.activity?.trim() || "Do things!";
+      sendNotification("Work block starting", activity);
+    } else {
+      const nextActivity = cs.nextRowIndex >= 0
+        ? (state.rows[cs.nextRowIndex]?.activity?.trim() || "Do things!")
+        : null;
+      sendNotification("Take a break!", nextActivity ? `Next: ${nextActivity}` : "");
+    }
   }
   _prevPhase    = cs.phase;
   _prevRowIndex = cs.rowIndex;
@@ -1444,12 +1456,45 @@ function resetActiveMain() {
 function showComplete() {
   clearInterval(session.timerInterval);
   _prevPhase = null; _prevRowIndex = null;
+  playChime();
+  sendNotification("Schedule complete!", "Great work today.");
   const main = document.getElementById("active-main");
   main.innerHTML = `
     <div class="complete-msg">Schedule complete!</div>
     <p style="color:var(--text-2); margin-top:12px;">Great work today.</p>
     <button class="btn btn-accent" style="margin-top:24px;" onclick="stopActive()">Back to Edit</button>
   `;
+}
+
+/* ----------------------------------------------------------------
+   NOTIFICATIONS
+   ---------------------------------------------------------------- */
+function requestNotificationPermission() {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "default") {
+    // Defer the prompt until the user first presses Start,
+    // to avoid a cold permission dialog on page load.
+    // (called from startActive instead)
+  }
+}
+
+function askNotificationPermission() {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}
+
+function sendNotification(title, body) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  try {
+    new Notification(title, {
+      body: body || "",
+      icon: "", // no icon — keeps it minimal
+      silent: true, // we handle sound ourselves via Web Audio
+    });
+  } catch(e) { /* notifications not available in this context */ }
 }
 
 /* ----------------------------------------------------------------
