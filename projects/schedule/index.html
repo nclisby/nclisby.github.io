@@ -1762,11 +1762,11 @@ function showComplete() {
   clearInterval(session.timerInterval);
   _prevPhase = null; _prevRowIndex = null;
   playChime();
-  sendNotification("Schedule complete!", "Great work today.");
+  sendNotification("Schedule complete.", "Great job!");
   const main = document.getElementById("active-main");
   main.innerHTML = `
-    <div class="complete-msg">Schedule complete!</div>
-    <p style="color:var(--text-2); margin-top:12px;">Great work today.</p>
+    <div class="complete-msg">Schedule complete.</div>
+    <p style="color:var(--text-2); margin-top:12px;">Great job!</p>
     <button class="btn btn-accent" style="margin-top:24px;" onclick="stopActive()">Back to Edit</button>
   `;
 }
