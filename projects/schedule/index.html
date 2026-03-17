@@ -773,15 +773,13 @@
   <div class="overlay-box" style="max-width:520px;">
     <div class="overlay-title">Daily Schedule</div>
     <div class="overlay-body">
-      <p>A simple timer that allows you to schedule focused work blocks
-      interspersed with short breaks.</p>
+      <p>A simple timer to keep you on track through a scheduled day, using the Pomodoro technique of focused work blocks followed by short breaks.</p>
       <h3>Edit Mode</h3>
       <p>Fill in your schedule: each row has a <strong>Start Time</strong> and an optional <strong>Activity</strong>. Start times are auto-calculated from your chosen work and break lengths, but you can edit them manually — times below will update automatically.</p>
       <p>Use the <strong>Work</strong> and <strong>Break</strong> dropdowns to set block lengths. Schedules can be saved locally and loaded later, or shared via a link.</p>
       <h3>Active Mode</h3>
       <p>Press <strong>Start</strong> to begin. The timer counts down your current work block, then automatically starts the break. The current activity and next activity are shown below the timer.</p>
-      <p>Press <strong>Edit</strong> at any time to return to the schedule.
-      Pressing Start restarts active mode .</p>
+      <p>Press <strong>Edit</strong> at any time to return to the schedule. Pressing Start again resumes from where you left off.</p>
       <h3>Sound</h3>
       <p>Enable the <strong>Sound</strong> checkbox to hear a chime when each block transitions.</p>
     </div>
@@ -1643,6 +1641,11 @@ function startActive() {
 function stopActive() {
   clearInterval(session.timerInterval);
   session.timerInterval = null;
+  // Apply any pending SW update now that the timer has stopped
+  if (swRegistration?.waiting) {
+    swRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
+    return; // controllerchange handler will reload
+  }
   showEditView();
 }
 
@@ -1759,11 +1762,11 @@ function showComplete() {
   clearInterval(session.timerInterval);
   _prevPhase = null; _prevRowIndex = null;
   playChime();
-  sendNotification("Schedule complete.", "Great job!");
+  sendNotification("Schedule complete!", "Great work today.");
   const main = document.getElementById("active-main");
   main.innerHTML = `
-    <div class="complete-msg">Schedule complete.</div>
-    <p style="color:var(--text-2); margin-top:12px;">Great job!</p>
+    <div class="complete-msg">Schedule complete!</div>
+    <p style="color:var(--text-2); margin-top:12px;">Great work today.</p>
     <button class="btn btn-accent" style="margin-top:24px;" onclick="stopActive()">Back to Edit</button>
   `;
 }
@@ -1781,8 +1784,31 @@ function registerServiceWorker() {
   navigator.serviceWorker.register("sw.js")
     .then(reg => {
       swRegistration = reg;
+
+      // Check for updates immediately and then every 60 seconds
+      reg.update();
+      setInterval(() => reg.update(), 60000);
+
+      // A new SW has installed and is waiting — reload when safe
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            // New version cached — reload if not in active timer session
+            if (!session.timerInterval) {
+              location.reload();
+            }
+            // If timer is running, reload will happen next time Edit is pressed
+          }
+        });
+      });
     })
     .catch(() => { /* SW not available — silent fallback */ });
+
+  // If the SW controller changes (new SW took over), reload the page
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!session.timerInterval) location.reload();
+  });
 }
 
 /* ----------------------------------------------------------------
