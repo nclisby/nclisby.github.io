@@ -929,6 +929,12 @@ var VFApp = (function () {
     // ── Labels ──
     TA.wireToggle(dom.toggleLabels, state, 'showLabels', update);
 
+    // --- Colour inversion button ---
+    document.getElementById('toggleInvert').addEventListener('click', function() {
+      this.classList.toggle('active');
+      document.documentElement.classList.toggle('inverted');
+    });
+
     // ── Div / Curl (mutually exclusive) ──
     dom.toggleDiv.addEventListener('click', function() {
       state.showDiv = !state.showDiv;

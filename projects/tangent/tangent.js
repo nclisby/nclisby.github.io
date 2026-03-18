@@ -1029,6 +1029,12 @@ var TangentApp = (function () {
     TA.wireToggle(dom.toggleHeatmap,  state, 'showHeatmap',  update);
     TA.wireToggle(dom.toggleContours, state, 'showContours', update);
 
+    // --- Colour inversion button ---
+    document.getElementById('toggleInvert').addEventListener('click', function() {
+      this.classList.toggle('active');
+      document.documentElement.classList.toggle('inverted');
+    });
+
     // --- Colour scheme selector ---
     document.querySelectorAll('[data-scheme]').forEach(function (btn) {
       btn.addEventListener('click', function () {

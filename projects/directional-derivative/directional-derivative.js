@@ -988,6 +988,12 @@ var DDApp = (function () {
 
     TA.wireToggle(dom.toggleLabels, state, 'showLabels', update);
 
+    // --- Colour inversion button ---
+    document.getElementById('toggleInvert').addEventListener('click', function() {
+      this.classList.toggle('active');
+      document.documentElement.classList.toggle('inverted');
+    });
+
     // Flip sign toggle (special: also flips globalFmin/globalFmax)
     dom.toggleFlip.addEventListener('click', function() {
       state.flipSign = !state.flipSign;

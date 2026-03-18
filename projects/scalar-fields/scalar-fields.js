@@ -1319,6 +1319,12 @@ var ScalarFieldApp = (function () {
     TA.wireToggle(dom.toggleHeatmap,  state, 'showHeatmap',  update);
     TA.wireToggle(dom.toggleContours, state, 'showContours', update);
 
+    // --- Colour inversion button ---
+    document.getElementById('toggleInvert').addEventListener('click', function() {
+      this.classList.toggle('active');
+      document.documentElement.classList.toggle('inverted');
+    });
+
     // Slice toggle (also controls c-slider visibility)
     TA.wireToggle(dom.toggleSlice, state, 'showSlice', function () {
       dom.cControls.style.display = state.showSlice ? 'flex' : 'none';

@@ -11,6 +11,9 @@
  * colours and dimensions.  Individual apps should not override them.
  * ========================================================================== */
 
+/* ===== Colour inversion as cheap fix for light mode ===== */
+
+html.inverted { filter: invert(1); }
 
 /* ===== Custom properties ===== */
 
