@@ -13,7 +13,13 @@
 
 /* ===== Colour inversion as cheap fix for light mode ===== */
 
-html.inverted { filter: invert(1); }
+html {
+  transition: filter 0.8s ease;
+}
+
+html.inverted { 
+  filter: invert(1); 
+}
 
 /* ===== Custom properties ===== */
 
