@@ -66,6 +66,7 @@ var VFApp = (function () {
     density2d: 10,
     density3d: 5,
     isCustom: false,
+    showField: true,
     showDiv: false,
     showCurl: false,
     overlayHeatmap: false,
@@ -441,6 +442,9 @@ var VFApp = (function () {
       dom.colourbarWrap.style.display = 'none';
     }
 
+    // Show arrows if showField is true
+    if (state.showField) {
+
     // Compute arrows and find max magnitude
     var arrows = [];
     var maxMag = 0;
@@ -492,6 +496,7 @@ var VFApp = (function () {
       ctx.lineTo(ex - headLen * Math.cos(angle + headAngle), ey - headLen * Math.sin(angle + headAngle));
       ctx.closePath();
       ctx.fill();
+    }
     }
 
     ctx.restore();
@@ -799,6 +804,7 @@ var VFApp = (function () {
     dom.container3d = document.getElementById('container3d');
     dom.fnSelect = document.getElementById('fnSelect');
     dom.currentFnLabel = document.getElementById('currentFnLabel');
+    dom.toggleField = document.getElementById('toggleField');
     dom.toggleFlip = document.getElementById('toggleFlip');
     dom.toggleDiv = document.getElementById('toggleDiv');
     dom.toggleCurl = document.getElementById('toggleCurl');
@@ -850,6 +856,7 @@ var VFApp = (function () {
         savedState[prev].presetIndex = state.presetIndex;
         savedState[prev].isCustom = state.isCustom;
         if (prev === '2d') {
+          savedState[prev].showField = state.showField;
           savedState[prev].showDiv = state.showDiv;
           savedState[prev].showCurl = state.showCurl;
         }
@@ -875,20 +882,25 @@ var VFApp = (function () {
         // Show/hide mode-specific UI
         dom.customWrap2d.style.display = state.mode === '2d' ? 'block' : 'none';
         dom.customWrap3d.style.display = state.mode === '3d' ? 'block' : 'none';
+        dom.toggleField.style.display = state.mode === '2d' ? '' : 'none';
         dom.toggleDiv.style.display = state.mode === '2d' ? '' : 'none';
         dom.toggleCurl.style.display = state.mode === '2d' ? '' : 'none';
         dom.toggleLabels.style.display = state.mode === '2d' ? '' : 'none';
 
         if (state.mode === '2d') {
+          state.showField = restored.showField;
           state.showDiv = restored.showDiv;
           state.showCurl = restored.showCurl;
+          dom.toggleField.classList.toggle('active', state.showField);
           dom.toggleDiv.classList.toggle('active', state.showDiv);
           dom.toggleCurl.classList.toggle('active', state.showCurl);
           updateOverlayUI();
         } else {
+          state.showField = true;
           state.showDiv = false;
           state.showCurl = false;
           state.showLabels = false;
+          dom.toggleField.classList.remove('active');
           dom.toggleDiv.classList.remove('active');
           dom.toggleCurl.classList.remove('active');
           dom.toggleLabels.classList.remove('active');
@@ -922,6 +934,9 @@ var VFApp = (function () {
     dom.customFx3.addEventListener('input', tryParseCustom3D);
     dom.customFy3.addEventListener('input', tryParseCustom3D);
     dom.customFz3.addEventListener('input', tryParseCustom3D);
+
+    // ── Display field ──
+    TA.wireToggle(document.getElementById('toggleField'), state, 'showField', update);
 
     // ── Flip sign ──
     TA.wireToggle(dom.toggleFlip, state, 'flipSign', update);
