@@ -56,9 +56,9 @@
       <button class="opt-btn" id="toggleInvert">Invert</button>
       <button class="opt-btn" id="toggleHeatmap">Heat map</button>
       <button class="opt-btn" id="toggleLevelSets">Level sets</button>
-      <button class="opt-btn" id="toggleGrad">∇f</button>
       <button class="opt-btn" id="toggleSurface">Surface</button>
       <button class="opt-btn" id="toggleLabels">Labels</button>
+      <button class="opt-btn" id="toggleGrad">∇f</button>
       <button class="opt-btn" id="toggleFlip">−f</button>
     </div>
   </div>
@@ -82,9 +82,12 @@
 
   <!-- Angle slider (floating over canvas) -->
   <div class="slice-controls" id="angleControls" style="display:flex;">
-    <label>θ =</label>
+    <!-- <label>θ =</label> -->
+    <label>θ =
+    <span style="display:inline-block; width:60px" id="angleValue">0°</span>
+    </label>
+    <!-- <span class="control-value" id="angleValue">0°</span> -->
     <input type="range" min="0" max="360" value="0" id="angleSlider">
-    <span class="control-value" id="angleValue">0°</span>
   </div>
 
   <!-- 2D canvas -->
