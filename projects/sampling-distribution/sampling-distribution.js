@@ -76,7 +76,7 @@ var SamplingDistribution = (function () {
     cltApplies: true
   });
 
-  // Pareto (alpha=2.5), shifted to mean zero
+  // Power-law (exponent 3.5) / Pareto alpha=2.5, shifted to mean zero
   // X ~ Pareto(1, alpha), E[X] = alpha/(alpha-1), Var = alpha/((a-1)^2*(a-2))
   // For alpha=2.5: mean = 2.5/1.5 = 5/3, var = 2.5/(1.5^2*0.5) = 2.5/1.125 = 20/9
   (function () {
@@ -84,7 +84,8 @@ var SamplingDistribution = (function () {
     var mu = alpha / (alpha - 1);                          // 5/3
     var v = alpha / ((alpha - 1) * (alpha - 1) * (alpha - 2)); // 20/9
     populations.push({
-      name: 'Pareto (α = 2.5)',
+      // name: 'Pareto (α = 2.5)',
+      name: 'Power-law 1/x^3.5',
       sample: function () {
         var u = Math.random();
         return Math.pow(1 - u, -1.0 / alpha) - mu;
@@ -100,13 +101,14 @@ var SamplingDistribution = (function () {
     });
   })();
 
-  // Pareto (alpha=1.5), shifted to mean zero
+  // Power-law (exponent 2.5) Pareto (alpha=1.5), shifted to mean zero
   // E[X] = alpha/(alpha-1) = 3, Var = infinite (alpha <= 2)
   (function () {
     var alpha = 1.5;
     var mu = alpha / (alpha - 1);  // 3
     populations.push({
-      name: 'Pareto (α = 1.5)',
+      // name: 'Pareto (α = 1.5)',
+      name: 'Power-law 1/x^2.5',
       sample: function () {
         var u = Math.random();
         return Math.pow(1 - u, -1.0 / alpha) - mu;
