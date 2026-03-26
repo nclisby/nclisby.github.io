@@ -355,7 +355,7 @@ var SamplingDistribution = (function () {
 
   var state = {
     popIndex: 0,
-    sampleSize: 10,
+    sampleSize: 5,
     showPopulation: true,
     showSampleLine: true,
     showSamplingDist: true,
