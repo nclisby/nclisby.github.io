@@ -1030,8 +1030,12 @@ var SamplingDistribution = (function () {
 
       var line1 = 'n = ' + state.sampleSize + '   Samples: ' + state.totalSamples;
       var line2 = 'x\u0305 = ' + histMuStr + '   s = ' + histSigmaStr + predictedStr;
-      ctx.fillText(line1, rect.x + 8, rect.y + 6);
-      ctx.fillText(line2, rect.x + 8, rect.y + 24);
+      var histLabelY = rect.y + 6;
+      if (state.showBinSlider && !state.showPopulation && !state.showSampleLine) {
+        histLabelY += 36;
+      }
+      ctx.fillText(line1, rect.x + 8, histLabelY);
+      ctx.fillText(line2, rect.x + 8, histLabelY + 18);
     }
 
     ctx.restore();

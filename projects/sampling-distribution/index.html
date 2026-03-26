@@ -70,7 +70,7 @@
   border-radius: var(--radius);
 }
 .bin-slider-label {
-  color: var(--text-dim); font-size: 13px; white-space: nowrap;
+  color: var(--text-dim); font-size: 20px; white-space: nowrap;
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 .bin-slider-wrap input[type="range"] {
@@ -181,7 +181,7 @@
           title="Open sidebar">&#9776;</button>
   <button class="repeat-btn" id="btnRepeat" title="Repeat last action">Repeat</button>
   <div class="bin-slider-wrap" id="binSliderWrap" style="display:none;">
-    <label class="bin-slider-label">Bin size: <span id="binSliderValue">1.00</span>×</label>
+    <label class="bin-slider-label">Bin size: <span id="binSliderValue" style="display:inline-block; width:4.5ch; text-align:right;">1.00</span>×</label>
     <input type="range" id="binSlider" min="-1" max="1" step="0.001" value="0">
   </div>
   <canvas id="canvas2d"></canvas>
