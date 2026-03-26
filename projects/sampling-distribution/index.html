@@ -60,6 +60,22 @@
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 .repeat-btn:hover { background: var(--hover); border-color: var(--accent); color: var(--text); }
+
+/* ── Bin size slider (floating, top-left of canvas area) ── */
+.bin-slider-wrap {
+  position: absolute; top: 12px; left: 56px; z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px;
+  background: var(--input-bg); border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+}
+.bin-slider-label {
+  color: var(--text-dim); font-size: 13px; white-space: nowrap;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.bin-slider-wrap input[type="range"] {
+  width: 140px; cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -141,6 +157,9 @@
       <button class="opt-btn" id="toggleRescale">Rescale</button>
       <button class="opt-btn" id="toggleLabels">Labels</button>
     </div>
+    <div class="opt-grid-3" style="margin-top:4px;">
+      <button class="opt-btn" id="toggleBinSize">Bin size</button>
+    </div>
   </div>
 
   <!-- Options -->
@@ -161,6 +180,10 @@
   <button class="sidebar-toggle hidden-when-open" id="openBtn"
           title="Open sidebar">&#9776;</button>
   <button class="repeat-btn" id="btnRepeat" title="Repeat last action">Repeat</button>
+  <div class="bin-slider-wrap" id="binSliderWrap" style="display:none;">
+    <label class="bin-slider-label">Bin size: <span id="binSliderValue">1.00</span>×</label>
+    <input type="range" id="binSlider" min="-1" max="1" step="0.001" value="0">
+  </div>
   <canvas id="canvas2d"></canvas>
 </div>
 

@@ -416,6 +416,8 @@ var SamplingDistribution = (function () {
     showNormal: false,
     showLabels: false,
     rescale: false,
+    showBinSlider: false,
+    binSizeFactor: 1,          // multiplicative factor for histogram bin width
 
     // Sampling data
     sampleMeans: [],         // accumulated sample means
@@ -814,7 +816,8 @@ var SamplingDistribution = (function () {
       ctx.fillStyle = 'rgba(224, 226, 235, 0.7)';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      ctx.fillText('μ = 0   σ = ' + sigmaStr, rect.x + 8, rect.y + 6);
+      var labelY = rect.y + 6 + (state.showBinSlider ? 36 : 0);
+      ctx.fillText('μ = 0   σ = ' + sigmaStr, rect.x + 8, labelY);
     }
 
     ctx.restore();
@@ -911,7 +914,7 @@ var SamplingDistribution = (function () {
     var maxBin = 0;
 
     if (hasData) {
-      var nBins = chooseBinCount(state.sampleMeans.length);
+      var nBins = Math.max(5, Math.round(chooseBinCount(state.sampleMeans.length) / state.binSizeFactor));
       hist = computeHistogram(state.sampleMeans, xMin, xMax, nBins);
       for (var i = 0; i < hist.nBins; i++) {
         if (hist.bins[i] > maxBin) maxBin = hist.bins[i];
@@ -1345,6 +1348,13 @@ var SamplingDistribution = (function () {
       resetSampling();
       updateCLTButtons();
       showCustomEditor(!!populations[state.popIndex].isCustom);
+      // Reset bin size slider
+      state.showBinSlider = false;
+      state.binSizeFactor = 1;
+      document.getElementById('toggleBinSize').classList.remove('active');
+      document.getElementById('binSliderWrap').style.display = 'none';
+      document.getElementById('binSlider').value = 0;
+      document.getElementById('binSliderValue').textContent = '1.00';
       draw();
     });
 
@@ -1431,6 +1441,33 @@ var SamplingDistribution = (function () {
     document.getElementById('toggleLabels').addEventListener('click', function () {
       state.showLabels = !state.showLabels;
       this.classList.toggle('active', state.showLabels);
+      draw();
+    });
+
+    // --- Bin size toggle + slider ---
+    var binSliderWrap = document.getElementById('binSliderWrap');
+    var binSlider = document.getElementById('binSlider');
+    var binSliderValue = document.getElementById('binSliderValue');
+    var binToggleBtn = document.getElementById('toggleBinSize');
+
+    binToggleBtn.addEventListener('click', function () {
+      state.showBinSlider = !state.showBinSlider;
+      this.classList.toggle('active', state.showBinSlider);
+      binSliderWrap.style.display = state.showBinSlider ? 'flex' : 'none';
+      if (!state.showBinSlider) {
+        state.binSizeFactor = 1;
+        binSlider.value = 0;
+        binSliderValue.textContent = '1.00';
+      }
+      draw();
+    });
+
+    binSlider.addEventListener('input', function () {
+      var raw = parseFloat(binSlider.value); // -1 to 1 (log10 scale)
+      // Dead zone: snap to 0 (factor=1) when close to centre
+      if (Math.abs(raw) < 0.04) raw = 0;
+      state.binSizeFactor = Math.pow(10, raw);
+      binSliderValue.textContent = state.binSizeFactor.toFixed(2);
       draw();
     });
 
