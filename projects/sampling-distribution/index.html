@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sampling Distribution</title>
+
+<!-- Shared design system -->
+<link rel="stylesheet" href="../teaching-app-assets/teaching-app.css">
+
+<!-- App-specific styles -->
+<style>
+/* ── Radio-button row for sample size ── */
+.sample-size-row {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.sample-size-row label {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 40px; padding: 4px 7px;
+  background: var(--input-bg); border: 1px solid var(--panel-border);
+  border-radius: var(--radius); color: var(--text-dim);
+  font-size: 13px; cursor: pointer; transition: all 0.15s;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.sample-size-row label:hover { background: var(--hover); }
+.sample-size-row input { display: none; }
+.sample-size-row input:checked + span {
+  color: var(--accent); font-weight: 600;
+}
+.sample-size-row label:has(input:checked) {
+  border-color: var(--accent); background: var(--accent-dim);
+}
+
+/* ── Sampling buttons (2×3 grid) ── */
+.sample-btn-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+}
+.sample-btn-grid button {
+  padding: 6px 4px;
+  background: var(--input-bg); border: 1px solid var(--panel-border);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 13px; cursor: pointer; transition: all 0.15s;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.sample-btn-grid button:hover { background: var(--hover); border-color: var(--accent); }
+.sample-btn-grid button.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+/* ── Disabled button style ── */
+.opt-btn.disabled-btn {
+  opacity: 0.35; cursor: default; pointer-events: none;
+}
+
+/* ── Repeat button (top-left of canvas area) ── */
+.repeat-btn {
+  position: absolute; top: 12px; right: 16px; z-index: 10;
+  padding: 6px 14px;
+  background: var(--input-bg); border: 1px solid var(--panel-border);
+  border-radius: var(--radius); color: var(--text-dim);
+  font-size: 14px; cursor: pointer; transition: all 0.15s;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.repeat-btn:hover { background: var(--hover); border-color: var(--accent); color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <a href="https://clisby.net/" title="home"
+           style="color:var(--text-dim); display:flex; transition:color 0.15s;"
+           onmouseover="this.style.color='var(--accent)'"
+           onmouseout="this.style.color='var(--text-dim)'">
+          <svg width="26" height="26" viewBox="0 0 20 20" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 10L10 3l7 7"/>
+            <path d="M5 8.5V16a1 1 0 001 1h3v-4h2v4h3a1 1 0 001-1V8.5"/>
+          </svg>
+        </a>
+        <h1>Sampling distributions</h1>
+      </div>
+      <p>Sampling, central limit theorem</p>
+    </div>
+    <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
+  </div>
+
+  <!-- Population selection -->
+  <div class="section">
+    <div class="section-label">Population</div>
+    <select class="fn-select" id="fnSelect"></select>
+    <div id="customEditorWrap" style="display:none; margin-top:8px;">
+      <canvas id="customEditor" width="310" height="120"
+              style="width:100%; height:120px; cursor:pointer; border:1px solid var(--panel-border); border-radius:var(--radius); background:var(--input-bg); touch-action:none;"></canvas>
+    </div>
+  </div>
+
+  <!-- Sample size -->
+  <div class="section">
+    <div class="section-label">Sample size (n)</div>
+    <div class="sample-size-row" id="sampleSizeRow">
+      <label><input type="radio" name="sampleSize" value="1"><span>1</span></label>
+      <label><input type="radio" name="sampleSize" value="2"><span>2</span></label>
+      <label><input type="radio" name="sampleSize" value="3"><span>3</span></label>
+      <label><input type="radio" name="sampleSize" value="5" checked><span>5</span></label>
+      <label><input type="radio" name="sampleSize" value="10"><span>10</span></label>
+      <label><input type="radio" name="sampleSize" value="20"><span>20</span></label>
+      <label><input type="radio" name="sampleSize" value="30"><span>30</span></label>
+      <label><input type="radio" name="sampleSize" value="100"><span>100</span></label>
+      <label><input type="radio" name="sampleSize" value="1000"><span>1000</span></label>
+      <label><input type="radio" name="sampleSize" value="10000"><span>10000</span></label>
+    </div>
+  </div>
+
+  <!-- Sampling controls -->
+  <div class="section">
+    <div class="section-label">Generate samples</div>
+    <div class="sample-btn-grid">
+      <button id="btnAnimate">Animate</button>
+      <button id="btnSample1">1</button>
+      <button id="btnSample5">5</button>
+      <button id="btnSample100">100</button>
+      <button id="btnSample10000">10000</button>
+      <button id="btnReset">Reset</button>
+    </div>
+  </div>
+
+  <!-- Display toggles -->
+  <div class="section">
+    <div class="section-label">Display</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn active" id="togglePopulation">Population</button>
+      <button class="opt-btn active" id="toggleSampleLine">Sample</button>
+      <button class="opt-btn active" id="toggleSamplingDist">Histogram</button>
+    </div>
+    <div class="opt-grid-3" style="margin-top:4px;">
+      <button class="opt-btn" id="toggleNormal">Normal</button>
+      <button class="opt-btn" id="toggleRescale">Rescale</button>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn" id="btnHelp">Help</button>
+      <button class="opt-btn" id="btnOverview">Overview</button>
+      <button class="opt-btn" id="toggleInvert">Invert</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== Main visualisation area ===== -->
+
+<div class="canvas-area" id="canvasArea">
+  <button class="sidebar-toggle hidden-when-open" id="openBtn"
+          title="Open sidebar">&#9776;</button>
+  <button class="repeat-btn" id="btnRepeat" title="Repeat last action">Repeat</button>
+  <canvas id="canvas2d"></canvas>
+</div>
+
+
+<!-- ===== Help overlay ===== -->
+
+<div class="overlay" id="helpOverlay">
+  <button class="overlay-close" id="helpClose">✕</button>
+  <div class="overlay-content" id="helpContent">
+      <h1>Help</h1>
+      <p>
+      Experiment with sampling from various populations, where the sample
+      means are stored in a histogram.
+      </p>
+      <p>
+      A custom population can be created by clicking/pressing on the
+      distribution to shape it.
+      </p>
+      <p>
+      Choose the population and sample size, then start generating samples.
+      </p>
+      <p>
+      Toggle the display of the population, sample values, and sample histogram.
+      </p>
+      <p>
+      Compare the sampling distribution with the normal approximation from the
+      central limit theorem.
+      </p>
+      <p>
+      Reset the display via the reset button, or by changing the population or
+      sample size.
+      </p>
+
+  </div>
+</div>
+
+
+<!-- ===== Overview overlay ===== -->
+
+<div class="overlay" id="overviewOverlay">
+  <button class="overlay-close" id="overviewClose">✕</button>
+  <div class="overlay-content" id="overviewContent">
+    <h1>Overview</h1>
+      </p>
+      <p>
+      Sampling distributions are fundamental for the understanding of
+      statistics.
+      </p>
+      <p>
+      For a parent population with finite variance σ² the central limit theorem
+      tells us that in the limit of large sample size (n) the sampling distribution
+      of the mean will approach a normal distribution with the same mean as the
+      parent population, and variance σ²/n.
+      </p>
+      <p>
+      The standard deviation of the
+      sample mean (the width of the sampling distribution) decreases as 
+      1/√n.
+      </p>
+      <p>
+      A good rule of thumb is that a sample size of 30 ensures that the sampling
+      distribution is &ldquo;close&rdquo; to normal.
+      </p>
+      <p>
+      For a long-tailed parent population without finite variance the central limit theorem
+      does not apply.
+      </p>
+      <p>
+      Experiment with different populations, including various continuous
+      distributions that have finite variance (uniform, exponential, normal,
+      Pareto with α=2.5), distributions without finite variance (Pareto with
+      α=1.5, Cauchy), a discrete
+      distribution (±1), or your own custom distribution.
+      </p>
+      <p>
+  </div>
+</div>
+
+
+<!-- ===== Scripts ===== -->
+<script src="../teaching-app-assets/teaching-app.js"></script>
+<script src="sampling-distribution.js"></script>
+<script>SamplingDistribution.init();</script>
+
+</body>
+</html>
