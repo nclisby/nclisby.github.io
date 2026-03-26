@@ -56,7 +56,7 @@ var SamplingDistribution = (function () {
 
   // Exponential (shifted to mean zero) — rate 1, shifted by -1
   populations.push({
-    name: 'Exponential',
+    name: 'Exponential: exp(-x)',
     sample: function () { return -Math.log(1 - Math.random()) - 1; },
     pdf: function (x) { return (x >= -1) ? Math.exp(-(x + 1)) : 0; },
     variance: 1,
@@ -67,7 +67,7 @@ var SamplingDistribution = (function () {
 
   // Normal(0, 1)
   populations.push({
-    name: 'Normal',
+    name: 'Normal: C exp(-x²)',
     sample: function () { return randn(); },
     pdf: function (x) { return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI); },
     variance: 1,
@@ -85,7 +85,7 @@ var SamplingDistribution = (function () {
     var v = alpha / ((alpha - 1) * (alpha - 1) * (alpha - 2)); // 20/9
     populations.push({
       // name: 'Pareto (α = 2.5)',
-      name: 'Power-law 1/x^3.5',
+      name: 'Power-law: C/x^3.5',
       sample: function () {
         var u = Math.random();
         return Math.pow(1 - u, -1.0 / alpha) - mu;
@@ -108,7 +108,7 @@ var SamplingDistribution = (function () {
     var mu = alpha / (alpha - 1);  // 3
     populations.push({
       // name: 'Pareto (α = 1.5)',
-      name: 'Power-law 1/x^2.5',
+      name: 'Power-law: C/x^2.5',
       sample: function () {
         var u = Math.random();
         return Math.pow(1 - u, -1.0 / alpha) - mu;
@@ -126,7 +126,7 @@ var SamplingDistribution = (function () {
 
   // Cauchy — no mean, no variance
   populations.push({
-    name: 'Cauchy',
+    name: 'Cauchy: C/(1+x²)',
     sample: function () { return Math.tan(Math.PI * (Math.random() - 0.5)); },
     pdf: function (x) { return 1.0 / (Math.PI * (1 + x * x)); },
     variance: null,
@@ -134,6 +134,58 @@ var SamplingDistribution = (function () {
     xRange: [-8, 8],
     cltApplies: false
   });
+
+  // Heavy-tailed: C/(1 + |x|^1.5), C = 3√3/(8π) — no finite mean
+  // Sampling via precomputed inverse half-CDF table with log-space interpolation
+  // in the tail and asymptotic formula for the deep tail.
+  (function () {
+    var HT_C = 2.067483357831720e-01;
+    var HT_SPLIT = 0.45;
+    var HT_DEEP = 0.4999;
+    var HT_BODY = [[0.0000000000,0.0000000000],[0.0030201342,0.0146181032],[0.0060402685,0.0292740270],[0.0090604027,0.0439847093],[0.0120805369,0.0587629965],[0.0151006711,0.0736198929],[0.0181208054,0.0885653136],[0.0211409396,0.1036084605],[0.0241610738,0.1187580434],[0.0271812081,0.1340224243],[0.0302013423,0.1494097190],[0.0332214765,0.1649278723],[0.0362416107,0.1805847158],[0.0392617450,0.1963880143],[0.0422818792,0.2123455041],[0.0453020134,0.2284649256],[0.0483221477,0.2447540512],[0.0513422819,0.2612207101],[0.0543624161,0.2778728110],[0.0573825503,0.2947183626],[0.0604026846,0.3117654930],[0.0634228188,0.3290224677],[0.0664429530,0.3464977072],[0.0694630872,0.3641998042],[0.0724832215,0.3821375397],[0.0755033557,0.4003199001],[0.0785234899,0.4187560930],[0.0815436242,0.4374555642],[0.0845637584,0.4564280139],[0.0875838926,0.4756834138],[0.0906040268,0.4952320246],[0.0936241611,0.5150844135],[0.0966442953,0.5352514723],[0.0996644295,0.5557444367],[0.1026845638,0.5765749053],[0.1057046980,0.5977548603],[0.1087248322,0.6192966886],[0.1117449664,0.6412132033],[0.1147651007,0.6635176673],[0.1177852349,0.6862238174],[0.1208053691,0.7093458888],[0.1238255034,0.7328986427],[0.1268456376,0.7568973930],[0.1298657718,0.7813580366],[0.1328859060,0.8062970836],[0.1359060403,0.8317316903],[0.1389261745,0.8576796929],[0.1419463087,0.8841596447],[0.1449664430,0.9111908534],[0.1479865772,0.9387934226],[0.1510067114,0.9669882939],[0.1540268456,0.9957972929],[0.1570469799,1.0252431776],[0.1600671141,1.0553496888],[0.1630872483,1.0861416052],[0.1661073826,1.1176448008],[0.1691275168,1.1498863060],[0.1721476510,1.1828943737],[0.1751677852,1.2166985477],[0.1781879195,1.2513297375],[0.1812080537,1.2868202973],[0.1842281879,1.3232041095],[0.1872483221,1.3605166751],[0.1902684564,1.3987952097],[0.1932885906,1.4380787457],[0.1963087248,1.4784082425],[0.1993288591,1.5198267035],[0.2023489933,1.5623793024],[0.2053691275,1.6061135177],[0.2083892617,1.6510792772],[0.2114093960,1.6973291138],[0.2144295302,1.7449183320],[0.2174496644,1.7939051869],[0.2204697987,1.8443510776],[0.2234899329,1.8963207550],[0.2265100671,1.9498825449],[0.2295302013,2.0051085904],[0.2325503356,2.0620751118],[0.2355704698,2.1208626883],[0.2385906040,2.1815565626],[0.2416107383,2.2442469701],[0.2446308725,2.3090294959],[0.2476510067,2.3760054615],[0.2506711409,2.4452823450],[0.2536912752,2.5169742369],[0.2567114094,2.5912023363],[0.2597315436,2.6680954909],[0.2627516779,2.7477907849],[0.2657718121,2.8304341811],[0.2687919463,2.9161812215],[0.2718120805,3.0051977934],[0.2748322148,3.0976609680],[0.2778523490,3.1937599188],[0.2808724832,3.2936969303],[0.2838926174,3.3976885048],[0.2869127517,3.5059665806],[0.2899328859,3.6187798731],[0.2929530201,3.7363953545],[0.2959731544,3.8590998874],[0.2989932886,3.9872020313],[0.3020134228,4.1210340442],[0.3050335570,4.2609541023],[0.3080536913,4.4073487660],[0.3110738255,4.5606357245],[0.3140939597,4.7212668547],[0.3171140940,4.8897316366],[0.3201342282,5.0665609731],[0.3231543624,5.2523314714],[0.3261744966,5.4476702480],[0.3291946309,5.6532603351],[0.3322147651,5.8698467730],[0.3352348993,6.0982434920],[0.3382550336,6.3393411023],[0.3412751678,6.5941157299],[0.3442953020,6.8636390655],[0.3473154362,7.1490898164],[0.3503355705,7.4517667938],[0.3533557047,7.7731039049],[0.3563758389,8.1146873748],[0.3593959732,8.4782755853],[0.3624161074,8.8658219951],[0.3654362416,9.2795017006],[0.3684563758,9.7217423128],[0.3714765101,10.1952599733],[0.3744966443,10.7031015072],[0.3775167785,11.2486939405],[0.3805369128,11.8359028892],[0.3835570470,12.4691016835],[0.3865771812,13.1532535446],[0.3895973154,13.8940097078],[0.3926174497,14.6978271299],[0.3956375839,15.5721103779],[0.3986577181,16.5253835483],[0.4016778523,17.5674997068],[0.4046979866,18.7098975063],[0.4077181208,19.9659175326],[0.4107382550,21.3511948094],[0.4137583893,22.8841491614],[0.4167785235,24.5866023448],[0.4197986577,26.4845608306],[0.4228187919,28.6092170761],[0.4258389262,30.9982418663],[0.4288590604,33.6974686002],[0.4318791946,36.7631115010],[0.4348993289,40.2647203261],[0.4379194631,44.2891648982],[0.4409395973,48.9460810618],[0.4439597315,54.3754243619],[0.4469798658,60.7581180022],[0.4500000000,68.3313332518]];
+    var HT_TAIL = [[0.453042206564,4.3500679521],[0.455899312713,4.4757413897],[0.458582580720,4.6013932191],[0.461102587616,4.7270271539],[0.463469266882,4.8526462690],[0.465691947603,4.9782531103],[0.467779391247,5.1038497861],[0.469739826196,5.2294380423],[0.471580980184,5.3550193249],[0.473310110757,5.4805948314],[0.474934033882,5.6061655535],[0.476459150815,5.7317323128],[0.477891473333,5.8572957896],[0.479236647432,5.9828565474],[0.480499975582,6.1084150532],[0.481686437627,6.2339716934],[0.482800710421,6.3595267884],[0.483847186254,6.4850806033],[0.484829990174,6.6106333580],[0.485752996243,6.7361852345],[0.486619842810,6.8617363834],[0.487433946851,6.9872869298],[0.488198517439,7.1128369770],[0.488916568393,7.2383866107],[0.489590930161,7.3639359019],[0.490224260972,7.4894849093],[0.490819057321,7.6150336818],[0.491377663803,7.7405822596],[0.491902282358,7.8661306761],[0.492394980954,7.9916789591],[0.492857701731,8.1172271314],[0.493292268665,8.2427752120],[0.493700394751,8.3683232167],[0.494083688759,8.4938711586],[0.494443661577,8.6194190483],[0.494781732162,8.7449668949],[0.495099233135,8.8705147058],[0.495397416038,8.9960624870],[0.495677456260,9.1216102437],[0.495940457679,9.2471579801],[0.496187457005,9.3727056997],[0.496419427872,9.4982534053],[0.496637284672,9.6238010994],[0.496841886165,9.7493487839],[0.497034038858,9.8748964605],[0.497214500187,10.0004441305],[0.497383981503,10.1259917951],[0.497543150876,10.2515394552],[0.497692635727,10.3770871115],[0.497833025302,10.5026347648],[0.497964872995,10.6281824155],[0.498088698529,10.7537300641],[0.498204990007,10.8792777109],[0.498314205831,11.0048253563],[0.498416776512,11.1303730005],[0.498513106370,11.2559206436],[0.498603575121,11.3814682860],[0.498688539380,11.5070159276],[0.498768334062,11.6325635687],[0.498843273706,11.7581112093],[0.498913653713,11.8836588496],[0.498979751509,12.0092064895],[0.499041827642,12.1347541291],[0.499100126807,12.2603017685],[0.499154878809,12.3858494078],[0.499206299474,12.5113970469],[0.499254591493,12.6369446858],[0.499299945226,12.7624923247],[0.499342539451,12.8880399634],[0.499382542067,13.0135876021],[0.499420110758,13.1391352408],[0.499455393615,13.2646828794],[0.499488529718,13.3902305179],[0.499519649683,13.5157781564],[0.499548876180,13.6413257949],[0.499576324417,13.7668734334],[0.499602102590,13.8924210718],[0.499626312312,14.0179687103],[0.499649049015,14.1435163487],[0.499670402323,14.2690639871],[0.499690456407,14.3946116255],[0.499709290318,14.5201592639],[0.499726978296,14.6457069022],[0.499743590065,14.7712545406],[0.499759191104,14.8968021790],[0.499773842912,15.0223498174],[0.499787603244,15.1478974557],[0.499800526340,15.2734450941],[0.499812663142,15.3989927325],[0.499824061490,15.5245403708],[0.499834766316,15.6500880092],[0.499844819816,15.7756356475],[0.499854261619,15.9011832859],[0.499863128945,16.0267309242],[0.499871456745,16.1522785626],[0.499879277848,16.2778262009],[0.499886623082,16.4033738393],[0.499893521402,16.5289214777],[0.499900000000,16.6544691160]];
+
+    // Binary search helper for [u, v] table
+    function tableInterp(table, uq) {
+      if (uq <= table[0][0]) return table[0][1];
+      if (uq >= table[table.length - 1][0]) return table[table.length - 1][1];
+      var lo = 0, hi = table.length - 1;
+      while (hi - lo > 1) {
+        var mid = (lo + hi) >> 1;
+        if (table[mid][0] <= uq) lo = mid; else hi = mid;
+      }
+      var t = (uq - table[lo][0]) / (table[hi][0] - table[lo][0]);
+      return table[lo][1] + t * (table[hi][1] - table[lo][1]);
+    }
+
+    function sampleHalfInverse(u) {
+      // u in [0, 0.5): return x >= 0 such that half-CDF(x) = u
+      if (u <= HT_SPLIT) return tableInterp(HT_BODY, u);
+      if (u <= HT_DEEP) return Math.exp(tableInterp(HT_TAIL, u));
+      // Deep tail: asymptotic x ≈ (2C / (0.5 - u))^2
+      var gap = 0.5 - u;
+      if (gap <= 0) return 1e16;
+      return (2 * HT_C / gap) * (2 * HT_C / gap);
+    }
+
+    populations.push({
+      name: 'Heavy-tailed: C/(1+|x|^1.5)',
+      sample: function () {
+        var sign = Math.random() < 0.5 ? -1 : 1;
+        var u = Math.random() * 0.5;
+        return sign * sampleHalfInverse(u);
+      },
+      pdf: function (x) {
+        return HT_C / (1 + Math.pow(Math.abs(x), 1.5));
+      },
+      variance: null,
+      discrete: false,
+      xRange: [-8, 8],
+      cltApplies: false,
+      rescaleFrac: 0.5
+    });
+  })();
+
 
   // ±1 discrete (Rademacher)
   populations.push({
@@ -371,6 +423,7 @@ var SamplingDistribution = (function () {
     currentMean: null,       // latest sample mean
     totalSamples: 0,
     lastAction: null,        // last sampling action: 'animate', 1, 5, 100, 10000
+    empiricalHalfW: null,    // cached 90% percentile half-width for non-CLT rescale
 
     // Animation state
     animating: false,
@@ -498,14 +551,64 @@ var SamplingDistribution = (function () {
   function getNaturalXRange() {
     var pop = populations[state.popIndex];
     if (pop.variance != null && pop.variance > 0 && state.sampleSize > 0) {
+      // CLT case: theoretical sigma/sqrt(n)
       var sigma = Math.sqrt(pop.variance / state.sampleSize);
       var halfW = 3 * sigma;
-      // Ensure at least some minimum width
       if (halfW < 1.e-8) halfW = 1.e-8;
       return [-halfW, halfW];
     }
+    // Non-CLT case: use cached empirical 90% half-width
+    if (state.empiricalHalfW !== null) {
+      return [-state.empiricalHalfW, state.empiricalHalfW];
+    }
     // Fallback to population range
     return pop.xRange;
+  }
+
+  // Compute the 90% empirical half-width from accumulated sample means.
+  // Uses a single linear scan with two running counts, avoiding a full sort.
+  function updateEmpiricalHalfW() {
+    var n = state.sampleMeans.length;
+    if (n < 20) { state.empiricalHalfW = null; return; }
+
+    // Find the percentile of |sampleMean| using quickselect (O(n) average).
+    // Use per-population rescaleFrac if specified, default 0.90.
+    var pop = populations[state.popIndex];
+    var frac = (pop.rescaleFrac != null) ? pop.rescaleFrac : 0.90;
+
+    var absVals = new Float64Array(n);
+    for (var i = 0; i < n; i++) absVals[i] = Math.abs(state.sampleMeans[i]);
+
+    var target = Math.floor(n * frac);
+    var halfW = quickselect(absVals, target, 0, n - 1);
+    state.empiricalHalfW = (halfW > 1e-8) ? halfW : null;
+  }
+
+  // Quickselect: find the k-th smallest element in arr[lo..hi] in place.
+  function quickselect(arr, k, lo, hi) {
+    while (lo < hi) {
+      // Median-of-three pivot
+      var mid = (lo + hi) >> 1;
+      if (arr[mid] < arr[lo]) { var t1 = arr[lo]; arr[lo] = arr[mid]; arr[mid] = t1; }
+      if (arr[hi] < arr[lo]) { var t2 = arr[lo]; arr[lo] = arr[hi]; arr[hi] = t2; }
+      if (arr[mid] < arr[hi]) { var t3 = arr[mid]; arr[mid] = arr[hi]; arr[hi] = t3; }
+      var pivot = arr[hi];
+
+      var i = lo, j = hi - 1;
+      while (true) {
+        while (arr[i] < pivot) i++;
+        while (j > i && arr[j] >= pivot) j--;
+        if (i >= j) break;
+        var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+        i++; j--;
+      }
+      var tmp2 = arr[i]; arr[i] = arr[hi]; arr[hi] = tmp2;
+
+      if (i === k) return arr[i];
+      else if (k < i) hi = i - 1;
+      else lo = i + 1;
+    }
+    return arr[lo];
   }
 
   function getEffectiveXRange() {
@@ -964,6 +1067,7 @@ var SamplingDistribution = (function () {
     }
     state.totalSamples += count;
     state.lastAction = count;
+    updateEmpiricalHalfW();
     draw();
   }
 
@@ -981,6 +1085,7 @@ var SamplingDistribution = (function () {
     state.currentSample = [];
     state.currentMean = null;
     state.totalSamples = 0;
+    state.empiricalHalfW = null;
     state.animating = false;
     draw();
   }
@@ -1043,6 +1148,7 @@ var SamplingDistribution = (function () {
       state.animating = false;
       state.sampleMeans.push(state.currentMean);
       state.totalSamples++;
+      updateEmpiricalHalfW();
       draw();
       return;
     }
@@ -1151,19 +1257,12 @@ var SamplingDistribution = (function () {
   function updateCLTButtons() {
     var pop = populations[state.popIndex];
     var btnN = dom.toggleNormal;
-    var btnR = dom.toggleRescale;
     if (!pop.cltApplies) {
       btnN.classList.add('disabled-btn');
       btnN.classList.remove('active');
       state.showNormal = false;
-      btnR.classList.add('disabled-btn');
-      btnR.classList.remove('active');
-      state.rescale = false;
-      state.rescaleTarget = 0;
-      state.rescaleT = 0;
     } else {
       btnN.classList.remove('disabled-btn');
-      btnR.classList.remove('disabled-btn');
     }
   }
 
@@ -1322,8 +1421,6 @@ var SamplingDistribution = (function () {
 
     // --- Rescale toggle ---
     dom.toggleRescale.addEventListener('click', function () {
-      var pop = populations[state.popIndex];
-      if (!pop.cltApplies) return;
       state.rescale = !state.rescale;
       this.classList.toggle('active', state.rescale);
       state.rescaleTarget = state.rescale ? 1 : 0;
