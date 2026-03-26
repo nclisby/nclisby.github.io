@@ -360,6 +360,7 @@ var SamplingDistribution = (function () {
     showSampleLine: true,
     showSamplingDist: true,
     showNormal: false,
+    showLabels: false,
     rescale: false,
 
     // Sampling data
@@ -700,6 +701,17 @@ var SamplingDistribution = (function () {
     ctx.lineWidth = 1;
     ctx.stroke();
 
+    // Labels
+    if (state.showLabels) {
+      var sigmaStr = (pop.variance != null && pop.variance > 0)
+        ? Math.sqrt(pop.variance).toFixed(3) : '∞';
+      ctx.font = '16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      ctx.fillStyle = 'rgba(224, 226, 235, 0.7)';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('μ = 0   σ = ' + sigmaStr, rect.x + 8, rect.y + 6);
+    }
+
     ctx.restore();
   }
 
@@ -877,12 +889,42 @@ var SamplingDistribution = (function () {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Sample count label (top-left of histogram panel)
-    ctx.font = '18px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-    ctx.fillStyle = 'rgba(224, 226, 235, 0.7)';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('n = ' + state.sampleSize + '   Samples: ' + state.totalSamples, rect.x + 8, rect.y + 6);
+    // Labels (top-left of histogram panel)
+    if (state.showLabels) {
+      ctx.font = '16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      ctx.fillStyle = 'rgba(224, 226, 235, 0.7)';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+
+      var histMuStr = '—';
+      var histSigmaStr = '—';
+      if (state.sampleMeans.length > 0) {
+        var hSum = 0;
+        for (var m = 0; m < state.sampleMeans.length; m++) hSum += state.sampleMeans[m];
+        var hMean = hSum / state.sampleMeans.length;
+        var hVar = 0;
+        for (var m2 = 0; m2 < state.sampleMeans.length; m2++) {
+          var dev = state.sampleMeans[m2] - hMean;
+          hVar += dev * dev;
+        }
+        hVar /= state.sampleMeans.length;
+        histMuStr = hMean.toFixed(4);
+        histSigmaStr = Math.sqrt(hVar).toFixed(4);
+      }
+
+      // Predicted stdev: sigma/sqrt(n)
+      var predictedStr = '';
+      if (pop.variance != null && pop.variance > 0) {
+        var popSigma = Math.sqrt(pop.variance);
+        var predicted = popSigma / Math.sqrt(state.sampleSize);
+        predictedStr = '   σ/√' + state.sampleSize + ' = ' + predicted.toFixed(4);
+      }
+
+      var line1 = 'n = ' + state.sampleSize + '   Samples: ' + state.totalSamples;
+      var line2 = 'x\u0305 = ' + histMuStr + '   s = ' + histSigmaStr + predictedStr;
+      ctx.fillText(line1, rect.x + 8, rect.y + 6);
+      ctx.fillText(line2, rect.x + 8, rect.y + 24);
+    }
 
     ctx.restore();
   }
@@ -1284,6 +1326,13 @@ var SamplingDistribution = (function () {
       this.classList.toggle('active', state.rescale);
       state.rescaleTarget = state.rescale ? 1 : 0;
       startRescaleAnimation();
+    });
+
+    // --- Labels toggle ---
+    document.getElementById('toggleLabels').addEventListener('click', function () {
+      state.showLabels = !state.showLabels;
+      this.classList.toggle('active', state.showLabels);
+      draw();
     });
 
     // --- Custom distribution editor ---
