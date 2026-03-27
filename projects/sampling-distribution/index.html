@@ -144,10 +144,15 @@
     </div>
   </div>
 
-  <!-- Display toggles -->
+  <!-- Options -->
   <div class="section">
-    <div class="section-label">Display</div>
+    <div class="section-label">Options</div>
     <div class="opt-grid-3">
+      <button class="opt-btn" id="btnHelp">Help</button>
+      <button class="opt-btn" id="btnOverview">Overview</button>
+      <button class="opt-btn" id="toggleInvert">Invert</button>
+    </div>
+    <div class="opt-grid-3" style="margin-top:4px;">
       <button class="opt-btn active" id="togglePopulation">Population</button>
       <button class="opt-btn active" id="toggleSampleLine">Sample</button>
       <button class="opt-btn active" id="toggleSamplingDist">Histogram</button>
@@ -157,20 +162,11 @@
       <button class="opt-btn" id="toggleRescale">Rescale</button>
       <button class="opt-btn" id="toggleLabels">Labels</button>
     </div>
-    <div class="opt-grid-3" style="margin-top:4px;">
+    <div class="opt-grid-3">
       <button class="opt-btn" id="toggleBinSize">Bin size</button>
     </div>
   </div>
 
-  <!-- Options -->
-  <div class="section">
-    <div class="section-label">Options</div>
-    <div class="opt-grid-3">
-      <button class="opt-btn" id="btnHelp">Help</button>
-      <button class="opt-btn" id="btnOverview">Overview</button>
-      <button class="opt-btn" id="toggleInvert">Invert</button>
-    </div>
-  </div>
 </div>
 
 
@@ -240,27 +236,24 @@
       For a parent population with finite variance σ² the central limit theorem
       tells us that in the limit of large sample size (n) the sampling distribution
       of the mean will approach a normal distribution with the same mean as the
-      parent population, and variance σ²/n.
-      </p>
-      <p>
-      The standard deviation of the
-      sample mean, that is the width of the sampling distribution of the mean,
-      is σ/√n.
+      parent population and variance σ²/n.
+      The standard deviation is therefore σ/√n.
       </p>
       <p>
       A good rule of thumb is that a sample size of 30 ensures that the sampling
       distribution is &ldquo;close&rdquo; to normal.
       </p>
       <p>
-      For a long-tailed parent population without finite variance the central limit theorem
-      does not apply.
+      For heavy-tailed parent populations with infinite variance 
+      the central limit theorem does not apply.
       </p>
       <p>
-      Experiment with different populations, including various continuous
-      distributions that have finite variance (uniform, exponential, normal,
-      power-law with exponent 3.5), distributions without finite variance
-      (power-law with exponent 2.5, Cauchy), a discrete
-      distribution (±1), or your own custom distribution.
+      Experiment with different populations! There are continuous
+      distributions with finite variance (uniform, exponential, normal,
+      power-law 3.5), distributions with infinite variance
+      (power-law 2.5, Cauchy, power-law 1.5), 
+      and a discrete distribution (±1). 
+      Or, design your own custom distribution!
       </p>
   </div>
 </div>

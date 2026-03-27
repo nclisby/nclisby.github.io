@@ -96,7 +96,7 @@ var SamplingDistribution = (function () {
       },
       variance: v,
       discrete: false,
-      xRange: [-3, 8],
+      xRange: [-1, 4],
       cltApplies: true
     });
   })();
@@ -119,8 +119,9 @@ var SamplingDistribution = (function () {
       },
       variance: null,   // infinite
       discrete: false,
-      xRange: [-5, 30],
-      cltApplies: false
+      xRange: [-3, 6],
+      cltApplies: false,
+      rescaleFrac: 0.95
     });
   })();
 
