@@ -130,6 +130,7 @@ var SamplingDistribution = (function () {
     name: 'Cauchy: C/(1+x²)',
     sample: function () { return Math.tan(Math.PI * (Math.random() - 0.5)); },
     pdf: function (x) { return 1.0 / (Math.PI * (1 + x * x)); },
+    mean: null,
     variance: null,
     discrete: false,
     xRange: [-8, 8],
@@ -179,6 +180,7 @@ var SamplingDistribution = (function () {
       pdf: function (x) {
         return HT_C / (1 + Math.pow(Math.abs(x), 1.5));
       },
+      mean: null,
       variance: null,
       discrete: false,
       xRange: [-8, 8],
@@ -818,7 +820,15 @@ var SamplingDistribution = (function () {
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       var labelY = rect.y + 6 + (state.showBinSlider ? 36 : 0);
-      ctx.fillText('μ = 0   σ = ' + sigmaStr, rect.x + 8, labelY);
+      if (pop.mean === null)
+      {
+          ctx.fillText('μ = —   σ = ' + sigmaStr, rect.x + 8, labelY);
+      }
+      else
+      {
+          ctx.fillText('μ = 0   σ = ' + sigmaStr, rect.x + 8, labelY);
+      }
+
     }
 
     ctx.restore();
