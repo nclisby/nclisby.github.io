@@ -812,7 +812,7 @@ var SamplingDistribution = (function () {
     // Labels
     if (state.showLabels) {
       var sigmaStr = (pop.variance != null && pop.variance > 0)
-        ? Math.sqrt(pop.variance).toFixed(3) : '∞';
+        ? Math.sqrt(pop.variance).toFixed(4) : '∞';
       ctx.font = '16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
       ctx.fillStyle = 'rgba(224, 226, 235, 0.7)';
       ctx.textAlign = 'left';
