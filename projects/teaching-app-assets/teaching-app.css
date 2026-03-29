@@ -47,7 +47,6 @@ body {
   background: var(--bg);
   color: var(--text);
   height: 100vh;
-  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   display: flex;                       /* sidebar | canvas-area */
@@ -63,13 +62,11 @@ body {
   width: var(--panel-width);
   min-width: var(--panel-width);
   height: 100vh;
-  height: 100dvh;
   background: var(--panel);
   border-right: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   transition: margin-left 0.3s ease, opacity 0.3s ease;
   position: relative;
@@ -317,8 +314,6 @@ body {
   flex: 1;
   position: relative;
   overflow: hidden;
-  height: 100vh;     /* fallback */
-  height: 100dvh;    /* modern browsers */
 }
 
 /* 2D canvas fills the entire area */
@@ -493,7 +488,6 @@ body {
   top: 0; left: 0;
   width: 100vw; 
   height: 100vh;
-  height: 100dvh;
   background: rgba(15, 17, 23, 0.92);
   z-index: 50000;
   display: none;
@@ -501,7 +495,6 @@ body {
   justify-content: center;
   backdrop-filter: blur(6px);
   overflow-y: auto;
-  overflow-y: hidden;
 }
 
 .overlay.visible {
@@ -518,7 +511,6 @@ body {
   line-height: 1.4;
   position: relative;
   overflow-y: auto;
-  overflow-y: hidden;
 }
 
 .overlay-content h1 {
