@@ -421,6 +421,9 @@ var SamplingDistribution = (function () {
     rescale: false,
     showBinSlider: false,
     binSizeFactor: 1,          // multiplicative factor for histogram bin width
+    showCI: false,
+    showWindow: false,
+    ciLevel: '95',             // '95', '1', '2', '3' (sigma levels)
 
     // Sampling data
     sampleMeans: [],         // accumulated sample means
@@ -436,6 +439,7 @@ var SamplingDistribution = (function () {
     animDotIndex: 0,
     animT: 0,
     animStartTime: 0,
+    lastWasAnimate: false,   // true after animate completes, for CI display
 
     // Layout (computed in resize)
     canvasW: 0,
@@ -489,7 +493,7 @@ var SamplingDistribution = (function () {
 
     var totalPad = VPAD * (panels.length - 1);
     var topPad = 20;
-    var bottomPad = 20;
+    var bottomPad = 20 + (state.showWindow ? 16 : 0);
     var availH = h - topPad - bottomPad - totalPad;
     var totalWeight = 0;
     for (var i = 0; i < panels.length; i++) totalWeight += panels[i].weight;
@@ -558,7 +562,7 @@ var SamplingDistribution = (function () {
     if (pop.variance != null && pop.variance > 0 && state.sampleSize > 0) {
       // CLT case: theoretical sigma/sqrt(n)
       var sigma = Math.sqrt(pop.variance / state.sampleSize);
-      var halfW = 3 * sigma;
+      var halfW = 3.1 * sigma;
       if (halfW < 1.e-8) halfW = 1.e-8;
       return [-halfW, halfW];
     }
@@ -722,8 +726,48 @@ var SamplingDistribution = (function () {
     }
 
     if (layout.pop && layout.pop.h > 5) drawPopulation(layout.pop);
-    if (layout.sample && layout.sample.h > 5) drawSampleLine(layout.sample);
-    if (layout.hist && layout.hist.h > 5) drawHistogram(layout.hist);
+    if (layout.sample && layout.sample.h > 5) {
+      drawSampleLine(layout.sample);
+      var sampleBaseY = layout.sample.y + layout.sample.h * 0.5;
+      // Window always draws on number line when enabled
+      if (state.showWindow) {
+        var savedCI = state.showCI; state.showCI = false;
+        drawCIOnRect(layout.sample, sampleBaseY, 10);
+        state.showCI = savedCI;
+      }
+      // CI on number line: hide during animation until mean appears (phase >= 1)
+      if (state.showCI && !(state.animating && state.animPhase < 1)) {
+        var savedW = state.showWindow; state.showWindow = false;
+        drawCIOnRect(layout.sample, sampleBaseY, 10);
+        state.showWindow = savedW;
+      }
+    }
+    if (layout.hist && layout.hist.h > 5) {
+      drawHistogram(layout.hist);
+      var histBaseY = layout.hist.y + layout.hist.h;
+      // Window always draws on histogram when enabled
+      if (state.showWindow) {
+        var savedCI2 = state.showCI; state.showCI = false;
+        drawCIOnRect(layout.hist, histBaseY, 10);
+        state.showCI = savedCI2;
+      }
+      // CI on histogram: hide entirely during animation
+      if (state.showCI && !state.animating) {
+        var savedW2 = state.showWindow; state.showWindow = false;
+        drawCIOnRect(layout.hist, histBaseY, 10);
+        state.showWindow = savedW2;
+        // Draw red dot for sample mean on histogram baseline
+        if (state.currentMean !== null) {
+          var dotX = xToPixel(state.currentMean, layout.hist);
+          if (dotX >= layout.hist.x && dotX <= layout.hist.x + layout.hist.w) {
+            ctx.beginPath();
+            ctx.arc(dotX, histBaseY, 7, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(244, 67, 54, 0.9)';
+            ctx.fill();
+          }
+        }
+      }
+    }
   }
 
 
@@ -967,17 +1011,16 @@ var SamplingDistribution = (function () {
       }
     }
 
-    // Draw dropping mean during animation phase 2
+    // Draw dropping mean during animation phase 2 (drawn after histogram bars)
     if (state.animating && state.animPhase === 2 && state.currentMean !== null) {
       var mx = xToPixel(state.currentMean, rect);
       var targetY = rect.y + rect.h;
       var startY = rect.y - 10;
       var dropY = startY + (targetY - startY) * state.animT;
-      var radius = 7 * (1 - 0.5 * state.animT);
 
       ctx.beginPath();
-      ctx.arc(mx, dropY, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = 'rgba(244, 67, 54, ' + (0.9 - 0.5 * state.animT) + ')';
+      ctx.arc(mx, dropY, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(244, 67, 54, 0.9)';
       ctx.fill();
     }
 
@@ -1054,6 +1097,91 @@ var SamplingDistribution = (function () {
 
 
   /* ======================================================================
+   * CONFIDENCE INTERVAL / WINDOW DRAWING
+   * ====================================================================== */
+
+  function getCIHalfWidth() {
+    var pop = populations[state.popIndex];
+    if (pop.variance == null || pop.variance <= 0) return null;
+    var sigma = Math.sqrt(pop.variance);
+    var z;
+    switch (state.ciLevel) {
+      case '1': z = 1; break;
+      case '2': z = 2; break;
+      case '3': z = 3; break;
+      default:  z = 1.96; break; // 95%
+    }
+    return z * sigma / Math.sqrt(state.sampleSize);
+  }
+
+  // Draw a horizontal line with whiskers at each end
+  function drawWhiskeredLine(x1, x2, y, colour, clipRect) {
+    var whiskerH = 6;
+    // Clip to visible area
+    var left = Math.max(x1, clipRect.x);
+    var right = Math.min(x2, clipRect.x + clipRect.w);
+    if (left > clipRect.x + clipRect.w || right < clipRect.x) return;
+
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(left, y);
+    ctx.lineTo(right, y);
+    ctx.stroke();
+
+    // Left whisker (only if endpoint is visible)
+    if (x1 >= clipRect.x && x1 <= clipRect.x + clipRect.w) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y - whiskerH);
+      ctx.lineTo(x1, y + whiskerH);
+      ctx.stroke();
+    }
+    // Right whisker
+    if (x2 >= clipRect.x && x2 <= clipRect.x + clipRect.w) {
+      ctx.beginPath();
+      ctx.moveTo(x2, y - whiskerH);
+      ctx.lineTo(x2, y + whiskerH);
+      ctx.stroke();
+    }
+  }
+
+  function drawCIOnRect(rect, baseY, offsetBelow) {
+    var halfW = getCIHalfWidth();
+    if (halfW === null) return;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(rect.x, rect.y, rect.w, rect.h + 20); // extra clip for window below baseline
+    ctx.clip();
+
+    // CI (red) — centred on sample mean, drawn at baseline
+    if (state.showCI && state.currentMean !== null) {
+      var ciLeft = xToPixel(state.currentMean - halfW, rect);
+      var ciRight = xToPixel(state.currentMean + halfW, rect);
+      drawWhiskeredLine(ciLeft, ciRight, baseY, 'rgba(244, 67, 54, 0.85)', rect);
+    }
+
+    // Window (green) — centred on zero, drawn slightly below baseline
+    if (state.showWindow) {
+      var wLeft = xToPixel(-halfW, rect);
+      var wRight = xToPixel(halfW, rect);
+      var wY = baseY + offsetBelow;
+      drawWhiskeredLine(wLeft, wRight, wY, 'rgba(76, 175, 80, 0.85)', rect);
+      // Green dot at zero
+      var zeroX = xToPixel(0, rect);
+      if (zeroX >= rect.x && zeroX <= rect.x + rect.w) {
+        ctx.beginPath();
+        ctx.arc(zeroX, wY, 4, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(76, 175, 80, 0.85)';
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+  }
+
+
+  /* ======================================================================
    * SAMPLING
    * ====================================================================== */
 
@@ -1085,6 +1213,7 @@ var SamplingDistribution = (function () {
     }
     state.totalSamples += count;
     state.lastAction = count;
+    state.lastWasAnimate = false;
     updateEmpiricalHalfW();
     draw();
   }
@@ -1164,6 +1293,7 @@ var SamplingDistribution = (function () {
     } else {
       // Done
       state.animating = false;
+      state.lastWasAnimate = true;
       state.sampleMeans.push(state.currentMean);
       state.totalSamples++;
       updateEmpiricalHalfW();
@@ -1275,12 +1405,24 @@ var SamplingDistribution = (function () {
   function updateCLTButtons() {
     var pop = populations[state.popIndex];
     var btnN = dom.toggleNormal;
+    var btnCI = document.getElementById('toggleCI');
+    var btnW = document.getElementById('toggleWindow');
+    var ciLevelRow = document.getElementById('ciLevelRow');
     if (!pop.cltApplies) {
       btnN.classList.add('disabled-btn');
       btnN.classList.remove('active');
       state.showNormal = false;
+      btnCI.classList.add('disabled-btn');
+      btnCI.classList.remove('active');
+      state.showCI = false;
+      btnW.classList.add('disabled-btn');
+      btnW.classList.remove('active');
+      state.showWindow = false;
+      ciLevelRow.style.display = 'none';
     } else {
       btnN.classList.remove('disabled-btn');
+      btnCI.classList.remove('disabled-btn');
+      btnW.classList.remove('disabled-btn');
     }
   }
 
@@ -1484,6 +1626,41 @@ var SamplingDistribution = (function () {
       state.binSizeFactor = Math.pow(10, raw);
       binSliderValue.textContent = state.binSizeFactor.toFixed(2);
       draw();
+    });
+
+    // --- CI and Window toggles ---
+    var ciLevelRow = document.getElementById('ciLevelRow');
+
+    function updateCILevelVisibility() {
+      ciLevelRow.style.display = (state.showCI || state.showWindow) ? 'grid' : 'none';
+    }
+
+    document.getElementById('toggleCI').addEventListener('click', function () {
+      var pop = populations[state.popIndex];
+      if (!pop.cltApplies) return;
+      state.showCI = !state.showCI;
+      this.classList.toggle('active', state.showCI);
+      updateCILevelVisibility();
+      draw();
+    });
+
+    document.getElementById('toggleWindow').addEventListener('click', function () {
+      var pop = populations[state.popIndex];
+      if (!pop.cltApplies) return;
+      state.showWindow = !state.showWindow;
+      this.classList.toggle('active', state.showWindow);
+      updateCILevelVisibility();
+      draw();
+    });
+
+    document.querySelectorAll('[data-cilevel]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state.ciLevel = btn.dataset.cilevel;
+        document.querySelectorAll('[data-cilevel]').forEach(function (b) {
+          b.classList.toggle('active', b === btn);
+        });
+        draw();
+      });
     });
 
     // --- Custom distribution editor ---

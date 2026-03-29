@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Sampling Distribution</title>
+<title>Sampling Distributions</title>
 
 <!-- Shared design system -->
 <link rel="stylesheet" href="../teaching-app-assets/teaching-app.css">
@@ -61,6 +61,11 @@
 }
 .repeat-btn:hover { background: var(--hover); border-color: var(--accent); color: var(--text); }
 
+/* ── 4-column option grid for CI level selector ── */
+.opt-grid-4 {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px;
+}
+
 /* ── Bin size slider (floating, top-left of canvas area) ── */
 .bin-slider-wrap {
   position: absolute; top: 12px; left: 56px; z-index: 10;
@@ -99,7 +104,7 @@
         </a>
         <h1>Sampling distributions</h1>
       </div>
-      <p>Sampling, central limit theorem</p>
+      <p>Sampling, central limit theorem, CIs</p>
     </div>
     <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
   </div>
@@ -164,6 +169,14 @@
     </div>
     <div class="opt-grid-3">
       <button class="opt-btn" id="toggleBinSize">Bin size</button>
+      <button class="opt-btn" id="toggleCI">CI</button>
+      <button class="opt-btn" id="toggleWindow">Window</button>
+    </div>
+    <div class="opt-grid-4" id="ciLevelRow" style="display:none; margin-top:4px;">
+      <button class="opt-btn active" data-cilevel="95">95%</button>
+      <button class="opt-btn" data-cilevel="1">1σ</button>
+      <button class="opt-btn" data-cilevel="2">2σ</button>
+      <button class="opt-btn" data-cilevel="3">3σ</button>
     </div>
   </div>
 
