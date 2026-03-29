@@ -34,7 +34,7 @@ html.inverted {
   --input-bg: #1e2130;
   --hover: #252838;
   --radius: 8px;
-  --panel-width: 360px;
+  --panel-width: 380px;
 }
 
 
@@ -69,6 +69,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   transition: margin-left 0.3s ease, opacity 0.3s ease;
   position: relative;
@@ -500,6 +501,7 @@ body {
   justify-content: center;
   backdrop-filter: blur(6px);
   overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .overlay.visible {
@@ -516,6 +518,7 @@ body {
   line-height: 1.4;
   position: relative;
   overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .overlay-content h1 {
