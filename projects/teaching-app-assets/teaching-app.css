@@ -34,7 +34,7 @@ html.inverted {
   --input-bg: #1e2130;
   --hover: #252838;
   --radius: 8px;
-  --panel-width: 350px;
+  --panel-width: 360px;
 }
 
 
@@ -47,6 +47,7 @@ body {
   background: var(--bg);
   color: var(--text);
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   display: flex;                       /* sidebar | canvas-area */
@@ -62,6 +63,7 @@ body {
   width: var(--panel-width);
   min-width: var(--panel-width);
   height: 100vh;
+  height: 100dvh;
   background: var(--panel);
   border-right: 1px solid var(--panel-border);
   display: flex;
@@ -92,14 +94,14 @@ body {
 
 .panel-header-text h1 {
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.5px;
   color: var(--accent);
 }
 
 .panel-header-text p {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--text-dim);
   margin-top: 4px;
 }
@@ -119,7 +121,7 @@ body {
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   color: var(--text-dim);
-  font-size: 20px;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,7 +150,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 24px;
+  font-size: 22px;
   flex-shrink: 0;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -167,7 +169,7 @@ body {
 
 .section-label {
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -185,7 +187,7 @@ body {
   border-radius: var(--radius);
   color: var(--text);
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: 17px;
+  font-size: 15px;
   padding: 10px 12px;
   outline: none;
   cursor: pointer;
@@ -221,7 +223,7 @@ body {
   border-radius: var(--radius);
   color: var(--text);
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: 17px;
+  font-size: 16px;
   padding: 10px 12px;
   outline: none;
   transition: border-color 0.15s;
@@ -314,6 +316,8 @@ body {
   flex: 1;
   position: relative;
   overflow: hidden;
+  height: 100vh;     /* fallback */
+  height: 100dvh;    /* modern browsers */
 }
 
 /* 2D canvas fills the entire area */
@@ -486,7 +490,9 @@ body {
 .overlay {
   position: fixed;
   top: 0; left: 0;
-  width: 100vw; height: 100vh;
+  width: 100vw; 
+  height: 100vh;
+  height: 100dvh;
   background: rgba(15, 17, 23, 0.92);
   z-index: 50000;
   display: none;
