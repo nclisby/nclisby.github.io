@@ -433,6 +433,8 @@ var SamplingDistribution = (function () {
     totalSamples: 0,
     lastAction: null,        // last sampling action: 'animate', 1, 5, 100, 10000
     empiricalHalfW: null,    // cached 90% percentile half-width for non-CLT rescale
+    cachedSortedMeans: null, // cached sorted copy of sampleMeans for hist window
+    cachedHistMean: null,    // cached mean of sampleMeans
 
     // Animation state
     animating: false,
@@ -1130,15 +1132,27 @@ var SamplingDistribution = (function () {
     }
   }
 
-  // Get empirical percentiles for Hist Window
+  // Get empirical percentiles for Hist Window (uses cached sorted array)
   function getHistWindowRange() {
-    if (state.sampleMeans.length < 20) return null;
+    if (state.cachedSortedMeans === null || state.cachedSortedMeans.length < 20) return null;
     var tail = getCITailFraction();
-    var sorted = state.sampleMeans.slice().sort(function (a, b) { return a - b; });
-    var n = sorted.length;
+    var n = state.cachedSortedMeans.length;
     var iLo = Math.max(0, Math.floor(n * tail));
     var iHi = Math.min(n - 1, Math.floor(n * (1 - tail)));
-    return { lo: sorted[iLo], hi: sorted[iHi] };
+    return { lo: state.cachedSortedMeans[iLo], hi: state.cachedSortedMeans[iHi] };
+  }
+
+  // Update cached sorted means and histogram mean (call when samples change)
+  function updateHistWindowCache() {
+    if (state.sampleMeans.length < 20) {
+      state.cachedSortedMeans = null;
+      state.cachedHistMean = null;
+      return;
+    }
+    state.cachedSortedMeans = state.sampleMeans.slice().sort(function (a, b) { return a - b; });
+    var sum = 0;
+    for (var i = 0; i < state.sampleMeans.length; i++) sum += state.sampleMeans[i];
+    state.cachedHistMean = sum / state.sampleMeans.length;
   }
 
   // Draw a horizontal line with whiskers at each end
@@ -1214,11 +1228,8 @@ var SamplingDistribution = (function () {
         var hwRight = xToPixel(range.hi, rect);
         drawWhiskeredLine(hwLeft, hwRight, hwY, '#64b5f6', rect);
         // Blue dot at histogram mean
-        if (state.sampleMeans.length > 0) {
-          var hSum = 0;
-          for (var hi = 0; hi < state.sampleMeans.length; hi++) hSum += state.sampleMeans[hi];
-          var hMean = hSum / state.sampleMeans.length;
-          var meanX = xToPixel(hMean, rect);
+        if (state.cachedHistMean !== null) {
+          var meanX = xToPixel(state.cachedHistMean, rect);
           if (meanX >= rect.x && meanX <= rect.x + rect.w) {
             ctx.beginPath();
             ctx.arc(meanX, hwY, 4, 0, 2 * Math.PI);
@@ -1267,6 +1278,7 @@ var SamplingDistribution = (function () {
     state.lastAction = count;
     state.lastWasAnimate = false;
     updateEmpiricalHalfW();
+    updateHistWindowCache();
     draw();
   }
 
@@ -1285,6 +1297,8 @@ var SamplingDistribution = (function () {
     state.currentMean = null;
     state.totalSamples = 0;
     state.empiricalHalfW = null;
+    state.cachedSortedMeans = null;
+    state.cachedHistMean = null;
     state.animating = false;
     draw();
   }
@@ -1349,6 +1363,7 @@ var SamplingDistribution = (function () {
       state.sampleMeans.push(state.currentMean);
       state.totalSamples++;
       updateEmpiricalHalfW();
+      updateHistWindowCache();
       draw();
       return;
     }
