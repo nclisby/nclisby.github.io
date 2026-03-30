@@ -423,7 +423,8 @@ var SamplingDistribution = (function () {
     binSizeFactor: 1,          // multiplicative factor for histogram bin width
     showCI: false,
     showWindow: false,
-    ciLevel: '95',             // '95', '1', '2', '3' (sigma levels)
+    showHistWindow: false,
+    ciLevel: '95',             // '50', '95', '1', '2', '3' (sigma levels)
 
     // Sampling data
     sampleMeans: [],         // accumulated sample means
@@ -493,7 +494,8 @@ var SamplingDistribution = (function () {
 
     var totalPad = VPAD * (panels.length - 1);
     var topPad = 20;
-    var bottomPad = 20 + (state.showWindow ? 16 : 0);
+    var extraBottom = (state.showWindow ? 16 : 0) + (state.showHistWindow ? 16 : 0);
+    var bottomPad = 20 + extraBottom;
     var availH = h - topPad - bottomPad - totalPad;
     var totalWeight = 0;
     for (var i = 0; i < panels.length; i++) totalWeight += panels[i].weight;
@@ -729,33 +731,35 @@ var SamplingDistribution = (function () {
     if (layout.sample && layout.sample.h > 5) {
       drawSampleLine(layout.sample);
       var sampleBaseY = layout.sample.y + layout.sample.h * 0.5;
-      // Window always draws on number line when enabled
-      if (state.showWindow) {
+      // Window and Hist Window always draw on number line when enabled
+      if (state.showWindow || state.showHistWindow) {
         var savedCI = state.showCI; state.showCI = false;
         drawCIOnRect(layout.sample, sampleBaseY, 10);
         state.showCI = savedCI;
       }
       // CI on number line: hide during animation until mean appears (phase >= 1)
       if (state.showCI && !(state.animating && state.animPhase < 1)) {
-        var savedW = state.showWindow; state.showWindow = false;
+        var savedW = state.showWindow; var savedHW = state.showHistWindow;
+        state.showWindow = false; state.showHistWindow = false;
         drawCIOnRect(layout.sample, sampleBaseY, 10);
-        state.showWindow = savedW;
+        state.showWindow = savedW; state.showHistWindow = savedHW;
       }
     }
     if (layout.hist && layout.hist.h > 5) {
       drawHistogram(layout.hist);
       var histBaseY = layout.hist.y + layout.hist.h;
-      // Window always draws on histogram when enabled
-      if (state.showWindow) {
+      // Window and Hist Window always draw on histogram when enabled
+      if (state.showWindow || state.showHistWindow) {
         var savedCI2 = state.showCI; state.showCI = false;
         drawCIOnRect(layout.hist, histBaseY, 10);
         state.showCI = savedCI2;
       }
       // CI on histogram: hide entirely during animation
       if (state.showCI && !state.animating) {
-        var savedW2 = state.showWindow; state.showWindow = false;
+        var savedW2 = state.showWindow; var savedHW2 = state.showHistWindow;
+        state.showWindow = false; state.showHistWindow = false;
         drawCIOnRect(layout.hist, histBaseY, 10);
-        state.showWindow = savedW2;
+        state.showWindow = savedW2; state.showHistWindow = savedHW2;
         // Draw red dot for sample mean on histogram baseline
         if (state.currentMean !== null) {
           var dotX = xToPixel(state.currentMean, layout.hist);
@@ -1106,12 +1110,35 @@ var SamplingDistribution = (function () {
     var sigma = Math.sqrt(pop.variance);
     var z;
     switch (state.ciLevel) {
+      case '50': z = 0.6745; break;
       case '1': z = 1; break;
       case '2': z = 2; break;
       case '3': z = 3; break;
       default:  z = 1.96; break; // 95%
     }
     return z * sigma / Math.sqrt(state.sampleSize);
+  }
+
+  // Get the tail fraction for the current CI level
+  function getCITailFraction() {
+    switch (state.ciLevel) {
+      case '50': return 0.25;
+      case '1':  return (1 - 0.6827) / 2;
+      case '2':  return (1 - 0.9545) / 2;
+      case '3':  return (1 - 0.9973) / 2;
+      default:   return 0.025;  // 95%
+    }
+  }
+
+  // Get empirical percentiles for Hist Window
+  function getHistWindowRange() {
+    if (state.sampleMeans.length < 20) return null;
+    var tail = getCITailFraction();
+    var sorted = state.sampleMeans.slice().sort(function (a, b) { return a - b; });
+    var n = sorted.length;
+    var iLo = Math.max(0, Math.floor(n * tail));
+    var iHi = Math.min(n - 1, Math.floor(n * (1 - tail)));
+    return { lo: sorted[iLo], hi: sorted[iHi] };
   }
 
   // Draw a horizontal line with whiskers at each end
@@ -1147,25 +1174,26 @@ var SamplingDistribution = (function () {
 
   function drawCIOnRect(rect, baseY, offsetBelow) {
     var halfW = getCIHalfWidth();
-    if (halfW === null) return;
 
     ctx.save();
     ctx.beginPath();
-    ctx.rect(rect.x, rect.y, rect.w, rect.h + 20); // extra clip for window below baseline
+    ctx.rect(rect.x, rect.y, rect.w, rect.h + 40); // extra clip for intervals below baseline
     ctx.clip();
 
     // CI (red) — centred on sample mean, drawn at baseline
-    if (state.showCI && state.currentMean !== null) {
+    if (state.showCI && state.currentMean !== null && halfW !== null) {
       var ciLeft = xToPixel(state.currentMean - halfW, rect);
       var ciRight = xToPixel(state.currentMean + halfW, rect);
       drawWhiskeredLine(ciLeft, ciRight, baseY, 'rgba(244, 67, 54, 0.85)', rect);
     }
 
     // Window (green) — centred on zero, drawn slightly below baseline
-    if (state.showWindow) {
+    var windowOffset = 0;
+    if (state.showWindow && halfW !== null) {
+      windowOffset = offsetBelow;
       var wLeft = xToPixel(-halfW, rect);
       var wRight = xToPixel(halfW, rect);
-      var wY = baseY + offsetBelow;
+      var wY = baseY + windowOffset;
       drawWhiskeredLine(wLeft, wRight, wY, 'rgba(76, 175, 80, 0.85)', rect);
       // Green dot at zero
       var zeroX = xToPixel(0, rect);
@@ -1174,6 +1202,30 @@ var SamplingDistribution = (function () {
         ctx.arc(zeroX, wY, 4, 0, 2 * Math.PI);
         ctx.fillStyle = 'rgba(76, 175, 80, 0.85)';
         ctx.fill();
+      }
+    }
+
+    // Hist Window (blue) — empirical percentiles, below Window
+    if (state.showHistWindow) {
+      var range = getHistWindowRange();
+      if (range !== null) {
+        var hwY = baseY + (windowOffset > 0 ? windowOffset + offsetBelow : offsetBelow);
+        var hwLeft = xToPixel(range.lo, rect);
+        var hwRight = xToPixel(range.hi, rect);
+        drawWhiskeredLine(hwLeft, hwRight, hwY, '#64b5f6', rect);
+        // Blue dot at histogram mean
+        if (state.sampleMeans.length > 0) {
+          var hSum = 0;
+          for (var hi = 0; hi < state.sampleMeans.length; hi++) hSum += state.sampleMeans[hi];
+          var hMean = hSum / state.sampleMeans.length;
+          var meanX = xToPixel(hMean, rect);
+          if (meanX >= rect.x && meanX <= rect.x + rect.w) {
+            ctx.beginPath();
+            ctx.arc(meanX, hwY, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = '#64b5f6';
+            ctx.fill();
+          }
+        }
       }
     }
 
@@ -1418,7 +1470,7 @@ var SamplingDistribution = (function () {
       btnW.classList.add('disabled-btn');
       btnW.classList.remove('active');
       state.showWindow = false;
-      ciLevelRow.style.display = 'none';
+      ciLevelRow.style.display = state.showHistWindow ? 'grid' : 'none';
     } else {
       btnN.classList.remove('disabled-btn');
       btnCI.classList.remove('disabled-btn');
@@ -1632,7 +1684,7 @@ var SamplingDistribution = (function () {
     var ciLevelRow = document.getElementById('ciLevelRow');
 
     function updateCILevelVisibility() {
-      ciLevelRow.style.display = (state.showCI || state.showWindow) ? 'grid' : 'none';
+      ciLevelRow.style.display = (state.showCI || state.showWindow || state.showHistWindow) ? 'grid' : 'none';
     }
 
     document.getElementById('toggleCI').addEventListener('click', function () {
@@ -1649,6 +1701,13 @@ var SamplingDistribution = (function () {
       if (!pop.cltApplies) return;
       state.showWindow = !state.showWindow;
       this.classList.toggle('active', state.showWindow);
+      updateCILevelVisibility();
+      draw();
+    });
+
+    document.getElementById('toggleHistWindow').addEventListener('click', function () {
+      state.showHistWindow = !state.showHistWindow;
+      this.classList.toggle('active', state.showHistWindow);
       updateCILevelVisibility();
       draw();
     });

@@ -246,9 +246,33 @@ body {
 
 .opt-row { display: flex; gap: 4px; }
 
+.opt-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
 .opt-grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+}
+
+.opt-grid-4 {
+  display: grid; 
+  grid-template-columns: 1fr 1fr 1fr 1fr; 
+  gap: 4px;
+}
+
+.opt-grid-5 {
+  display: grid; 
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr; 
+  gap: 4px;
+}
+
+.opt-grid-6 {
+  display: grid; 
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; 
   gap: 4px;
 }
 
@@ -257,11 +281,11 @@ body {
   background: var(--input-bg);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
-  color: var(--text-dim);
+  color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  padding: 9px 6px;
+  padding: 7px 5px;
   cursor: pointer;
   text-align: center;
   transition: all 0.15s;
@@ -270,11 +294,18 @@ body {
 }
 
 .opt-btn:hover, .opt-btn:active { background: var(--hover); }
+.opt-btn:hover { border-color: var(--accent); }
 
 .opt-btn.active {
   background: var(--accent-dim);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.opt-btn.disabled-btn {
+  opacity: 0.35; 
+  cursor: default; 
+  pointer-events: none;
 }
 
 
