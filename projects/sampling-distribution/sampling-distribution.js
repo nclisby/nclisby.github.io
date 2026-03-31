@@ -1226,14 +1226,16 @@ var SamplingDistribution = (function () {
         var hwY = baseY + (windowOffset > 0 ? windowOffset + offsetBelow : offsetBelow);
         var hwLeft = xToPixel(range.lo, rect);
         var hwRight = xToPixel(range.hi, rect);
-        drawWhiskeredLine(hwLeft, hwRight, hwY, '#64b5f6', rect);
-        // Blue dot at histogram mean
+        // drawWhiskeredLine(hwLeft, hwRight, hwY, '#64b5f6', rect);
+        drawWhiskeredLine(hwLeft, hwRight, hwY, '#ffffff', rect);
+        // White dot at histogram mean
         if (state.cachedHistMean !== null) {
           var meanX = xToPixel(state.cachedHistMean, rect);
           if (meanX >= rect.x && meanX <= rect.x + rect.w) {
             ctx.beginPath();
             ctx.arc(meanX, hwY, 4, 0, 2 * Math.PI);
-            ctx.fillStyle = '#64b5f6';
+            // ctx.fillStyle = '#64b5f6';
+            ctx.fillStyle = '#ffffff';
             ctx.fill();
           }
         }
