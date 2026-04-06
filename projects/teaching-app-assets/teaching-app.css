@@ -276,6 +276,18 @@ body {
   gap: 4px;
 }
 
+.opt-grid-7 {
+  display: grid; 
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr; 
+  gap: 4px;
+}
+
+.opt-grid-8 {
+  display: grid; 
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; 
+  gap: 4px;
+}
+
 .opt-btn {
   flex: 1;
   background: var(--input-bg);
