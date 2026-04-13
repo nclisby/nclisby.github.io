@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Colour Explorer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f11;
+    --surface: #1a1a1f;
+    --border: #2e2e38;
+    --text: #e8e8f0;
+    --text-muted: #6b6b80;
+    --accent: #7c6aff;
+    --input-bg: #13131a;
+    --btn-bg: #23232d;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    touch-action: manipulation;
+  }
+
+  header {
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  .app-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* RGB */
+  .rgb-wrapper { display: flex; flex-direction: column; gap: 2px; }
+
+  .rgb-sublabels { display: flex; }
+  .rgb-sublabels span {
+    width: 48px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .rgb-sublabels span.r { color: #ff7070; }
+  .rgb-sublabels span.g { color: #70ff90; }
+  .rgb-sublabels span.b { color: #70b8ff; }
+
+  .rgb-inputs {
+    display: flex;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .rgb-inputs input {
+    width: 48px;
+    padding: 7px 4px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .rgb-inputs input:last-child { border-right: none; }
+  .rgb-inputs input::-webkit-outer-spin-button,
+  .rgb-inputs input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .rgb-inputs input:focus { background: rgba(124,106,255,0.1); }
+
+  /* k */
+  .k-group { display: flex; align-items: center; gap: 5px; }
+  .k-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .k-box {
+    display: flex;
+    align-items: stretch;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .k-box button {
+    width: 30px;
+    background: var(--btn-bg);
+    border: none;
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    touch-action: manipulation;
+    border-right: 1px solid var(--border);
+  }
+  .k-box button:last-child { border-right: none; border-left: 1px solid var(--border); }
+  .k-box button:hover { background: var(--accent); color: #fff; }
+  .k-box button:active { background: #5a49d6; }
+  .k-box input {
+    width: 42px;
+    padding: 7px 2px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .k-box input::-webkit-outer-spin-button,
+  .k-box input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* Random button */
+  .btn-random {
+    padding: 7px 13px;
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    touch-action: manipulation;
+    white-space: nowrap;
+  }
+  .btn-random:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-random:active { background: #5a49d6; }
+
+  /* Toggle */
+  .toggle-group {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; user-select: none;
+  }
+  .toggle-group input[type="checkbox"] { display: none; }
+  .toggle-track {
+    width: 32px; height: 18px;
+    background: var(--border);
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    left: 2px; top: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: left 0.2s, background 0.2s;
+  }
+  .toggle-group input:checked + .toggle-track { background: var(--accent); }
+  .toggle-group input:checked + .toggle-track::after { left: 16px; background: #fff; }
+  .toggle-group span {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .divider {
+    width: 1px; height: 24px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .preview-swatch {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+
+  /* Canvas */
+  .canvas-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    touch-action: manipulation;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="app-title">Colour Explorer</span>
+  <div class="controls">
+
+    <div id="swatchPreview" class="preview-swatch"></div>
+    <div class="divider"></div>
+
+    <div class="rgb-wrapper">
+      <div class="rgb-sublabels">
+        <span class="r">R</span><span class="g">G</span><span class="b">B</span>
+      </div>
+      <div class="rgb-inputs">
+        <input type="number" id="rInput" min="0" max="255" inputmode="numeric">
+        <input type="number" id="gInput" min="0" max="255" inputmode="numeric">
+        <input type="number" id="bInput" min="0" max="255" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="k-group">
+      <span class="k-label">k =</span>
+      <div class="k-box">
+        <button id="kDown" aria-label="Decrease k">−</button>
+        <input type="number" id="kInput" min="1" max="255" value="10" inputmode="numeric">
+        <button id="kUp" aria-label="Increase k">+</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <button class="btn-random" id="btnRandom">⚄ Random</button>
+    <div class="divider"></div>
+
+    <label class="toggle-group">
+      <input type="checkbox" id="textToggle" checked>
+      <span class="toggle-track"></span>
+      <span>labels</span>
+    </label>
+
+  </div>
+</header>
+
+<div class="canvas-container" id="canvasContainer">
+  <canvas id="hexCanvas"></canvas>
+</div>
+
+<script>
+const canvas    = document.getElementById('hexCanvas');
+const ctx       = canvas.getContext('2d');
+const container = document.getElementById('canvasContainer');
+
+const rInput     = document.getElementById('rInput');
+const gInput     = document.getElementById('gInput');
+const bInput     = document.getElementById('bInput');
+const kInput     = document.getElementById('kInput');
+const kDown      = document.getElementById('kDown');
+const kUp        = document.getElementById('kUp');
+const textToggle = document.getElementById('textToggle');
+const btnRandom  = document.getElementById('btnRandom');
+const swatchPreview = document.getElementById('swatchPreview');
+
+// ── State ──────────────────────────────────────────────────────────────────
+let R = Math.floor(Math.random() * 256);
+let G = Math.floor(Math.random() * 256);
+let B = Math.floor(Math.random() * 256);
+let K = 10;
+let showText = true;
+let hexes = []; // for hit-testing
+
+rInput.value = R;
+gInput.value = G;
+bInput.value = B;
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const clamp255 = v => Math.max(0, Math.min(255, Math.round(v)));
+
+function toHex(r, g, b) {
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+function textColor(r, g, b) {
+  return (0.299*r + 0.587*g + 0.114*b) < 110 ? '#ffffff' : '#111111';
+}
+
+// ── Pointy-top hex geometry ────────────────────────────────────────────────
+//
+// Pointy-top regular hexagon, circumradius = s.
+//   flat-to-flat (width)  = sqrt(3) * s
+//   tip-to-tip  (height)  = 2 * s
+//   inradius              = sqrt(3)/2 * s
+//
+// Two adjacent pointy-top hexes share an edge; their centres are exactly
+//   2 * inradius = sqrt(3) * s  apart.
+//
+// The 6 neighbours (pointy-top), measuring angle from +x axis (east):
+//   E   =   0°   NE  =  60°   NW  = 120°
+//   W   = 180°   SW  = 240°   SE  = 300°
+//
+// Our colour assignments:
+//   +R → NE (60°),  +G → E (0°),  +B → SE (300°)
+//   -R → SW (240°), -G → W (180°), -B → NW (120°)
+//
+// Bounding box of the 7-hex cluster (pointy-top):
+//   Widest row: W–centre–E centres span 2 * sqrt(3)*s, plus one hex width
+//               each side → total = 2*sqrt(3)*s + 2*(sqrt(3)/2)*s = 3*sqrt(3)*s
+//   Tallest col: NE/NW centre at dy = sqrt(3)*s * sin(60°) = 1.5s above centre,
+//               top tip of that hex is 1.5s + s = 2.5s above centre.
+//               Total height = 5*s.
+
+function hexPath(cx, cy, s) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    // Pointy-top: first vertex points straight up (90°)
+    const angle = Math.PI / 180 * (90 + 60 * i);
+    const x = cx + s * Math.cos(angle);
+    const y = cy + s * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function getNeighbourDefs(s) {
+  const d = Math.sqrt(3) * s; // centre-to-centre distance
+  // [dr, dg, db, angleDeg]
+  const dirs = [
+    [+1,  0,  0,  60],  // NE = +R
+    [ 0, +1,  0,   0],  // E  = +G
+    [ 0,  0, +1, 300],  // SE = +B
+    [-1,  0,  0, 240],  // SW = -R
+    [ 0, -1,  0, 180],  // W  = -G
+    [ 0,  0, -1, 120],  // NW = -B
+  ];
+  const list = [{ dr:0, dg:0, db:0, dx:0, dy:0 }];
+  for (const [dr, dg, db, ang] of dirs) {
+    const rad = ang * Math.PI / 180;
+    list.push({
+      dr, dg, db,
+      dx: d * Math.cos(rad),
+      dy: d * Math.sin(rad),  // NOTE: canvas y+ is down; sin(0)=0, sin(60)>0 so NE goes UP in visual
+    });
+  }
+  return list;
+}
+
+function computeSize(w, h) {
+  const pad = 14;
+  const sByW = (w - pad*2) / (3 * Math.sqrt(3));
+  const sByH = (h - pad*2) / 5;
+  return Math.min(sByW, sByH);
+}
+
+// ── Draw ───────────────────────────────────────────────────────────────────
+function draw() {
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.fillStyle = '#0f0f11';
+  ctx.fillRect(0, 0, w, h);
+
+  const s    = computeSize(w, h);
+  const cx   = w / 2;
+  const cy   = h / 2;
+  const defs = getNeighbourDefs(s);
+
+  hexes = [];
+
+  // Draw neighbours first, centre last (so centre border appears on top)
+  const drawOrder = [1,2,3,4,5,6,0];
+
+  const items = defs.map((d, i) => ({
+    hx: cx + d.dx,
+    // NE (60°): dy = d*sin(60°) > 0, but in canvas coords this goes DOWN.
+    // We want NE to go UP, so we negate dy for display:
+    hy: cy - d.dy,
+    r: clamp255(R + d.dr * K),
+    g: clamp255(G + d.dg * K),
+    b: clamp255(B + d.db * K),
+    isCenter: i === 0,
+  }));
+
+  for (const idx of drawOrder) {
+    const it = items[idx];
+    hexes.push({ cx: it.hx, cy: it.hy, r: it.r, g: it.g, b: it.b, size: s });
+    drawHex(it.hx, it.hy, s, it.r, it.g, it.b, it.isCenter);
+  }
+
+  swatchPreview.style.background = toHex(R, G, B);
+}
+
+function drawHex(cx, cy, s, r, g, b, isCenter) {
+  const hex = toHex(r, g, b);
+  const tc  = textColor(r, g, b);
+
+  hexPath(cx, cy, s);
+  ctx.fillStyle = hex;
+  ctx.fill();
+
+  hexPath(cx, cy, s);
+  ctx.strokeStyle = isCenter ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = isCenter ? 2.5 : 1.2;
+  ctx.stroke();
+
+  if (!showText) return;
+
+  // Font sizes relative to hex width (sqrt(3)*s)
+  const hw  = Math.sqrt(3) * s;
+  const fs1 = Math.max(10, Math.min(hw * 0.21, s * 0.19));
+  const fs2 = Math.max(9,  fs1 * 0.82);
+
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.font      = `500 ${fs1}px 'DM Mono', monospace`;
+  ctx.fillStyle = tc;
+  ctx.fillText(hex.toUpperCase(), cx, cy - fs1 * 0.7);
+
+  ctx.font      = `300 ${fs2}px 'DM Mono', monospace`;
+  ctx.fillStyle = tc === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.55)';
+  ctx.fillText(`${r}, ${g}, ${b}`, cx, cy + fs2 * 0.9);
+}
+
+// ── Resize ─────────────────────────────────────────────────────────────────
+function resize() {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  canvas.width  = w;
+  canvas.height = h;
+  draw();
+}
+
+// ── Hit-test ───────────────────────────────────────────────────────────────
+function findHex(px, py) {
+  let best = null, bestDist = Infinity;
+  for (const hex of hexes) {
+    const dist = Math.hypot(px - hex.cx, py - hex.cy);
+    if (dist < hex.size && dist < bestDist) {
+      bestDist = dist;
+      best = hex;
+    }
+  }
+  return best;
+}
+
+function selectHex(hex) {
+  if (!hex) return;
+  R = hex.r; G = hex.g; B = hex.b;
+  rInput.value = R;
+  gInput.value = G;
+  bInput.value = B;
+  draw();
+}
+
+function canvasCoords(clientX, clientY) {
+  const rect   = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top)  * scaleY,
+  };
+}
+
+// Desktop double-click
+canvas.addEventListener('dblclick', e => {
+  const { x, y } = canvasCoords(e.clientX, e.clientY);
+  selectHex(findHex(x, y));
+});
+
+// Mobile double-tap
+let lastTap = 0, lastTapXY = null;
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  const t     = e.changedTouches[0];
+  const now   = Date.now();
+  const { x, y } = canvasCoords(t.clientX, t.clientY);
+
+  if (now - lastTap < 350 && lastTapXY &&
+      Math.hypot(x - lastTapXY.x, y - lastTapXY.y) < 50) {
+    selectHex(findHex(x, y));
+    lastTap = 0; lastTapXY = null;
+  } else {
+    lastTap = now; lastTapXY = { x, y };
+  }
+}, { passive: false });
+
+// ── Controls ───────────────────────────────────────────────────────────────
+function readInputs() {
+  R = clamp255(parseInt(rInput.value) || 0);
+  G = clamp255(parseInt(gInput.value) || 0);
+  B = clamp255(parseInt(bInput.value) || 0);
+  K = Math.max(1, Math.min(255, parseInt(kInput.value) || 10));
+  draw();
+}
+
+[rInput, gInput, bInput, kInput].forEach(el => el.addEventListener('input', readInputs));
+
+kDown.addEventListener('click', () => { K = Math.max(1, K-1); kInput.value = K; draw(); });
+kUp.addEventListener('click',   () => { K = Math.min(255, K+1); kInput.value = K; draw(); });
+
+textToggle.addEventListener('change', () => { showText = textToggle.checked; draw(); });
+
+btnRandom.addEventListener('click', () => {
+  R = Math.floor(Math.random() * 256);
+  G = Math.floor(Math.random() * 256);
+  B = Math.floor(Math.random() * 256);
+  rInput.value = R; gInput.value = G; bInput.value = B;
+  draw();
+});
+
+window.addEventListener('resize', resize);
+resize();
+</script>
+</body>
+</html>
