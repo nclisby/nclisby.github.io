@@ -18,12 +18,10 @@
     --accent: #7c6aff;
     --input-bg: #13131a;
     --btn-bg: #23232d;
+    --error: #ff4f4f;
   }
 
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
+  html, body { height: 100%; overflow: hidden; }
 
   body {
     font-family: 'DM Sans', sans-serif;
@@ -61,45 +59,52 @@
     flex-wrap: wrap;
   }
 
-  /* RGB */
-  .rgb-wrapper { display: flex; flex-direction: column; gap: 2px; }
-
-  .rgb-sublabels { display: flex; }
-  .rgb-sublabels span {
-    width: 48px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    text-align: center;
-    color: var(--text-muted);
+  /* Swatch */
+  .preview-swatch {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    transition: background 0.15s;
   }
-  .rgb-sublabels span.r { color: #ff7070; }
-  .rgb-sublabels span.g { color: #70ff90; }
-  .rgb-sublabels span.b { color: #70b8ff; }
 
-  .rgb-inputs {
+  /* RGB unified input */
+  .rgb-group {
     display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rgb-group label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  #rgbInput {
+    width: 160px;
+    padding: 7px 10px;
     background: var(--input-bg);
     border: 1px solid var(--border);
     border-radius: 6px;
-    overflow: hidden;
-  }
-  .rgb-inputs input {
-    width: 48px;
-    padding: 7px 4px;
-    background: transparent;
-    border: none;
-    border-right: 1px solid var(--border);
     color: var(--text);
     font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    text-align: center;
+    font-size: 12px;
     outline: none;
-    -moz-appearance: textfield;
+    transition: border-color 0.15s, background 0.15s;
   }
-  .rgb-inputs input:last-child { border-right: none; }
-  .rgb-inputs input::-webkit-outer-spin-button,
-  .rgb-inputs input::-webkit-inner-spin-button { -webkit-appearance: none; }
-  .rgb-inputs input:focus { background: rgba(124,106,255,0.1); }
+
+  #rgbInput:focus {
+    border-color: var(--accent);
+    background: rgba(124,106,255,0.07);
+  }
+
+  #rgbInput.error {
+    border-color: var(--error);
+    background: rgba(255,79,79,0.08);
+    color: var(--error);
+  }
 
   /* k */
   .k-group { display: flex; align-items: center; gap: 5px; }
@@ -202,14 +207,6 @@
     flex-shrink: 0;
   }
 
-  .preview-swatch {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    flex-shrink: 0;
-    transition: background 0.15s;
-  }
-
   /* Canvas */
   .canvas-container {
     flex: 1;
@@ -232,15 +229,13 @@
     <div id="swatchPreview" class="preview-swatch"></div>
     <div class="divider"></div>
 
-    <div class="rgb-wrapper">
-      <div class="rgb-sublabels">
-        <span class="r">R</span><span class="g">G</span><span class="b">B</span>
-      </div>
-      <div class="rgb-inputs">
-        <input type="number" id="rInput" min="0" max="255" inputmode="numeric">
-        <input type="number" id="gInput" min="0" max="255" inputmode="numeric">
-        <input type="number" id="bInput" min="0" max="255" inputmode="numeric">
-      </div>
+    <div class="rgb-group">
+      <label for="rgbInput">RGB =</label>
+      <input type="text"
+             id="rgbInput"
+             spellcheck="false"
+             autocomplete="off"
+             placeholder="#rrggbb or r,g,b">
     </div>
 
     <div class="divider"></div>
@@ -276,9 +271,7 @@ const canvas    = document.getElementById('hexCanvas');
 const ctx       = canvas.getContext('2d');
 const container = document.getElementById('canvasContainer');
 
-const rInput     = document.getElementById('rInput');
-const gInput     = document.getElementById('gInput');
-const bInput     = document.getElementById('bInput');
+const rgbInput   = document.getElementById('rgbInput');
 const kInput     = document.getElementById('kInput');
 const kDown      = document.getElementById('kDown');
 const kUp        = document.getElementById('kUp');
@@ -292,11 +285,65 @@ let G = Math.floor(Math.random() * 256);
 let B = Math.floor(Math.random() * 256);
 let K = 10;
 let showText = true;
-let hexes = []; // for hit-testing
+let hexes = [];
 
-rInput.value = R;
-gInput.value = G;
-bInput.value = B;
+// ── RGB input parsing ──────────────────────────────────────────────────────
+// Accepted formats:
+//   Hex:    #rrggbb  #rgb  rrggbb  rgb
+//   Triplet: r,g,b  or r g b  (comma or space separated)
+//     - if all three values <= 1.0  → treat as ratios [0,1]
+//     - otherwise                   → treat as integers [0,255]
+
+function parseRGB(raw) {
+  const s = raw.trim();
+
+  // ── Hex formats ────────────────────────────────────────────────────────
+  const hex6 = s.match(/^#?([0-9a-f]{6})$/i);
+  if (hex6) {
+    const n = parseInt(hex6[1], 16);
+    return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+  }
+
+  const hex3 = s.match(/^#?([0-9a-f]{3})$/i);
+  if (hex3) {
+    const [, h] = hex3;
+    return [
+      parseInt(h[0]+h[0], 16),
+      parseInt(h[1]+h[1], 16),
+      parseInt(h[2]+h[2], 16),
+    ];
+  }
+
+  // ── Triplet (comma and/or whitespace separated) ─────────────────────────
+  const parts = s.split(/[\s,]+/).filter(Boolean);
+  if (parts.length === 3) {
+    const nums = parts.map(Number);
+    if (nums.some(isNaN)) return null;
+
+    // Ratio mode: all values in [0,1]
+    if (nums.every(v => v >= 0 && v <= 1)) {
+      return nums.map(v => Math.round(v * 255));
+    }
+
+    // Integer mode: values in [0,255]
+    if (nums.every(v => v >= 0 && v <= 255)) {
+      return nums.map(Math.round);
+    }
+
+    return null; // out of range
+  }
+
+  return null;
+}
+
+function rgbToDisplayString(r, g, b) {
+  return `${r}, ${g}, ${b}`;
+}
+
+function syncInputFromState() {
+  rgbInput.value = rgbToDisplayString(R, G, B);
+  rgbInput.classList.remove('error');
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 const clamp255 = v => Math.max(0, Math.min(255, Math.round(v)));
@@ -310,102 +357,68 @@ function textColor(r, g, b) {
 }
 
 // ── Pointy-top hex geometry ────────────────────────────────────────────────
-//
-// Pointy-top regular hexagon, circumradius = s.
-//   flat-to-flat (width)  = sqrt(3) * s
-//   tip-to-tip  (height)  = 2 * s
-//   inradius              = sqrt(3)/2 * s
-//
-// Two adjacent pointy-top hexes share an edge; their centres are exactly
-//   2 * inradius = sqrt(3) * s  apart.
-//
-// The 6 neighbours (pointy-top), measuring angle from +x axis (east):
-//   E   =   0°   NE  =  60°   NW  = 120°
-//   W   = 180°   SW  = 240°   SE  = 300°
-//
-// Our colour assignments:
-//   +R → NE (60°),  +G → E (0°),  +B → SE (300°)
+// circumradius = s
+// centre-to-centre (adjacent) = sqrt(3)*s
+// Directions (measuring from +x/east, canvas y-down):
+//   +R → NE (60°),  +G → E (0°),   +B → SE (300°)
 //   -R → SW (240°), -G → W (180°), -B → NW (120°)
-//
-// Bounding box of the 7-hex cluster (pointy-top):
-//   Widest row: W–centre–E centres span 2 * sqrt(3)*s, plus one hex width
-//               each side → total = 2*sqrt(3)*s + 2*(sqrt(3)/2)*s = 3*sqrt(3)*s
-//   Tallest col: NE/NW centre at dy = sqrt(3)*s * sin(60°) = 1.5s above centre,
-//               top tip of that hex is 1.5s + s = 2.5s above centre.
-//               Total height = 5*s.
+// Bounding box of 7-hex cluster: width = 3√3·s, height = 5s
 
 function hexPath(cx, cy, s) {
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
-    // Pointy-top: first vertex points straight up (90°)
-    const angle = Math.PI / 180 * (90 + 60 * i);
-    const x = cx + s * Math.cos(angle);
-    const y = cy + s * Math.sin(angle);
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    const angle = Math.PI / 180 * (90 + 60 * i); // pointy-top: first vertex up
+    ctx.lineTo(cx + s * Math.cos(angle), cy + s * Math.sin(angle));
   }
   ctx.closePath();
 }
 
 function getNeighbourDefs(s) {
-  const d = Math.sqrt(3) * s; // centre-to-centre distance
-  // [dr, dg, db, angleDeg]
+  const d = Math.sqrt(3) * s;
   const dirs = [
-    [+1,  0,  0,  60],  // NE = +R
-    [ 0, +1,  0,   0],  // E  = +G
-    [ 0,  0, +1, 300],  // SE = +B
-    [-1,  0,  0, 240],  // SW = -R
-    [ 0, -1,  0, 180],  // W  = -G
-    [ 0,  0, -1, 120],  // NW = -B
+    [+1,  0,  0,  60],
+    [ 0, +1,  0,   0],
+    [ 0,  0, +1, 300],
+    [-1,  0,  0, 240],
+    [ 0, -1,  0, 180],
+    [ 0,  0, -1, 120],
   ];
   const list = [{ dr:0, dg:0, db:0, dx:0, dy:0 }];
   for (const [dr, dg, db, ang] of dirs) {
     const rad = ang * Math.PI / 180;
-    list.push({
-      dr, dg, db,
-      dx: d * Math.cos(rad),
-      dy: d * Math.sin(rad),  // NOTE: canvas y+ is down; sin(0)=0, sin(60)>0 so NE goes UP in visual
-    });
+    list.push({ dr, dg, db, dx: d * Math.cos(rad), dy: d * Math.sin(rad) });
   }
   return list;
 }
 
 function computeSize(w, h) {
   const pad = 14;
-  const sByW = (w - pad*2) / (3 * Math.sqrt(3));
-  const sByH = (h - pad*2) / 5;
-  return Math.min(sByW, sByH);
+  return Math.min((w - pad*2) / (3 * Math.sqrt(3)), (h - pad*2) / 5);
 }
 
 // ── Draw ───────────────────────────────────────────────────────────────────
 function draw() {
-  const w = canvas.width;
-  const h = canvas.height;
-
+  const w = canvas.width, h = canvas.height;
   ctx.fillStyle = '#0f0f11';
   ctx.fillRect(0, 0, w, h);
 
   const s    = computeSize(w, h);
-  const cx   = w / 2;
-  const cy   = h / 2;
+  const cx   = w / 2, cy = h / 2;
   const defs = getNeighbourDefs(s);
 
   hexes = [];
 
-  // Draw neighbours first, centre last (so centre border appears on top)
-  const drawOrder = [1,2,3,4,5,6,0];
-
   const items = defs.map((d, i) => ({
     hx: cx + d.dx,
-    // NE (60°): dy = d*sin(60°) > 0, but in canvas coords this goes DOWN.
-    // We want NE to go UP, so we negate dy for display:
-    hy: cy - d.dy,
+    hy: cy - d.dy,   // negate dy: screen y-down, we want NE to go up visually
     r: clamp255(R + d.dr * K),
     g: clamp255(G + d.dg * K),
     b: clamp255(B + d.db * K),
     isCenter: i === 0,
   }));
 
-  for (const idx of drawOrder) {
+  // Draw neighbours first so centre border renders on top
+  for (const idx of [1,2,3,4,5,6,0]) {
     const it = items[idx];
     hexes.push({ cx: it.hx, cy: it.hy, r: it.r, g: it.g, b: it.b, size: s });
     drawHex(it.hx, it.hy, s, it.r, it.g, it.b, it.isCenter);
@@ -424,12 +437,11 @@ function drawHex(cx, cy, s, r, g, b, isCenter) {
 
   hexPath(cx, cy, s);
   ctx.strokeStyle = isCenter ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.14)';
-  ctx.lineWidth = isCenter ? 2.5 : 1.2;
+  ctx.lineWidth   = isCenter ? 2.5 : 1.2;
   ctx.stroke();
 
   if (!showText) return;
 
-  // Font sizes relative to hex width (sqrt(3)*s)
   const hw  = Math.sqrt(3) * s;
   const fs1 = Math.max(10, Math.min(hw * 0.21, s * 0.19));
   const fs2 = Math.max(9,  fs1 * 0.82);
@@ -448,10 +460,8 @@ function drawHex(cx, cy, s, r, g, b, isCenter) {
 
 // ── Resize ─────────────────────────────────────────────────────────────────
 function resize() {
-  const w = container.clientWidth;
-  const h = container.clientHeight;
-  canvas.width  = w;
-  canvas.height = h;
+  canvas.width  = container.clientWidth;
+  canvas.height = container.clientHeight;
   draw();
 }
 
@@ -460,10 +470,7 @@ function findHex(px, py) {
   let best = null, bestDist = Infinity;
   for (const hex of hexes) {
     const dist = Math.hypot(px - hex.cx, py - hex.cy);
-    if (dist < hex.size && dist < bestDist) {
-      bestDist = dist;
-      best = hex;
-    }
+    if (dist < hex.size && dist < bestDist) { bestDist = dist; best = hex; }
   }
   return best;
 }
@@ -471,38 +478,30 @@ function findHex(px, py) {
 function selectHex(hex) {
   if (!hex) return;
   R = hex.r; G = hex.g; B = hex.b;
-  rInput.value = R;
-  gInput.value = G;
-  bInput.value = B;
+  syncInputFromState();
   draw();
 }
 
 function canvasCoords(clientX, clientY) {
-  const rect   = canvas.getBoundingClientRect();
-  const scaleX = canvas.width  / rect.width;
-  const scaleY = canvas.height / rect.height;
+  const rect = canvas.getBoundingClientRect();
   return {
-    x: (clientX - rect.left) * scaleX,
-    y: (clientY - rect.top)  * scaleY,
+    x: (clientX - rect.left) * (canvas.width  / rect.width),
+    y: (clientY - rect.top)  * (canvas.height / rect.height),
   };
 }
 
-// Desktop double-click
 canvas.addEventListener('dblclick', e => {
   const { x, y } = canvasCoords(e.clientX, e.clientY);
   selectHex(findHex(x, y));
 });
 
-// Mobile double-tap
 let lastTap = 0, lastTapXY = null;
 canvas.addEventListener('touchend', e => {
   e.preventDefault();
-  const t     = e.changedTouches[0];
-  const now   = Date.now();
+  const t = e.changedTouches[0];
+  const now = Date.now();
   const { x, y } = canvasCoords(t.clientX, t.clientY);
-
-  if (now - lastTap < 350 && lastTapXY &&
-      Math.hypot(x - lastTapXY.x, y - lastTapXY.y) < 50) {
+  if (now - lastTap < 350 && lastTapXY && Math.hypot(x - lastTapXY.x, y - lastTapXY.y) < 50) {
     selectHex(findHex(x, y));
     lastTap = 0; lastTapXY = null;
   } else {
@@ -510,31 +509,57 @@ canvas.addEventListener('touchend', e => {
   }
 }, { passive: false });
 
-// ── Controls ───────────────────────────────────────────────────────────────
-function readInputs() {
-  R = clamp255(parseInt(rInput.value) || 0);
-  G = clamp255(parseInt(gInput.value) || 0);
-  B = clamp255(parseInt(bInput.value) || 0);
-  K = Math.max(1, Math.min(255, parseInt(kInput.value) || 10));
-  draw();
+// ── RGB input handling ─────────────────────────────────────────────────────
+function commitRGBInput() {
+  const result = parseRGB(rgbInput.value);
+  if (result) {
+    [R, G, B] = result;
+    syncInputFromState(); // normalise display (e.g. ratios → integers)
+    draw();
+  } else {
+    rgbInput.classList.add('error');
+  }
 }
 
-[rInput, gInput, bInput, kInput].forEach(el => el.addEventListener('input', readInputs));
+// Clear error state as soon as user starts editing again
+rgbInput.addEventListener('input', () => {
+  rgbInput.classList.remove('error');
+});
 
+rgbInput.addEventListener('blur', commitRGBInput);
+
+rgbInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    commitRGBInput();
+    rgbInput.blur();
+  }
+});
+
+// ── k controls ────────────────────────────────────────────────────────────
 kDown.addEventListener('click', () => { K = Math.max(1, K-1); kInput.value = K; draw(); });
 kUp.addEventListener('click',   () => { K = Math.min(255, K+1); kInput.value = K; draw(); });
 
+kInput.addEventListener('change', () => {
+  K = Math.max(1, Math.min(255, parseInt(kInput.value) || 10));
+  kInput.value = K;
+  draw();
+});
+
+// ── Other controls ─────────────────────────────────────────────────────────
 textToggle.addEventListener('change', () => { showText = textToggle.checked; draw(); });
 
 btnRandom.addEventListener('click', () => {
   R = Math.floor(Math.random() * 256);
   G = Math.floor(Math.random() * 256);
   B = Math.floor(Math.random() * 256);
-  rInput.value = R; gInput.value = G; bInput.value = B;
+  syncInputFromState();
   draw();
 });
 
 window.addEventListener('resize', resize);
+
+// ── Init ───────────────────────────────────────────────────────────────────
+syncInputFromState();
 resize();
 </script>
 </body>
