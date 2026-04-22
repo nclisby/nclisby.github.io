@@ -120,6 +120,30 @@
         let audioContext = null;
         let oscillator = null;
         let gainNode = null;
+        let wakeLock = null;
+
+        async function acquireWakeLock() {
+            if (!('wakeLock' in navigator)) return;
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+            } catch (e) {
+                // Silently ignore — e.g. battery saver mode blocking it
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
+        // Re-acquire wake lock if page becomes visible again (e.g. after tab switch)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isRunning) {
+                acquireWakeLock();
+            }
+        });
 
         const timerDiv = document.getElementById('timer');
         const startBtn = document.getElementById('startBtn');
@@ -221,6 +245,7 @@
         function startTimer() {
             if (hours === 0 && minutes === 0 && seconds === 0) return;
             
+            acquireWakeLock();
             isRunning = true;
             isPaused = false;
             startBtn.style.display = 'none';
@@ -266,6 +291,7 @@
 
         function resetTimer() {
             clearInterval(intervalId);
+            releaseWakeLock();
             hours = 0;
             minutes = 0;
             seconds = 0;
