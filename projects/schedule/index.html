@@ -1634,6 +1634,7 @@ function startActive() {
   showActiveView();
   // Restore the active-main structure in case showComplete() replaced it
   resetActiveMain();
+  acquireWakeLock();
   tick();
   startInterval();
 }
@@ -1641,6 +1642,7 @@ function startActive() {
 function stopActive() {
   clearInterval(session.timerInterval);
   session.timerInterval = null;
+  releaseWakeLock();
   // Apply any pending SW update now that the timer has stopped
   if (swRegistration?.waiting) {
     swRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
@@ -1761,6 +1763,7 @@ function resetActiveMain() {
 function showComplete() {
   clearInterval(session.timerInterval);
   _prevPhase = null; _prevRowIndex = null;
+  releaseWakeLock();
   playChime();
   sendNotification("Schedule complete.", "Great job!");
   const main = document.getElementById("active-main");
@@ -1911,6 +1914,34 @@ function showToast(msg) {
     el.style.transform = "translateX(-50%) translateY(20px)";
   }, 2400);
 }
+
+/* ----------------------------------------------------------------
+   WAKE LOCK
+   ---------------------------------------------------------------- */
+let _wakeLock = null;
+
+async function acquireWakeLock() {
+  if (!("wakeLock" in navigator)) return;
+  if (_wakeLock) return; // already held
+  try {
+    _wakeLock = await navigator.wakeLock.request("screen");
+    _wakeLock.addEventListener("release", () => { _wakeLock = null; });
+  } catch (e) { /* permission denied or not supported — silent fallback */ }
+}
+
+function releaseWakeLock() {
+  if (_wakeLock) {
+    _wakeLock.release();
+    _wakeLock = null;
+  }
+}
+
+// Reacquire if user returns to the app while timer is running
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && session.timerInterval) {
+    acquireWakeLock();
+  }
+});
 
 /* ----------------------------------------------------------------
    BOOT
