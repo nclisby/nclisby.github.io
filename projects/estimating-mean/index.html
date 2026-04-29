@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Estimating the Mean</title>
+
+<!-- Shared design system -->
+<link rel="stylesheet" href="../teaching-app-assets/teaching-app.css">
+
+<!-- App-specific styles -->
+<style>
+/* ── Radio-button row for sample size ── */
+.sample-size-row {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.sample-size-row label {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 40px; padding: 4px 7px;
+  background: var(--input-bg); border: 1px solid var(--panel-border);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 15px; cursor: pointer; transition: all 0.15s;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.sample-size-row label:hover { background: var(--hover); border-color: var(--accent); }
+.sample-size-row input { display: none; }
+.sample-size-row input:checked + span {
+  color: var(--accent); font-weight: 600;
+}
+.sample-size-row label:has(input:checked) {
+  border-color: var(--accent); background: var(--accent-dim);
+}
+
+/* ── Sampling buttons (2×3 grid) ── */
+.sample-btn-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+}
+.sample-btn-grid button {
+  padding: 7px 5px;
+  background: var(--input-bg); border: 1px solid var(--panel-border);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 15px; cursor: pointer; transition: all 0.15s;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.sample-btn-grid button:hover { background: var(--hover); border-color: var(--accent); }
+.sample-btn-grid button.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+/* ── Repeat button (top-right of canvas area) ── */
+.repeat-btn {
+  position: absolute; top: 12px; right: 16px; z-index: 10;
+  padding: 6px 14px;
+  background: var(--input-bg); border: 1px solid var(--panel-border);
+  border-radius: var(--radius); color: var(--text-dim);
+  font-size: 14px; cursor: pointer; transition: all 0.15s;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.repeat-btn:hover { background: var(--hover); border-color: var(--accent); color: var(--text); }
+
+/* ── Bin size slider (floating, top-left of canvas area) ── */
+.bin-slider-wrap {
+  position: absolute; top: 12px; left: 56px; z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px;
+  background: var(--input-bg); border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+}
+.bin-slider-label {
+  color: var(--text-dim); font-size: 20px; white-space: nowrap;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+.bin-slider-wrap input[type="range"] {
+  width: 140px; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <a href="https://clisby.net/" title="home"
+           style="color:var(--text-dim); display:flex; transition:color 0.15s;"
+           onmouseover="this.style.color='var(--accent)'"
+           onmouseout="this.style.color='var(--text-dim)'">
+          <svg width="26" height="26" viewBox="0 0 20 20" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 10L10 3l7 7"/>
+            <path d="M5 8.5V16a1 1 0 001 1h3v-4h2v4h3a1 1 0 001-1V8.5"/>
+          </svg>
+        </a>
+        <h1>Estimating the mean</h1>
+      </div>
+      <p>Sample mean, t-distribution, CIs</p>
+    </div>
+    <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
+  </div>
+
+  <!-- Population (fixed: standard normal) -->
+  <div class="section">
+    <div class="section-label">Population</div>
+    <div style="padding: 6px 8px; color: var(--text-dim); font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 14px;">
+      X ~ N(0, 1)
+    </div>
+  </div>
+
+  <!-- Sample size -->
+  <div class="section">
+    <div class="section-label">Sample size (n)</div>
+    <div class="sample-size-row" id="sampleSizeRow">
+      <label><input type="radio" name="sampleSize" value="2"><span>2</span></label>
+      <label><input type="radio" name="sampleSize" value="3"><span>3</span></label>
+      <label><input type="radio" name="sampleSize" value="5" checked><span>5</span></label>
+      <label><input type="radio" name="sampleSize" value="10"><span>10</span></label>
+      <label><input type="radio" name="sampleSize" value="20"><span>20</span></label>
+      <label><input type="radio" name="sampleSize" value="30"><span>30</span></label>
+      <label><input type="radio" name="sampleSize" value="100"><span>100</span></label>
+      <label><input type="radio" name="sampleSize" value="1000"><span>1000</span></label>
+      <label><input type="radio" name="sampleSize" value="10000"><span>10000</span></label>
+    </div>
+  </div>
+
+  <!-- Sampling controls -->
+  <div class="section">
+    <div class="section-label">Generate samples</div>
+    <div class="sample-btn-grid">
+      <button id="btnAnimate">Animate</button>
+      <button id="btnSample1">1</button>
+      <button id="btnSample5">5</button>
+      <button id="btnSample100">100</button>
+      <button id="btnSample10000">10000</button>
+      <button id="btnReset">Reset</button>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-3">
+      <button class="opt-btn" id="btnHelp">Help</button>
+      <button class="opt-btn" id="btnOverview">Overview</button>
+      <button class="opt-btn" id="toggleInvert">Invert</button>
+    </div>
+    <div class="opt-grid-4" style="margin-top:4px;">
+      <button class="opt-btn active" id="togglePopulation">Population</button>
+      <button class="opt-btn active" id="toggleSampleLine">Sample</button>
+      <button class="opt-btn active" id="toggleSamplingDist">Histogram</button>
+      <button class="opt-btn" id="toggleNormal">Normal</button>
+    </div>
+    <div class="opt-grid-4" style="margin-top:4px;">
+      <button class="opt-btn" id="toggleRescale">Zoom x</button>
+      <button class="opt-btn" id="toggleLogY">Log y</button>
+      <button class="opt-btn" id="toggleLabels">Labels</button>
+      <button class="opt-btn" id="toggleBinSize">Bin size</button>
+    </div>
+    <div class="opt-grid-3" style="margin-top:4px;">
+      <button class="opt-btn" id="toggleCI">CI</button>
+      <button class="opt-btn" id="toggleWindow">Norm win</button>
+      <button class="opt-btn" id="toggleHistWindow">Hist win</button>
+    </div>
+    <div class="opt-grid-4" id="ciLevelRow" style="display:none; margin-top:4px;">
+      <button class="opt-btn" data-cilevel="50">50%</button>
+      <button class="opt-btn" data-cilevel="90">90%</button>
+      <button class="opt-btn active" data-cilevel="95">95%</button>
+      <button class="opt-btn" data-cilevel="99">99%</button>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ===== Main visualisation area ===== -->
+
+<div class="canvas-area" id="canvasArea">
+  <button class="sidebar-toggle hidden-when-open" id="openBtn"
+          title="Open sidebar">&#9776;</button>
+  <button class="repeat-btn" id="btnRepeat" title="Repeat last action">Repeat</button>
+  <div class="bin-slider-wrap" id="binSliderWrap" style="display:none;">
+    <label class="bin-slider-label">Bin size: <span id="binSliderValue" style="display:inline-block; width:5.0ch; text-align:right;">1.00</span>× </label>
+    <input type="range" id="binSlider" min="-1" max="1" step="0.001" value="0">
+  </div>
+  <canvas id="canvas2d"></canvas>
+</div>
+
+
+<!-- ===== Help overlay ===== -->
+
+<div class="overlay" id="helpOverlay">
+  <button class="overlay-close" id="helpClose">✕</button>
+  <div class="overlay-content" id="helpContent">
+    <h1>Help</h1>
+    <p>
+      Experiment with drawing samples from a standard normal population. Each
+      sample's mean is recorded in the histogram, building up the sampling
+      distribution of X̄.
+    </p>
+    <p>
+      Choose the sample size, then generate samples using the buttons.
+      <b>Animate</b> shows one sample appearing dot by dot, with the mean
+      dropping into the histogram at the end.
+    </p>
+    <p>
+      Toggle the display of the population curve, the sample values, and the
+      histogram using the Population, Sample, and Histogram buttons.
+    </p>
+    <p>
+      <b>Normal</b> overlays the exact sampling distribution N(0, 1/n) on the
+      histogram.
+    </p>
+    <p>
+      <b>CI</b> shows a t-based confidence interval for the population mean,
+      constructed from the most recent sample. The CI bar appears on both the
+      sample line and below the histogram.
+    </p>
+    <p>
+      <b>Norm win</b> shows the central (1−α) interval of the theoretical
+      sampling distribution — the range where sample means should fall most
+      of the time.
+    </p>
+    <p>
+      <b>Hist win</b> shows the same interval estimated empirically from the
+      accumulated sample means.
+    </p>
+    <p>
+      <b>Zoom x</b> rescales the histogram axis to zoom in on the sampling
+      distribution.
+    </p>
+    <p>
+      Reset the display via the Reset button, or by changing the sample size.
+    </p>
+    <p>
+      This app is inspired by the outstanding sampling-distribution app developed
+      by David Lane:
+      <a href="https://onlinestatbook.com/stat_sim/sampling_dist/" target="_blank" rel="noopener noreferrer">
+        https://onlinestatbook.com/stat_sim/sampling_dist/</a>
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Overview overlay ===== -->
+
+<div class="overlay" id="overviewOverlay">
+  <button class="overlay-close" id="overviewClose">✕</button>
+  <div class="overlay-content" id="overviewContent">
+    <h1>Overview</h1>
+    <p>
+      Suppose we collect a sample X<sub>1</sub>, …, X<sub>n</sub> from a
+      population with unknown mean μ. Our best single estimate of μ is the
+      sample mean
+    </p>
+    <p style="text-align:center;">
+      X̄ = (1/n) Σ X<sub>i</sub>
+    </p>
+    <p>
+      But how reliable is this estimate? If we repeated the experiment many
+      times, each repetition would give a different X̄. The distribution of
+      these X̄ values is called the <b>sampling distribution</b> of the mean.
+      For a population with variance σ², the sampling distribution has mean μ
+      and variance σ²/n — so larger samples give more precise estimates.
+    </p>
+    <p>
+      In practice we only have <b>one sample</b>, and we don't know σ².
+      We use the sample standard deviation S to estimate it. The key result is
+      that the standardised statistic
+    </p>
+    <p style="text-align:center;">
+      (X̄ − μ) / (S/√n) &nbsp;~&nbsp; t(n−1)
+    </p>
+    <p>
+      follows a <b>t-distribution</b> with n−1 degrees of freedom. The
+      t-distribution is wider than the normal, reflecting the extra uncertainty
+      from estimating σ². For large n it is nearly identical to the normal.
+    </p>
+    <p>
+      A two-sided 100(1−α)% <b>confidence interval</b> for μ is
+    </p>
+    <p style="text-align:center;">
+      X̄ ± t<sub>α/2, n−1</sub> · S/√n
+    </p>
+    <p>
+      where t<sub>α/2, n−1</sub> is the upper α/2 quantile of t(n−1).
+      The CI says: if we repeated the sampling procedure many times, about
+      (1−α)×100% of the resulting intervals would contain the true μ.
+    </p>
+    <p>
+      The <b>Norm win</b> overlay shows the central (1−α) region of the
+      theoretical sampling distribution — using the <em>known</em> σ² = 1 —
+      while the <b>CI</b> is constructed using only what a real experimenter
+      would have: the sample itself.
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Scripts ===== -->
+<script src="../teaching-app-assets/teaching-app.js"></script>
+<script src="estimating-mean.js"></script>
+<script>EstimatingMean.init();</script>
+
+</body>
+</html>

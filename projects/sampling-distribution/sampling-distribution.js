@@ -553,6 +553,7 @@ var SamplingDistribution = (function () {
     sampleMeans: [],         // accumulated sample means
     currentSample: [],       // latest sample values
     currentMean: null,       // latest sample mean
+    currentSD: null,         // latest sample standard deviation (for CI)
     totalSamples: 0,
     lastAction: null,        // last sampling action: 'animate', 1, 5, 100, 10000
     empiricalHalfW: null,    // cached 90% percentile half-width for non-CLT rescale
@@ -1298,7 +1299,8 @@ var SamplingDistribution = (function () {
    * CONFIDENCE INTERVAL / WINDOW DRAWING
    * ====================================================================== */
 
-  function getCIHalfWidth() {
+  // Norm window half-width uses the known population σ (not the sample SD)
+  function getNormWindowHalfWidth() {
     var pop = populations[state.popIndex];
     if (pop.variance == null || pop.variance <= 0) return null;
     var sigma = Math.sqrt(pop.variance);
@@ -1312,6 +1314,20 @@ var SamplingDistribution = (function () {
       default:  z = 1.96; break; // 95%
     }
     return z * sigma / Math.sqrt(state.sampleSize);
+  }
+
+  function getCIHalfWidth() {
+    if (state.currentSD === null) return null;
+    var z;
+    switch (state.ciLevel) {
+      case '50': z = 0.6745; break;
+      case '1': z = 1; break;
+      case '2': z = 2; break;
+      case '3': z = 3; break;
+      case '4': z = 4; break;
+      default:  z = 1.96; break; // 95%
+    }
+    return z * state.currentSD / Math.sqrt(state.sampleSize);
   }
 
   // Get the tail fraction for the current CI level
@@ -1397,19 +1413,22 @@ var SamplingDistribution = (function () {
 
     // Window (green) — centred on zero, drawn slightly below baseline
     var windowOffset = 0;
-    if (state.showWindow && halfW !== null) {
-      windowOffset = offsetBelow;
-      var wLeft = xToPixel(-halfW, rect);
-      var wRight = xToPixel(halfW, rect);
-      var wY = baseY + windowOffset;
-      drawWhiskeredLine(wLeft, wRight, wY, 'rgba(76, 175, 80, 0.85)', rect);
-      // Green dot at zero
-      var zeroX = xToPixel(0, rect);
-      if (zeroX >= rect.x && zeroX <= rect.x + rect.w) {
-        ctx.beginPath();
-        ctx.arc(zeroX, wY, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = 'rgba(76, 175, 80, 0.85)';
-        ctx.fill();
+    if (state.showWindow) {
+      var normHalfW = getNormWindowHalfWidth();
+      if (normHalfW !== null) {
+        windowOffset = offsetBelow;
+        var wLeft = xToPixel(-normHalfW, rect);
+        var wRight = xToPixel(normHalfW, rect);
+        var wY = baseY + windowOffset;
+        drawWhiskeredLine(wLeft, wRight, wY, 'rgba(76, 175, 80, 0.85)', rect);
+        // Green dot at zero
+        var zeroX = xToPixel(0, rect);
+        if (zeroX >= rect.x && zeroX <= rect.x + rect.w) {
+          ctx.beginPath();
+          ctx.arc(zeroX, wY, 4, 0, 2 * Math.PI);
+          ctx.fillStyle = 'rgba(76, 175, 80, 0.85)';
+          ctx.fill();
+        }
       }
     }
 
@@ -1454,7 +1473,14 @@ var SamplingDistribution = (function () {
       sample.push(val);
       sum += val;
     }
-    return { values: sample, mean: sum / n };
+    var mean = sum / n;
+    var ss = 0;
+    for (var j = 0; j < n; j++) {
+      var d = sample[j] - mean;
+      ss += d * d;
+    }
+    var sd = (n > 1) ? Math.sqrt(ss / (n - 1)) : 0;
+    return { values: sample, mean: mean, sd: sd };
   }
 
   // Flash a button briefly to show it was activated
@@ -1469,6 +1495,7 @@ var SamplingDistribution = (function () {
       state.sampleMeans.push(s.mean);
       state.currentSample = s.values;
       state.currentMean = s.mean;
+      state.currentSD = s.sd;
     }
     state.totalSamples += count;
     state.lastAction = count;
@@ -1491,6 +1518,7 @@ var SamplingDistribution = (function () {
     state.sampleMeans = [];
     state.currentSample = [];
     state.currentMean = null;
+    state.currentSD = null;
     state.totalSamples = 0;
     state.empiricalHalfW = null;
     state.cachedSortedMeans = null;
@@ -1512,6 +1540,7 @@ var SamplingDistribution = (function () {
     var s = generateSample();
     state.currentSample = s.values;
     state.currentMean = s.mean;
+    state.currentSD = s.sd;
     state.lastAction = 'animate';
 
     state.animating = true;
