@@ -411,7 +411,10 @@ function latestIndex(W){
  * vectors: for each vector v on the record circle, every segment
  * p -> p+v whose endpoints are both lattice sites inside the square.
  * v and -v give the same set of segments, so keep one of each pair. */
-const LINE_WIDTH_PX = { 1: 2.5, 2: 2.0, 3: 1.5, 4: 0.6, 5: 0.15 };   // by record index
+/* Line widths in whole device pixels, so every stroke is crisp and solid
+ * (no sub-pixel fading).  Tapering from bold at r^2 = 1 down to a single
+ * device pixel at r^2 = 325. */
+const LINE_WIDTH_PX = { 1: 8, 2: 6, 3: 4, 4: 3, 5: 1 };   // device px, by record index
 let dirCache = { idx: -1, vecs: [] };
 function recordVecs(idx){
   if (idx < 1 || !(idx in LINE_WIDTH_PX)) return [];
@@ -427,7 +430,7 @@ function recordVecs(idx){
   dirCache = { idx, vecs };
   return vecs;
 }
-function lineWidth(idx){ return (LINE_WIDTH_PX[idx] || 0) * dpr; }
+function lineWidth(idx){ return LINE_WIDTH_PX[idx] || 0; }   // already device px
 
 function draw(dt){
   Records.ensure(Math.floor(level) + 5, 150);
@@ -548,15 +551,13 @@ function draw(dt){
  * p -> p+v for every lattice site p such that both p and p+v lie within
  * the square of shown sites (|coord| <= n).  No clipping: a segment is
  * drawn whole or not at all.  n is passed in so it can be frozen during a
- * zoom.  A width below 1 device px is rendered as a 1 px stroke faded to
- * that fraction, so very dense records show faintly rather than vanish. */
+ * zoom.  Lines are solid at a whole-device-pixel width. */
 function drawSegments(idx, n, s, th){
   const vecs = recordVecs(idx);
   if (!vecs.length) return;
-  const c = S / 2, w = lineWidth(idx);
+  const c = S / 2;
   ctx.strokeStyle = 'rgb(' + th.fg.join(',') + ')';
-  ctx.lineWidth = Math.max(w, 1);
-  ctx.globalAlpha = w < 1 ? Math.max(w, 0.06) : 1;
+  ctx.lineWidth = lineWidth(idx);
   ctx.lineCap = 'round';
   ctx.beginPath();
   for (const [a, b] of vecs){
@@ -573,7 +574,6 @@ function drawSegments(idx, n, s, th){
     }
   }
   ctx.stroke();
-  ctx.globalAlpha = 1;
   ctx.lineCap = 'butt';
 }
 
@@ -661,8 +661,15 @@ function frame(now){
   } else if (!dragging && (level !== target || vel !== 0)){
     if (reduceMotion){ level = target; vel = 0; }
     else {
-      const a = -OMEGA * OMEGA * (level - target) - 2 * OMEGA * vel;
-      vel += a * dt; level += vel * dt;
+      // Substep so the explicit integrator stays stable even on a long
+      // frame: OMEGA * h must stay well under 1, else it diverges.
+      let h = dt;
+      const steps = Math.max(1, Math.ceil(dt / 0.008));
+      h = dt / steps;
+      for (let i = 0; i < steps; i++){
+        const a = -OMEGA * OMEGA * (level - target) - 2 * OMEGA * vel;
+        vel += a * h; level += vel * h;
+      }
       if (Math.abs(level - target) < 1e-4 && Math.abs(vel) < 1e-3){ level = target; vel = 0; }
     }
     dirty = true;                                 // including the frame that lands on it
