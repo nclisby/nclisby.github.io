@@ -75,6 +75,7 @@ number of square-lattice points  (OEIS A071383).
   s                  all records / latest only
   l                  lattice on / off
   c                  circles through the records
+  u                  unit-distance segments (small circles)
   + / -              record dot size
   r                  reset the view
   t                  readout
@@ -104,6 +105,8 @@ carrying 1, 4, 8, 12, 16, 24, 32, 36, 48, 64, … points. These are OEIS A071383
 Green marks the largest record circle that fits in the view, blue the earlier ones. Past a few thousand points the points on a record circle sit closer together than a pixel and the circle reads as a solid ring; the lattice itself merges into a solid field at much the same depth, which is why the picture becomes a filled square carrying rings.
 
 Records and their lattice points are computed exactly while you zoom, from factorisations over the Gaussian integers, so nothing is tabulated in advance.
+
+Press u on the smaller circles to draw the unit-distance segments: for each vector joining the origin to a point on the current record circle, every pair of lattice points separated by that same vector is joined. All these segments have equal length, so the figure shows how often a single distance is repeated among lattice points, the question behind the Erdős unit-distance problem. It is offered only up to r² = 325, and thins as the circles grow; beyond that the segments are too dense to read.
 
 <a href="https://oeis.org/A071383" target="_blank" rel="noopener">oeis.org/A071383</a>
 
@@ -280,9 +283,10 @@ const INITIAL_LEVEL = 1;
 let level = INITIAL_LEVEL;                      // continuous, animated
 let target = INITIAL_LEVEL;                     // integer destination
 let vel = 0;
-let showAll = true, showInfo = false, showLattice = false, showCircles = true;
+let showAll = true, showInfo = false, showLattice = false, showCircles = true, showLines = false;
 let panel = null, discScale = 1;                 // open overlay, record dot size multiplier
 let dragging = false, glide = 0;
+let frozenLines = null;                          // {idx, n} held while zooming
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const THEMES = {
@@ -325,6 +329,7 @@ const FS = [
   '    float d = length(q) * u_scale;',
   '    float r = u_frac * u_scale;',
   '    a = max(a, 1.0 - smoothstep(r - 0.5, r + 0.5, d));',
+  '  }',
   '  }',
   '  gl_FragColor = vec4(mix(u_bg, u_fg, a), 1.0);',
   '}'
@@ -402,6 +407,28 @@ function latestIndex(W){
   return idx;
 }
 
+/* The unit-distance segments run along the current record's lattice
+ * vectors: for each vector v on the record circle, every segment
+ * p -> p+v whose endpoints are both lattice sites inside the square.
+ * v and -v give the same set of segments, so keep one of each pair. */
+const LINE_WIDTH_PX = { 1: 2.5, 2: 2.0, 3: 1.5, 4: 0.6, 5: 0.15 };   // by record index
+let dirCache = { idx: -1, vecs: [] };
+function recordVecs(idx){
+  if (idx < 1 || !(idx in LINE_WIDTH_PX)) return [];
+  if (dirCache.idx === idx) return dirCache.vecs;
+  const pts = pointsOf(Records.list[idx]) || [];
+  const seen = new Set(), vecs = [];
+  for (const [x, y] of pts){
+    let a = x, b = y;
+    if (b < 0 || (b === 0 && a < 0)){ a = -a; b = -b; }   // v and -v are one segment set
+    const key = a + ',' + b;
+    if (!seen.has(key)){ seen.add(key); vecs.push([a, b]); }
+  }
+  dirCache = { idx, vecs };
+  return vecs;
+}
+function lineWidth(idx){ return (LINE_WIDTH_PX[idx] || 0) * dpr; }
+
 function draw(dt){
   Records.ensure(Math.floor(level) + 5, 150);
   MAX_LEVEL = Math.min(RECORD_CAP, Records.list.length - 2);
@@ -415,7 +442,7 @@ function draw(dt){
   const th = THEMES[theme];
   ctx.clearRect(0, 0, S, S);
 
-  // lattice field
+  // lattice field (dots only; segments are drawn on the overlay below)
   if (gl){
     if (!showLattice){
       gl.clearColor(th.bg[0]/255, th.bg[1]/255, th.bg[2]/255, 1);
@@ -432,6 +459,24 @@ function draw(dt){
   } else {
     drawLatticeFallback(s, frac, solid, th);
   }
+
+  // unit-distance segments.  While the view is in motion we keep the set
+  // frozen: the record whose vectors are drawn, and the boundary box that
+  // determines the fraying, are both captured from the moment motion began
+  // and only recomputed once the zoom settles.  The frozen segments still
+  // scale and translate with the lattice, so they stay pinned to their
+  // points; only the choice of record and the frayed edge are held.
+  if (showLines){
+    const moving = glide !== 0 || coast !== null || dragging || level !== target || vel !== 0;
+    const nNow = Math.floor((S / 2) / s + 1e-9);
+    if (!moving || !frozenLines){
+      frozenLines = { idx: latestIndex(W), n: nNow };
+    }
+    drawSegments(frozenLines.idx, frozenLines.n, s, th);
+  } else {
+    frozenLines = null;
+  }
+
 
   // record circles
   const L = Records.list;
@@ -499,12 +544,46 @@ function draw(dt){
   if (showInfo) updateInfo(idx);
 }
 
+/* Unit-distance segments on the overlay: for each record vector v, draw
+ * p -> p+v for every lattice site p such that both p and p+v lie within
+ * the square of shown sites (|coord| <= n).  No clipping: a segment is
+ * drawn whole or not at all.  n is passed in so it can be frozen during a
+ * zoom.  A width below 1 device px is rendered as a 1 px stroke faded to
+ * that fraction, so very dense records show faintly rather than vanish. */
+function drawSegments(idx, n, s, th){
+  const vecs = recordVecs(idx);
+  if (!vecs.length) return;
+  const c = S / 2, w = lineWidth(idx);
+  ctx.strokeStyle = 'rgb(' + th.fg.join(',') + ')';
+  ctx.lineWidth = Math.max(w, 1);
+  ctx.globalAlpha = w < 1 ? Math.max(w, 0.06) : 1;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (const [a, b] of vecs){
+    // p = (i, j) and p+v = (i+a, j+b) both need |.| <= n
+    const iLo = Math.max(-n, -n - a), iHi = Math.min(n, n - a);
+    const jLo = Math.max(-n, -n - b), jHi = Math.min(n, n - b);
+    for (let i = iLo; i <= iHi; i++){
+      const x0 = c + i * s, x1 = c + (i + a) * s;
+      for (let j = jLo; j <= jHi; j++){
+        const y0 = c - j * s, y1 = c - (j + b) * s;
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+      }
+    }
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.lineCap = 'butt';
+}
+
 function drawLatticeFallback(s, frac, solid, th){
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1;
   ctx.fillStyle = 'rgb(' + th.bg.join(',') + ')';
   ctx.fillRect(0, 0, S, S);
   const fg = 'rgb(' + th.fg.join(',') + ')';
+  const c = S / 2;
   if (!showLattice) return;
   const H = (S / 2) / s;
   const n = Math.ceil(H);
@@ -516,7 +595,7 @@ function drawLatticeFallback(s, frac, solid, th){
     return;
   }
   ctx.fillStyle = fg;
-  const c = S / 2, pr = frac * s;
+  const pr = frac * s;
   ctx.beginPath();
   for (let i = -n; i <= n; i++)
     for (let j = -n; j <= n; j++){
@@ -636,7 +715,7 @@ function pressEnd(){
 function reset(){
   cancelPress();
   level = target = INITIAL_LEVEL; vel = 0; coast = null;
-  discScale = 1; showAll = false; showLattice = true; showCircles = false;
+  discScale = 1; showAll = false; showLattice = true; showCircles = false; showLines = false;
   dirty = true;
 }
 function cancelPress(){
@@ -664,6 +743,7 @@ addEventListener('keydown', e => {
     case 's': case 'S': if (!e.repeat) showAll = !showAll; dirty = true; break;
     case 'l': case 'L': if (!e.repeat) showLattice = !showLattice; dirty = true; break;
     case 'c': case 'C': if (!e.repeat) showCircles = !showCircles; dirty = true; break;
+    case 'u': case 'U': if (!e.repeat) showLines = !showLines; dirty = true; break;
     case 't': case 'T': if (!e.repeat){ showInfo = !showInfo; infoEl.classList.toggle('on', showInfo); } dirty = true; break;
     case 'd': case 'D': if (!e.repeat) setTheme(theme === 'dark' ? 'light' : 'dark'); break;
     case 'Shift': case 'Control': case 'Alt': case 'Meta': case 'CapsLock': case 'Tab': return;
