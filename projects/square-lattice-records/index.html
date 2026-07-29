@@ -856,15 +856,29 @@ addEventListener('keydown', e => {
   e.preventDefault();
 }, { passive: false });
 
-/* wheel: continuous, snapping to a level once it settles */
-let wheelTimer = 0;
+/* wheel: continuous while scrolling, then snap to the next level in the
+ * direction travelled.  Rounding to nearest would send a small inward
+ * nudge back to where it started, so we snap by the sign of the net
+ * motion instead: any inward scroll commits to the level below, any
+ * outward scroll to the level above. */
+let wheelTimer = 0, wheelFrom = null;
 addEventListener('wheel', e => {
   if (panel) return;
   e.preventDefault();
+  cancelPress();
+  if (wheelFrom === null) wheelFrom = level;                 // where this gesture began
   const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
-  setLevel(level + e.deltaY * unit / 400);
+  coast = null;
+  level = clamp(level + e.deltaY * unit / 400, MIN_LEVEL, MAX_LEVEL);
+  target = level; vel = 0; dirty = true;
   clearTimeout(wheelTimer);
-  wheelTimer = setTimeout(() => { target = clamp(Math.round(level), MIN_LEVEL, MAX_LEVEL); dirty = true; }, 140);
+  wheelTimer = setTimeout(() => {
+    const dir = level - wheelFrom;
+    let to = Math.abs(dir) < 1e-4 ? Math.round(level)
+           : dir > 0 ? Math.ceil(level - 1e-6) : Math.floor(level + 1e-6);
+    target = clamp(to, MIN_LEVEL, MAX_LEVEL);
+    wheelFrom = null; dirty = true;
+  }, 140);
 }, { passive: false });
 
 /* touch: tap out, two-finger tap in, drag or pinch for free zoom */
