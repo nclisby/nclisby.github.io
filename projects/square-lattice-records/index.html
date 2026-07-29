@@ -414,7 +414,7 @@ function latestIndex(W){
 /* Line widths in whole device pixels, so every stroke is crisp and solid
  * (no sub-pixel fading).  Tapering from bold at r^2 = 1 down to a single
  * device pixel at r^2 = 325. */
-const LINE_WIDTH_PX = { 1: 8, 2: 6, 3: 4, 4: 3, 5: 1 };   // device px, by record index
+const LINE_WIDTH_PX = { 1: 8, 2: 5, 3: 3, 4: 1, 5: 1 };   // device px, by record index
 let dirCache = { idx: -1, vecs: [] };
 function recordVecs(idx){
   if (idx < 1 || !(idx in LINE_WIDTH_PX)) return [];
