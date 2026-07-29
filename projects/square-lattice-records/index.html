@@ -59,6 +59,37 @@
   #about b { font-weight: 600; }
   #more { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   @media (max-width: 480px) { .panel > div { font-size: 11.5px; padding: 16px 18px; } }
+
+  #menubtn {
+    position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--edge); border-radius: 8px;
+    background: var(--panel); color: var(--fg); cursor: pointer;
+    -webkit-tap-highlight-color: transparent; user-select: none;
+    opacity: 0.5; transition: opacity 0.15s;
+  }
+  #menubtn:hover { opacity: 1; }
+  #menubtn svg { width: 20px; height: 20px; display: block; }
+  #menu > div { min-width: 240px; }
+  #menu h2 {
+    margin: 0 0 14px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+  }
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 4px; cursor: pointer; border-radius: 4px;
+  }
+  .row:hover { background: var(--edge); }
+  .row .key {
+    flex: none; width: 20px; text-align: center;
+    font-size: 11px; opacity: 0.55;
+  }
+  .row .label { flex: 1; }
+  .row .state {
+    flex: none; font-size: 11px; opacity: 0.7;
+    min-width: 34px; text-align: right;
+  }
+  .row.action .state { opacity: 0; }
+  .menu-sep { height: 1px; background: var(--edge); margin: 8px 0; border: 0; }
 </style>
 </head>
 <body>
@@ -67,6 +98,25 @@
   <canvas id="overlay"></canvas>
 </div>
 <div id="info"></div>
+<div id="menubtn" title="Menu" aria-label="Menu">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+</div>
+<div id="menu" class="panel"><div>
+  <h2>Options</h2>
+  <div class="row toggle" data-key="l"><span class="key">l</span><span class="label">Lattice</span><span class="state"></span></div>
+  <div class="row toggle" data-key="c"><span class="key">c</span><span class="label">Record circles</span><span class="state"></span></div>
+  <div class="row toggle" data-key="u"><span class="key">u</span><span class="label">Unit-distance segments</span><span class="state"></span></div>
+  <div class="row toggle" data-key="s"><span class="key">s</span><span class="label">All records</span><span class="state"></span></div>
+  <div class="row toggle" data-key="t"><span class="key">t</span><span class="label">Readout</span><span class="state"></span></div>
+  <div class="row toggle" data-key="d"><span class="key">d</span><span class="label">Dark mode</span><span class="state"></span></div>
+  <hr class="menu-sep">
+  <div class="row action" data-key="+"><span class="key">+</span><span class="label">Larger dots</span><span class="state"></span></div>
+  <div class="row action" data-key="-"><span class="key">&minus;</span><span class="label">Smaller dots</span><span class="state"></span></div>
+  <div class="row action" data-key="r"><span class="key">r</span><span class="label">Reset view</span><span class="state"></span></div>
+  <hr class="menu-sep">
+  <div class="row action" data-key="i"><span class="key">i</span><span class="label">About this picture</span><span class="state"></span></div>
+  <div class="row action" data-key="h"><span class="key">?</span><span class="label">Keyboard &amp; touch help</span><span class="state"></span></div>
+</div></div>
 <div id="help" class="panel"><div>Circles centred on the origin carrying a record
 number of square-lattice points  (OEIS A071383).
 
@@ -82,6 +132,9 @@ number of square-lattice points  (OEIS A071383).
   d                  light / dark
   i                  <span id="more">about this picture</span>
   h  ?  esc          this help
+
+  menu               tap the ☰ button, or click the view
+                     (desktop) for a menu of these options
 
   touch              tap to zoom out
                      two-finger tap to zoom in
@@ -309,6 +362,8 @@ const ctx = ovCanvas.getContext('2d');
 const infoEl = document.getElementById('info');
 const helpEl = document.getElementById('help');
 const aboutEl = document.getElementById('about');
+const menuEl = document.getElementById('menu');
+const menuBtn = document.getElementById('menubtn');
 
 let S = 0, dpr = 1;                             // device-pixel size of the square
 
@@ -691,6 +746,38 @@ function showPanel(name){
   panel = name;
   helpEl.classList.toggle('on', name === 'help');
   aboutEl.classList.toggle('on', name === 'about');
+  menuEl.classList.toggle('on', name === 'menu');
+  if (name === 'menu') refreshMenu();
+}
+
+/* Single source of truth for the toggles and one-shot actions, shared by
+ * the keyboard handler and the menu rows so the two can never drift. */
+function doAction(key){
+  switch (key){
+    case '+': discScale = Math.min(discScale * DISC_STEP, DISC_MAX); break;
+    case '-': discScale = Math.max(discScale / DISC_STEP, DISC_MIN); break;
+    case 'i': showPanel('about'); return;
+    case 'h': showPanel('help'); return;
+    case 'r': reset(); break;
+    case 's': showAll = !showAll; break;
+    case 'l': showLattice = !showLattice; break;
+    case 'c': showCircles = !showCircles; break;
+    case 'u': showLines = !showLines; break;
+    case 't': showInfo = !showInfo; infoEl.classList.toggle('on', showInfo); break;
+    case 'd': setTheme(theme === 'dark' ? 'light' : 'dark'); break;
+  }
+  dirty = true;
+}
+
+const TOGGLE_STATE = {
+  l: () => showLattice, c: () => showCircles, u: () => showLines,
+  s: () => showAll, t: () => showInfo, d: () => theme === 'dark'
+};
+function refreshMenu(){
+  for (const row of menuEl.querySelectorAll('.row.toggle')){
+    const on = TOGGLE_STATE[row.dataset.key]();
+    row.querySelector('.state').textContent = on ? 'on' : 'off';
+  }
 }
 
 const ZOOM_KEYS = new Set(['ArrowUp', 'ArrowDown']);
@@ -736,23 +823,31 @@ addEventListener('blur', cancelPress);
 addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key;
+  if (typeof k !== 'string') return;
   if (panel){
     if (k === 'Shift' || k === 'Control' || k === 'Alt' || k === 'Meta' || k === 'CapsLock' || k === 'Tab') return;
+    // In the menu, the toggle/action keys keep working and update the rows.
+    if (panel === 'menu' && !e.repeat && k.length === 1 && 'lcustdrih+=-_'.includes(k.toLowerCase())){
+      const key = (k === '=' ? '+' : k === '_' ? '-' : k.toLowerCase());
+      doAction(key);
+      if (panel === 'menu') refreshMenu();
+      e.preventDefault(); return;
+    }
     showPanel(null); e.preventDefault(); return;
   }
   switch (k){
     case 'ArrowUp': pressStart(-1); break;
     case 'ArrowDown': pressStart(1); break;
-    case '+': case '=': discScale = Math.min(discScale * DISC_STEP, DISC_MAX); dirty = true; break;
-    case '-': case '_': discScale = Math.max(discScale / DISC_STEP, DISC_MIN); dirty = true; break;
-    case 'i': case 'I': if (!e.repeat) showPanel('about'); break;
-    case 'r': case 'R': if (!e.repeat) reset(); break;
-    case 's': case 'S': if (!e.repeat) showAll = !showAll; dirty = true; break;
-    case 'l': case 'L': if (!e.repeat) showLattice = !showLattice; dirty = true; break;
-    case 'c': case 'C': if (!e.repeat) showCircles = !showCircles; dirty = true; break;
-    case 'u': case 'U': if (!e.repeat) showLines = !showLines; dirty = true; break;
-    case 't': case 'T': if (!e.repeat){ showInfo = !showInfo; infoEl.classList.toggle('on', showInfo); } dirty = true; break;
-    case 'd': case 'D': if (!e.repeat) setTheme(theme === 'dark' ? 'light' : 'dark'); break;
+    case '+': case '=': doAction('+'); break;
+    case '-': case '_': doAction('-'); break;
+    case 'i': case 'I': if (!e.repeat) doAction('i'); break;
+    case 'r': case 'R': if (!e.repeat) doAction('r'); break;
+    case 's': case 'S': if (!e.repeat) doAction('s'); break;
+    case 'l': case 'L': if (!e.repeat) doAction('l'); break;
+    case 'c': case 'C': if (!e.repeat) doAction('c'); break;
+    case 'u': case 'U': if (!e.repeat) doAction('u'); break;
+    case 't': case 'T': if (!e.repeat) doAction('t'); break;
+    case 'd': case 'D': if (!e.repeat) doAction('d'); break;
     case 'Shift': case 'Control': case 'Alt': case 'Meta': case 'CapsLock': case 'Tab': return;
     default:
       if (/^F\d+$/.test(k)) return;
@@ -775,14 +870,17 @@ addEventListener('wheel', e => {
 /* touch: tap out, two-finger tap in, drag or pinch for free zoom */
 const DRAG_PX_PER_LEVEL = 150;
 let t0 = 0, maxTouches = 0, moved = 0, startY = 0, startLevel = 0, pinch0 = 0, gesture = null, hold = 0;
+let isTouch = false, suppressClick = false;      // touch-vs-mouse, and swallow the ghost click
 const dist = ts => Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+const inMenu = el => el && el.closest && (el.closest('#menu') || el.closest('#menubtn') || el.closest('a'));
 
 addEventListener('touchstart', e => {
+  isTouch = true; suppressClick = true;                         // any touch: kill the ghost click
   const el = e.target.closest ? e.target : null;
-  if (el && el.closest('a')) return;                            // let the link open
+  if (inMenu(el)) return;                                        // let the menu/button/link handle it
+  if (el && el.closest('#more')){ e.preventDefault(); showPanel('about'); gesture = 'consumed'; return; }
   e.preventDefault();
   clearTimeout(hold);
-  if (el && el.closest('#more')){ showPanel('about'); gesture = 'consumed'; return; }
   if (panel){ showPanel(null); gesture = 'consumed'; return; }
   const ts = e.touches;
   if (ts.length === 1 && gesture === null){
@@ -827,10 +925,29 @@ addEventListener('touchend', e => {
 }, { passive: false });
 addEventListener('touchcancel', () => { dragging = false; gesture = null; pinch0 = 0; }, { passive: true });
 
+/* menu button + rows */
+menuBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  showPanel(panel === 'menu' ? null : 'menu');
+});
+menuEl.addEventListener('click', e => {
+  const row = e.target.closest('.row');
+  if (row){
+    e.stopPropagation();
+    doAction(row.dataset.key);
+    if (panel === 'menu') refreshMenu();          // stay open for further toggles
+    return;
+  }
+  showPanel(null);                                // click on the menu backdrop closes it
+});
+
 addEventListener('click', e => {
   if (e.target.closest && e.target.closest('a')) return;
   if (e.target.closest && e.target.closest('#more')){ showPanel('about'); return; }
-  if (panel) showPanel(null);
+  if (e.target.closest && (e.target.closest('#menu') || e.target.closest('#menubtn'))) return;
+  if (suppressClick){ suppressClick = false; return; }   // ignore the click synthesised after a tap
+  if (panel){ showPanel(null); return; }
+  if (!isTouch) showPanel('menu');                // desktop: click the view to open the menu
 });
 addEventListener('contextmenu', e => e.preventDefault());
 </script>
