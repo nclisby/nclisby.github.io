@@ -925,7 +925,8 @@ addEventListener('touchmove', e => {
 }, { passive: false });
 
 addEventListener('touchend', e => {
-  if (e.target.closest && e.target.closest('a')) return;
+  const el = e.target.closest ? e.target : null;
+  if (inMenu(el)) return;                                        // don't cancel the button's click
   e.preventDefault();
   clearTimeout(hold);
   if (e.touches.length > 0) return;
@@ -939,10 +940,20 @@ addEventListener('touchend', e => {
 }, { passive: false });
 addEventListener('touchcancel', () => { dragging = false; gesture = null; pinch0 = 0; }, { passive: true });
 
-/* menu button + rows */
+/* menu button + rows.  On touch we toggle from touchend directly, since
+ * relying on the browser's synthetic click after a tap is unreliable and
+ * can be swallowed; on mouse we use click. */
+let btnTapped = false;
+function toggleMenu(){ showPanel(panel === 'menu' ? null : 'menu'); }
 menuBtn.addEventListener('click', e => {
   e.stopPropagation();
-  showPanel(panel === 'menu' ? null : 'menu');
+  if (btnTapped){ btnTapped = false; return; }    // already handled on touchend
+  toggleMenu();
+});
+menuBtn.addEventListener('touchend', e => {
+  e.preventDefault(); e.stopPropagation();
+  btnTapped = true;                               // swallow the synthetic click that follows
+  toggleMenu();
 });
 menuEl.addEventListener('click', e => {
   const row = e.target.closest('.row');
@@ -953,6 +964,19 @@ menuEl.addEventListener('click', e => {
     return;
   }
   showPanel(null);                                // click on the menu backdrop closes it
+});
+menuEl.addEventListener('touchend', e => {
+  const row = e.target.closest('.row');
+  if (row){
+    e.preventDefault(); e.stopPropagation();
+    doAction(row.dataset.key);
+    if (panel === 'menu') refreshMenu();
+  } else if (e.target.closest('a')){
+    return;                                       // let links open
+  } else {
+    e.preventDefault(); e.stopPropagation();
+    showPanel(null);                              // tap the menu backdrop closes it
+  }
 });
 
 addEventListener('click', e => {
