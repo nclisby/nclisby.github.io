@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Record circles on the square lattice</title>
+<!-- Developed using Claude AI. -->
+<!-- Published on 29/7/2026 -->
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --dim: rgba(0,0,0,0.55);
+    --info: #000000;
+    --panel: rgba(255,255,255,0.93);
+    --edge: rgba(0,0,0,0.14);
+  }
+  html.dark {
+    --bg: #101014;
+    --fg: #e2e2e6;
+    --dim: rgba(226,226,230,0.55);
+    --info: #ffffff;
+    --panel: rgba(16,16,20,0.93);
+    --edge: rgba(226,226,230,0.16);
+  }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: var(--bg);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    touch-action: none; overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--fg);
+  }
+  #stage { position: relative; }
+  #stage canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+  #info {
+    position: fixed; top: 0; left: 0; padding: 12px 14px;
+    color: var(--info); white-space: pre; pointer-events: none;
+    font-size: 12px; letter-spacing: 0.01em; display: none;
+  }
+  #info.on { display: block; }
+  .panel {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    background: var(--panel); backdrop-filter: blur(2px);
+  }
+  .panel.on { display: flex; }
+  .panel > div {
+    padding: 22px 26px; border: 1px solid var(--edge); border-radius: 4px;
+    font-size: 13px; color: var(--fg);
+    max-width: min(92vw, 66ch); max-height: 88vh; overflow: auto;
+  }
+  #help > div { white-space: pre; }
+  #about > div { white-space: pre-wrap; line-height: 1.65; }
+  #about b { font-weight: 600; }
+  #more { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  @media (max-width: 480px) { .panel > div { font-size: 11.5px; padding: 16px 18px; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="lattice"></canvas>
+  <canvas id="overlay"></canvas>
+</div>
+<div id="info"></div>
+<div id="help" class="panel"><div>Circles centred on the origin carrying a record
+number of square-lattice points  (OEIS A071383).
+
+  up arrow           zoom in    (hold to glide)
+  down arrow         zoom out   (hold to glide)
+  s                  all records / latest only
+  l                  lattice on / off
+  c                  circles through the records
+  + / -              record dot size
+  r                  reset the view
+  t                  readout
+  d                  light / dark
+  i                  <span id="more">about this picture</span>
+  h  ?  esc          this help
+
+  touch              tap to zoom out
+                     two-finger tap to zoom in
+                     drag or pinch to zoom freely
+                     press and hold for this help
+
+Latest record in green, earlier records in blue.
+
+press any key or tap to close</div></div>
+
+<div id="about" class="panel"><div><b>What is being displayed</b>
+
+The dots are the points of the square lattice Z², with the origin drawn larger. A circle centred on the origin with squared radius n passes through r₂(n) of them. Only n that are sums of two squares qualify: if such an n factors over the primes p ≡ 1 (mod 4) as p₁^e₁ … pₖ^eₖ, then r₂(n) = 4(e₁+1)…(eₖ+1).
+
+Coloured are the circles that pass through more lattice points than any smaller circle. Their squared radii are
+
+  0, 1, 5, 25, 65, 325, 1105, 4225, 5525, 27625, …
+
+carrying 1, 4, 8, 12, 16, 24, 32, 36, 48, 64, … points. These are OEIS A071383 and A071385. Conway showed that consecutive squared radii grow by a factor of at most 5. Each zoom step moves to the next record, the view being sized so that the radius rounds up to a whole lattice step, which is why the green circle always sits just inside the frame.
+
+Green marks the largest record circle that fits in the view, blue the earlier ones. Past a few thousand points the points on a record circle sit closer together than a pixel and the circle reads as a solid ring; the lattice itself merges into a solid field at much the same depth, which is why the picture becomes a filled square carrying rings.
+
+Records and their lattice points are computed exactly while you zoom, from factorisations over the Gaussian integers, so nothing is tabulated in advance.
+
+<a href="https://oeis.org/A071383" target="_blank" rel="noopener">oeis.org/A071383</a>
+
+press any key or tap to close</div></div>
+
+<script>
+"use strict";
+
+/* ------------------------------------------------------------------ *
+ * Records of A071383: squared radii n = sum of two squares carrying a
+ * record number of lattice points.  Every such n factors into primes
+ * = 1 (mod 4), with non-increasing exponents, and the point count is
+ * 4 * prod(e_i + 1).
+ * ------------------------------------------------------------------ */
+
+const P4 = [];                                  // primes = 1 (mod 4)
+function isPrime(n){ if (n < 2) return false; for (let d = 2; d*d <= n; d++) if (n % d === 0) return false; return true; }
+function prime4(i){
+  while (P4.length <= i){
+    let n = P4.length ? P4[P4.length-1] + 4 : 5;
+    while (!isPrime(n)) n += 4;
+    P4.push(n);
+  }
+  return P4[i];
+}
+
+class MinHeap {                                 // ordered by numeric key
+  constructor(){ this.a = []; }
+  get size(){ return this.a.length; }
+  push(x){
+    const a = this.a; a.push(x); let i = a.length - 1;
+    while (i > 0){ const p = (i-1) >> 1; if (a[p].k <= a[i].k) break; const t = a[p]; a[p] = a[i]; a[i] = t; i = p; }
+  }
+  pop(){
+    const a = this.a, top = a[0], last = a.pop();
+    if (a.length){
+      a[0] = last; let i = 0;
+      for(;;){
+        const l = 2*i+1, r = l+1; let m = i;
+        if (l < a.length && a[l].k < a[m].k) m = l;
+        if (r < a.length && a[r].k < a[m].k) m = r;
+        if (m === i) break;
+        const t = a[m]; a[m] = a[i]; a[i] = t; i = m;
+      }
+    }
+    return top;
+  }
+}
+
+// Incremental sweep over candidate n in increasing order, keeping records.
+const Records = (function(){
+  const list = [];                              // record objects, index 0 is n = 0
+  const seen = new Set();
+  const heap = new MinHeap();
+  let best = 0, exhausted = false;
+
+  function offer(exps){
+    const key = exps.join(',');
+    if (seen.has(key)) return;
+    seen.add(key);
+    let k = 0;
+    for (let i = 0; i < exps.length; i++) k += exps[i] * Math.log(prime4(i));
+    heap.push({ k, exps });
+  }
+
+  function isqrt(n){                             // exact integer square root
+    if (n < 2n) return n;
+    let x = 1n << BigInt(Math.ceil(n.toString(2).length / 2));
+    for(;;){ const y = (x + n / x) >> 1n; if (y >= x) return x; x = y; }
+  }
+  function make(exps){
+    let count = 4, n = 1n;
+    for (let i = 0; i < exps.length; i++){
+      count *= exps[i] + 1;
+      n *= BigInt(prime4(i)) ** BigInt(exps[i]);
+    }
+    let w = isqrt(n);
+    if (w * w < n) w += 1n;                      // the radius rounded up, exactly
+    return { exps, count, n, r: Math.sqrt(Number(n)), W: Number(w), pts: null, alpha: 0, green: 0 };
+  }
+
+  list.push({ exps: [], count: 1, n: 0n, r: 0, W: 0, pts: [[0,0]], alpha: 0, green: 0 });
+  offer([]);
+
+  // Pull records until `wanted` of them are known, spending at most
+  // `budget` sweep steps so a frame is never blocked.
+  function ensure(wanted, budget){
+    if (exhausted) return;
+    let steps = 0;
+    while (list.length < wanted && steps < budget){
+      if (!heap.size){ exhausted = true; return; }
+      const { k, exps } = heap.pop();
+      steps++;
+      let count = 4;
+      for (let j = 0; j < exps.length; j++) count *= exps[j] + 1;
+      if (count > best){ best = count; list.push(make(exps)); }
+      for (let i = 0; i < exps.length; i++)
+        if (i === 0 || exps[i-1] > exps[i]){ const e = exps.slice(); e[i]++; offer(e); }
+      if (exps.length === 0 || exps[exps.length-1] > 0) offer(exps.concat([1]));
+    }
+  }
+
+  return { list, ensure };
+})();
+
+/* Lattice points on a record circle, via Gaussian integers.  For
+ * n = prod p_i^e_i with p_i = a_i^2 + b_i^2, every z with |z|^2 = n is
+ * a unit times prod pi_i^k conj(pi_i)^(e_i - k).  Exact in BigInt. */
+const MAX_EXPLICIT_POINTS = 40000;
+
+function gaussianSplit(p){
+  for (let a = 1; a*a <= p; a++){
+    const b2 = p - a*a, b = Math.round(Math.sqrt(b2));
+    if (b*b === b2) return [BigInt(a), BigInt(b)];
+  }
+  return null;
+}
+function cmul(z, w){ return [z[0]*w[0] - z[1]*w[1], z[0]*w[1] + z[1]*w[0]]; }
+
+function pointsOf(rec){
+  if (rec.pts) return rec.pts;
+  if (rec.count > MAX_EXPLICIT_POINTS) return null;
+  let zs = [[1n, 0n]];
+  for (let i = 0; i < rec.exps.length; i++){
+    const [a, b] = gaussianSplit(prime4(i));
+    const pi = [a, b], pc = [a, -b], e = rec.exps[i];
+    const pow = [[1n,0n]], pow2 = [[1n,0n]];
+    for (let j = 1; j <= e; j++){ pow.push(cmul(pow[j-1], pi)); pow2.push(cmul(pow2[j-1], pc)); }
+    const next = [];
+    for (const z of zs)
+      for (let k = 0; k <= e; k++) next.push(cmul(z, cmul(pow[k], pow2[e-k])));
+    zs = next;
+  }
+  const out = [];
+  for (const [x, y] of zs){
+    const X = Number(x), Y = Number(y);
+    out.push([X, Y], [-Y, X], [-X, -Y], [Y, -X]);
+  }
+  rec.pts = out;
+  return out;
+}
+
+/* ------------------------------------------------------------------ *
+ * View model.  Level k has nominal half-width W = 2^(k-1) lattice
+ * units, so each step doubles the grid.  Level 0 shows the origin
+ * alone.  The drawn half-extent carries a small margin so that discs
+ * on the boundary are not clipped.
+ * ------------------------------------------------------------------ */
+
+/* Half-extent carries a margin of 0.5 lattice units: enough to contain
+ * the discs sitting on the boundary of the block, and small enough to
+ * exclude the discs of the next ring out.  Each level therefore shows
+ * exactly a (2^k + 1) by (2^k + 1) block of sites, whole.  Level 0 is
+ * below the lattice spacing so it gets its own extent, blended
+ * geometrically into level 1. */
+const MIN_LEVEL = 0, RECORD_CAP = 100, H0 = 0.62;
+const MIN_DISC_PX = 5 / 3;                      // floor on a record disc radius, device px
+const DISC_STEP = 1.2, DISC_MIN = 0.1, DISC_MAX = 10;
+const CIRCLE_PX = 1.25;                         // stroke width of a record circle
+
+Records.ensure(12, 200000);                     // enough to be usable straight away
+let MAX_LEVEL = Math.min(RECORD_CAP, Records.list.length - 2);
+
+const extentOf = k => k <= 0 ? H0 : Records.list[k].W + 0.5;
+function halfExtent(x){                         // geometric between levels
+  const k = Math.floor(x), f = x - k;
+  if (f <= 0) return extentOf(k);
+  const a = Math.log(extentOf(k)), b = Math.log(extentOf(k + 1));
+  return Math.exp(a + f * (b - a));
+}
+const segLog = k => Math.log(extentOf(k + 1)) - Math.log(extentOf(k));
+
+const INITIAL_LEVEL = 1;
+let level = INITIAL_LEVEL;                      // continuous, animated
+let target = INITIAL_LEVEL;                     // integer destination
+let vel = 0;
+let showAll = false, showInfo = false, showLattice = true, showCircles = false;
+let panel = null, discScale = 1;                 // open overlay, record dot size multiplier
+let dragging = false, glide = 0;
+
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const THEMES = {
+  light: { bg: [255,255,255], fg: [0,0,0] },
+  dark:  { bg: [16,16,20],    fg: [226,226,230] }
+};
+const GREEN = [0,207,82], BLUE = [10,114,255];   // vivid, and legible against
+let theme = 'light';                             // light unless toggled with d
+
+/* ------------------------------------------------------------------ *
+ * Canvases.  A WebGL layer draws the lattice field analytically, so
+ * the discs merge into a solid region at any depth without ever
+ * iterating over points; a 2D layer on top draws the record circles.
+ * ------------------------------------------------------------------ */
+
+const stage = document.getElementById('stage');
+const glCanvas = document.getElementById('lattice');
+const ovCanvas = document.getElementById('overlay');
+const ctx = ovCanvas.getContext('2d');
+const infoEl = document.getElementById('info');
+const helpEl = document.getElementById('help');
+const aboutEl = document.getElementById('about');
+
+let S = 0, dpr = 1;                             // device-pixel size of the square
+
+const VS = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }';
+const FS = [
+  '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+  'precision highp float;',
+  '#else',
+  'precision mediump float;',
+  '#endif',
+  'uniform vec2 u_size; uniform float u_scale, u_solid, u_frac;',
+  'uniform vec3 u_bg, u_fg;',
+  'void main(){',
+  '  float a = u_solid;',
+  '  if (u_solid < 0.999){',
+  '    vec2 p = (gl_FragCoord.xy - 0.5 * u_size) / u_scale;',
+  '    vec2 q = p - floor(p + 0.5);',
+  '    float d = length(q) * u_scale;',
+  '    float r = u_frac * u_scale;',
+  '    a = max(a, 1.0 - smoothstep(r - 0.5, r + 0.5, d));',
+  '  }',
+  '  gl_FragColor = vec4(mix(u_bg, u_fg, a), 1.0);',
+  '}'
+].join('\n');
+
+let gl = null, uni = null;
+(function initGL(){
+  try {
+    gl = glCanvas.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false });
+  } catch (e) { gl = null; }
+  if (!gl) return;
+  const sh = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  try {
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    uni = {
+      size:  gl.getUniformLocation(prog, 'u_size'),
+      scale: gl.getUniformLocation(prog, 'u_scale'),
+      solid: gl.getUniformLocation(prog, 'u_solid'),
+      frac:  gl.getUniformLocation(prog, 'u_frac'),
+      bg:    gl.getUniformLocation(prog, 'u_bg'),
+      fg:    gl.getUniformLocation(prog, 'u_fg')
+    };
+  } catch (e) { gl = null; uni = null; }
+})();
+
+/* ------------------------------------------------------------------ */
+
+glCanvas.addEventListener('webglcontextlost', e => { e.preventDefault(); gl = null; dirty = true; });
+
+let dirty = true;
+function resize(){
+  const side = Math.max(1, Math.min(window.innerWidth, window.innerHeight));
+  dpr = Math.min(window.devicePixelRatio || 1, 3);
+  S = Math.max(1, Math.round(side * dpr));
+  stage.style.width = side + 'px';
+  stage.style.height = side + 'px';
+  for (const c of [glCanvas, ovCanvas]){ c.width = S; c.height = S; }
+  if (gl) gl.viewport(0, 0, S, S);
+  dirty = true;
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
+document.addEventListener('fullscreenchange', resize);
+document.addEventListener('webkitfullscreenchange', resize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+if (window.ResizeObserver) new ResizeObserver(resize).observe(document.documentElement);
+resize();
+
+/* ------------------------------------------------------------------ */
+
+const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
+const smoothstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const mix = (u, v, t) => 'rgb(' + Math.round(u[0]+(v[0]-u[0])*t) + ',' + Math.round(u[1]+(v[1]-u[1])*t) + ',' + Math.round(u[2]+(v[2]-u[2])*t) + ')';
+
+function latestIndex(W){
+  const L = Records.list;
+  let idx = 0;
+  for (let i = 1; i < L.length; i++){ if (L[i].r <= W) idx = i; else break; }
+  return idx;
+}
+
+function draw(dt){
+  Records.ensure(Math.floor(level) + 5, 150);
+  MAX_LEVEL = Math.min(RECORD_CAP, Records.list.length - 2);
+  const H = halfExtent(clamp(level, MIN_LEVEL, MAX_LEVEL));
+  const W = H - 0.5;                            // largest record radius that fits
+  const minR = MIN_DISC_PX * dpr * discScale;
+  const inset = Math.min(minR + dpr, 0.02 * S); // keep edge dots off the frame
+  const s = (S / 2 - inset) / H;                // device px per lattice unit
+  const frac = 0.30 + 0.16 * smoothstep(6, 2, s);
+  const solid = 1 - smoothstep(1.2, 4.0, s);
+  const th = THEMES[theme];
+  ctx.clearRect(0, 0, S, S);
+
+  // lattice field
+  if (gl){
+    if (!showLattice){
+      gl.clearColor(th.bg[0]/255, th.bg[1]/255, th.bg[2]/255, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    } else {
+      gl.uniform2f(uni.size, S, S);
+      gl.uniform1f(uni.scale, s);
+      gl.uniform1f(uni.solid, solid);
+      gl.uniform1f(uni.frac, frac);
+      gl.uniform3f(uni.bg, th.bg[0]/255, th.bg[1]/255, th.bg[2]/255);
+      gl.uniform3f(uni.fg, th.fg[0]/255, th.fg[1]/255, th.fg[2]/255);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+  } else {
+    drawLatticeFallback(s, frac, solid, th);
+  }
+
+  // record circles
+  const L = Records.list;
+  const idx = latestIndex(W);
+  const kA = 1 - Math.exp(-dt / 0.07);
+  const c = S / 2;
+
+  for (let i = 0; i < L.length; i++){
+    const rec = L[i];
+    const visible = rec.r <= W * (1 + 1e-12);   // r is a rounded square root
+    const tA = visible ? ((showAll || i === idx) ? 1 : 0) : 0;
+    const tG = (i === idx) ? 1 : 0;
+    rec.alpha += (tA - rec.alpha) * kA;
+    rec.green += (tG - rec.green) * kA;
+    if (Math.abs(tA - rec.alpha) > 0.004 || Math.abs(tG - rec.green) > 0.004) dirty = true;
+    if (rec.alpha < 0.005) continue;
+    if (i === 0) continue;                      // origin drawn last
+
+    const rpx = rec.r * s;
+    if (rpx < 2.5) continue;
+    const pr = Math.max(frac * s, Math.min(minR, 0.30 * rpx));
+    ctx.globalAlpha = rec.alpha;
+    const col = mix(BLUE, GREEN, rec.green);
+    if (showCircles){                            // the circle itself, under its points
+      ctx.strokeStyle = col;
+      ctx.lineWidth = CIRCLE_PX * dpr;
+      ctx.beginPath();
+      ctx.arc(c, c, rpx, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+    const gap = 2 * Math.PI * rpx / rec.count;   // spacing along the circle
+    const pts = gap < 0.8 ? null : pointsOf(rec);
+    if (!pts){
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2 * pr;
+      ctx.beginPath();
+      ctx.arc(c, c, rpx, 0, 2 * Math.PI);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      for (let j = 0; j < pts.length; j++){
+        const x = c + pts[j][0] * s, y = c - pts[j][1] * s;
+        ctx.moveTo(x + pr, y);
+        ctx.arc(x, y, pr, 0, 2 * Math.PI);
+      }
+      ctx.fill();
+    }
+  }
+
+  // origin: itself the first record, one point
+  const o = L[0];
+  const opr = Math.max(1.6 * frac * s, 1.3 * minR);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgb(' + th.fg.join(',') + ')';
+  ctx.beginPath(); ctx.arc(c, c, opr, 0, 2 * Math.PI); ctx.fill();
+  if (o.alpha > 0.005){
+    ctx.globalAlpha = o.alpha;
+    ctx.fillStyle = mix(BLUE, GREEN, o.green);
+    ctx.beginPath(); ctx.arc(c, c, opr, 0, 2 * Math.PI); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  if (showInfo) updateInfo(idx);
+}
+
+function drawLatticeFallback(s, frac, solid, th){
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgb(' + th.bg.join(',') + ')';
+  ctx.fillRect(0, 0, S, S);
+  const fg = 'rgb(' + th.fg.join(',') + ')';
+  if (!showLattice) return;
+  const H = (S / 2) / s;
+  const n = Math.ceil(H);
+  if (solid > 0.999 || (2*n+1)*(2*n+1) > 60000){
+    ctx.globalAlpha = Math.max(solid, Math.min(1, Math.PI * frac * frac * 4));
+    ctx.fillStyle = fg;
+    ctx.fillRect(0, 0, S, S);
+    ctx.globalAlpha = 1;
+    return;
+  }
+  ctx.fillStyle = fg;
+  const c = S / 2, pr = frac * s;
+  ctx.beginPath();
+  for (let i = -n; i <= n; i++)
+    for (let j = -n; j <= n; j++){
+      const x = c + i * s, y = c + j * s;
+      ctx.moveTo(x + pr, y);
+      ctx.arc(x, y, pr, 0, 2 * Math.PI);
+    }
+  ctx.fill();
+  if (solid > 0.002){ ctx.globalAlpha = solid; ctx.fillRect(0, 0, S, S); ctx.globalAlpha = 1; }
+}
+
+const group = s => s.replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');
+function fmt(n){
+  const s = n.toString();
+  return s.length <= 18 ? group(s) : Number(n).toExponential(6);
+}
+function updateInfo(idx){
+  const rec = Records.list[idx];
+  infoEl.textContent = 'r\u00b2 = ' + fmt(rec.n) +
+    ', r = ' + (rec.r < 1e7 ? rec.r.toFixed(3) : rec.r.toExponential(6)) +
+    ', points = ' + group(String(rec.count));
+}
+
+/* ------------------------------------------------------------------ *
+ * Animation.  A single press is a critically damped step of about
+ * 0.3 s; holding a key glides at a steady one doubling per second.
+ * ------------------------------------------------------------------ */
+
+const OMEGA = 22, GLIDE_SECONDS_PER_DOUBLING = 1.0;
+let coast = null;                               // easing out of a glide
+let last = performance.now();
+
+/* Levels are no longer evenly spaced on a log scale, so a glide runs at
+ * a constant scale rate rather than a constant rate of levels. */
+function glideRate(){
+  const k = clamp(Math.floor(level), MIN_LEVEL, Math.max(MIN_LEVEL, MAX_LEVEL - 1));
+  return (Math.LN2 / GLIDE_SECONDS_PER_DOUBLING) / Math.max(segLog(k), 1e-9);
+}
+
+/* Cubic that leaves at the glide's own speed and arrives with zero
+ * speed, so releasing a held key reads as the same motion running out
+ * rather than a fresh animation. */
+function startCoast(to, v0){
+  const D = to - level;
+  const T = clamp(1.5 * Math.abs(D) / Math.abs(v0), 0.12, 0.8);
+  coast = { from: level, D, T, t: 0, k: clamp(v0 * T / D, 0, 3) };
+  target = to; vel = 0; dirty = true;
+}
+
+function frame(now){
+  let dt = (now - last) / 1000; last = now;
+  dt = clamp(dt, 0.001, 0.05);
+
+  if (glide !== 0){
+    level = clamp(level + glide * dt * glideRate(), MIN_LEVEL, MAX_LEVEL);
+    target = level; vel = 0; dirty = true;
+  } else if (coast){
+    coast.t += dt;
+    const u = Math.min(coast.t / coast.T, 1), k = coast.k;
+    level = coast.from + coast.D * ((3 - 2 * u) * u * u + k * u * (1 - u) * (1 - u));
+    dirty = true;
+    if (u >= 1){ level = target; coast = null; vel = 0; }
+  } else if (!dragging && (level !== target || vel !== 0)){
+    if (reduceMotion){ level = target; vel = 0; }
+    else {
+      const a = -OMEGA * OMEGA * (level - target) - 2 * OMEGA * vel;
+      vel += a * dt; level += vel * dt;
+      if (Math.abs(level - target) < 1e-4 && Math.abs(vel) < 1e-3){ level = target; vel = 0; }
+    }
+    dirty = true;                                 // including the frame that lands on it
+  }
+  if (dirty){ dirty = false; draw(dt); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function step(d){ target = clamp(Math.round(target) + d, MIN_LEVEL, MAX_LEVEL); dirty = true; }
+function setLevel(v){ cancelPress(); coast = null; level = clamp(v, MIN_LEVEL, MAX_LEVEL); target = level; vel = 0; dirty = true; }
+
+/* ------------------------------------------------------------------ */
+
+function setTheme(t){ theme = t; document.documentElement.classList.toggle('dark', t === 'dark'); dirty = true; }
+setTheme(theme);
+
+function showPanel(name){
+  panel = name;
+  helpEl.classList.toggle('on', name === 'help');
+  aboutEl.classList.toggle('on', name === 'about');
+}
+
+const ZOOM_KEYS = new Set(['ArrowUp', 'ArrowDown']);
+const HOLD_DELAY = 120;                         // ms of holding before the glide starts
+let holdTimer = 0, holdDir = 0, holdFrom = 0;
+
+function pressStart(d){
+  if (holdDir === d && (holdTimer || glide)) return;   // ignore auto-repeat
+  clearTimeout(holdTimer);
+  coast = null;
+  holdDir = d;
+  holdFrom = clamp(Math.round(target), MIN_LEVEL, MAX_LEVEL);
+  holdTimer = setTimeout(() => { holdTimer = 0; glide = d; dirty = true; }, HOLD_DELAY);
+}
+function pressEnd(){
+  if (!holdDir) return;
+  const d = holdDir; holdDir = 0;
+  if (holdTimer){                               // released before the glide began
+    clearTimeout(holdTimer); holdTimer = 0;
+    step(d);
+    return;
+  }
+  glide = 0; vel = 0;                           // carry on to the next level ahead
+  let to = clamp(d > 0 ? Math.ceil(level - 1e-6) : Math.floor(level + 1e-6), MIN_LEVEL, MAX_LEVEL);
+  if (Math.abs(to - level) < 1e-4 && to === holdFrom) to = clamp(holdFrom + d, MIN_LEVEL, MAX_LEVEL);
+  if (Math.abs(to - level) < 1e-4){ level = to; target = to; coast = null; dirty = true; return; }
+  startCoast(to, d * glideRate());
+}
+function reset(){
+  cancelPress();
+  level = target = INITIAL_LEVEL; vel = 0; coast = null;
+  discScale = 1; showAll = false; showLattice = true; showCircles = false;
+  dirty = true;
+}
+function cancelPress(){
+  clearTimeout(holdTimer); holdTimer = 0; holdDir = 0;
+  if (glide !== 0){ glide = 0; vel = 0; target = clamp(Math.round(level), MIN_LEVEL, MAX_LEVEL); dirty = true; }
+  coast = null;
+}
+addEventListener('keyup', e => { if (ZOOM_KEYS.has(e.key)) pressEnd(); });
+addEventListener('blur', cancelPress);
+
+addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if (panel){
+    if (k === 'Shift' || k === 'Control' || k === 'Alt' || k === 'Meta' || k === 'CapsLock' || k === 'Tab') return;
+    showPanel(null); e.preventDefault(); return;
+  }
+  switch (k){
+    case 'ArrowUp': pressStart(-1); break;
+    case 'ArrowDown': pressStart(1); break;
+    case '+': case '=': discScale = Math.min(discScale * DISC_STEP, DISC_MAX); dirty = true; break;
+    case '-': case '_': discScale = Math.max(discScale / DISC_STEP, DISC_MIN); dirty = true; break;
+    case 'i': case 'I': if (!e.repeat) showPanel('about'); break;
+    case 'r': case 'R': if (!e.repeat) reset(); break;
+    case 's': case 'S': if (!e.repeat) showAll = !showAll; dirty = true; break;
+    case 'l': case 'L': if (!e.repeat) showLattice = !showLattice; dirty = true; break;
+    case 'c': case 'C': if (!e.repeat) showCircles = !showCircles; dirty = true; break;
+    case 't': case 'T': if (!e.repeat){ showInfo = !showInfo; infoEl.classList.toggle('on', showInfo); } dirty = true; break;
+    case 'd': case 'D': if (!e.repeat) setTheme(theme === 'dark' ? 'light' : 'dark'); break;
+    case 'Shift': case 'Control': case 'Alt': case 'Meta': case 'CapsLock': case 'Tab': return;
+    default:
+      if (/^F\d+$/.test(k)) return;
+      showPanel('help');
+  }
+  e.preventDefault();
+}, { passive: false });
+
+/* wheel: continuous, snapping to a level once it settles */
+let wheelTimer = 0;
+addEventListener('wheel', e => {
+  if (panel) return;
+  e.preventDefault();
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+  setLevel(level + e.deltaY * unit / 400);
+  clearTimeout(wheelTimer);
+  wheelTimer = setTimeout(() => { target = clamp(Math.round(level), MIN_LEVEL, MAX_LEVEL); dirty = true; }, 140);
+}, { passive: false });
+
+/* touch: tap out, two-finger tap in, drag or pinch for free zoom */
+const DRAG_PX_PER_LEVEL = 150;
+let t0 = 0, maxTouches = 0, moved = 0, startY = 0, startLevel = 0, pinch0 = 0, gesture = null, hold = 0;
+const dist = ts => Math.hypot(ts[0].clientX - ts[1].clientX, ts[0].clientY - ts[1].clientY);
+
+addEventListener('touchstart', e => {
+  const el = e.target.closest ? e.target : null;
+  if (el && el.closest('a')) return;                            // let the link open
+  e.preventDefault();
+  clearTimeout(hold);
+  if (el && el.closest('#more')){ showPanel('about'); gesture = 'consumed'; return; }
+  if (panel){ showPanel(null); gesture = 'consumed'; return; }
+  const ts = e.touches;
+  if (ts.length === 1 && gesture === null){
+    t0 = performance.now(); maxTouches = 1; moved = 0;
+    startY = ts[0].clientY; startLevel = level; gesture = 'idle';
+    hold = setTimeout(() => {                    // press and hold for the help
+      if (gesture === 'idle' && moved < 12){ showPanel('help'); gesture = 'consumed'; }
+    }, 550);
+  }
+  if (ts.length === 2 && gesture !== 'consumed'){
+    maxTouches = 2; pinch0 = dist(ts); startLevel = level; gesture = 'idle';
+  }
+}, { passive: false });
+
+addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (gesture === 'consumed' || gesture === null) return;
+  const ts = e.touches;
+  if (ts.length >= 2 && pinch0 > 0){
+    const d = dist(ts);
+    moved = Math.max(moved, Math.abs(d - pinch0));
+    if (moved > 12){ clearTimeout(hold); gesture = 'zoom'; dragging = true; setLevel(startLevel - Math.log2(d / pinch0)); }
+  } else if (ts.length === 1 && maxTouches < 2){
+    const dy = ts[0].clientY - startY;
+    moved = Math.max(moved, Math.abs(dy));
+    if (moved > 10){ clearTimeout(hold); gesture = 'zoom'; dragging = true; setLevel(startLevel + dy / DRAG_PX_PER_LEVEL); }
+  }
+}, { passive: false });
+
+addEventListener('touchend', e => {
+  if (e.target.closest && e.target.closest('a')) return;
+  e.preventDefault();
+  clearTimeout(hold);
+  if (e.touches.length > 0) return;
+  if (gesture === 'zoom'){
+    dragging = false;
+    target = clamp(Math.round(level), MIN_LEVEL, MAX_LEVEL); dirty = true;
+  } else if (gesture === 'idle' && performance.now() - t0 < 400 && moved < 12){
+    step(maxTouches >= 2 ? -1 : 1);
+  }
+  gesture = null; pinch0 = 0; maxTouches = 0;
+}, { passive: false });
+addEventListener('touchcancel', () => { dragging = false; gesture = null; pinch0 = 0; }, { passive: true });
+
+addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('a')) return;
+  if (e.target.closest && e.target.closest('#more')){ showPanel('about'); return; }
+  if (panel) showPanel(null);
+});
+addEventListener('contextmenu', e => e.preventDefault());
+</script>
+</body>
+</html>
