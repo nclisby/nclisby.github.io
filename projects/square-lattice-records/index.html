@@ -40,7 +40,7 @@
   #info {
     position: fixed; top: 0; left: 0; padding: 12px 14px;
     color: var(--info); white-space: pre; pointer-events: none;
-    font-size: 12px; letter-spacing: 0.01em; display: none;
+    font-size: 14px; letter-spacing: 0.01em; display: none;
   }
   #info.on { display: block; }
   .panel {
@@ -410,7 +410,7 @@ function draw(dt){
   const minR = MIN_DISC_PX * dpr * discScale;
   const inset = Math.min(minR + dpr, 0.02 * S); // keep edge dots off the frame
   const s = (S / 2 - inset) / H;                // device px per lattice unit
-  const frac = 0.30 + 0.16 * smoothstep(6, 2, s);
+  const frac = 0.20 + 0.16 * smoothstep(6, 2, s);
   const solid = 1 - smoothstep(1.2, 4.0, s);
   const th = THEMES[theme];
   ctx.clearRect(0, 0, S, S);
@@ -484,7 +484,8 @@ function draw(dt){
 
   // origin: itself the first record, one point
   const o = L[0];
-  const opr = Math.max(1.6 * frac * s, 1.3 * minR);
+  // const opr = Math.max(1.6 * frac * s, 1.3 * minR);
+  const opr = Math.max(frac * s, minR);
   ctx.globalAlpha = 1;
   ctx.fillStyle = 'rgb(' + th.fg.join(',') + ')';
   ctx.beginPath(); ctx.arc(c, c, opr, 0, 2 * Math.PI); ctx.fill();
