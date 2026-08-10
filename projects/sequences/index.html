@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sequences</title>
+
+<!-- Shared design system -->
+<link rel="stylesheet" href="../teaching-app-assets/teaching-app.css">
+
+<!-- App-specific styles -->
+<style>
+  #defBox {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 14px;
+    color: var(--text);
+    background: rgba(15,17,23,0.88);
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+    max-width: 60%;
+    line-height: 1.5;
+  }
+  #defBox .def-current { color: var(--accent); font-size: 12px; }
+
+  .n-input-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .n-input-row input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 15px;
+    padding: 8px 10px;
+    outline: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .n-input-row input:focus { border-color: var(--accent); }
+  .n-input-row .opt-btn {
+    flex: 0 0 auto;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .action-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 8px; }
+
+  .check-feedback {
+    font-size: 12.5px;
+    margin-top: 8px;
+    line-height: 1.4;
+    min-height: 14px;
+  }
+  .check-feedback.ok { color: #66bb6a; }
+  .check-feedback.bad { color: #e57373; }
+
+  .zoom-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .zoom-axis-label {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    padding: 0 1px;
+    flex: 0 0 auto;
+  }
+  .zoom-btn {
+    flex: 0 0 30px;
+    width: 30px;
+    padding: 6px 0;
+    text-align: center;
+  }
+  #btnResetView {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .overlay-content .working-legend {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <a href="https://clisby.net/" title="home" style="color:var(--text-dim); display:flex; transition:color 0.15s;"
+                onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">
+                <svg width="26" height="26" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 10L10 3l7 7"/>
+                <path d="M5 8.5V16a1 1 0 001 1h3v-4h2v4h3a1 1 0 001-1V8.5"/>
+                </svg>
+            </a>
+            <h1>Sequences</h1>
+        </div>
+      <p>ε&ndash;N and B&ndash;N for limits</p>
+    </div>
+    <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar">&#x2039;</button>
+  </div>
+
+  <!-- Sequence selection -->
+  <div class="section">
+    <div class="section-label">Sequence</div>
+    <select class="fn-select" id="seqSelect"></select>
+  </div>
+
+  <!-- Mode -->
+  <div class="section">
+    <div class="section-label">Mode</div>
+    <div class="opt-row">
+      <button class="opt-btn active" id="btnModeUser">User</button>
+      <button class="opt-btn" id="btnModeChallenge">Challenge</button>
+    </div>
+
+    <div id="challengeSection" style="display:none; margin-top:10px;">
+      <div class="opt-row">
+        <button class="opt-btn active" id="chal0"></button>
+        <button class="opt-btn" id="chal1"></button>
+        <button class="opt-btn" id="chal2"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Target (epsilon or B) - hidden entirely in Challenge mode, since
+       the challenge buttons above already show the value. -->
+  <div class="section" id="targetSection">
+    <div class="section-label" id="targetLabel">Epsilon (ε)</div>
+
+    <div id="targetInputWrap">
+      <input type="text" class="custom-input" id="targetInput" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div class="slider-wrap">
+        <input type="range" id="targetSlider" min="0" max="1000" value="500">
+      </div>
+    </div>
+  </div>
+
+  <!-- Find N -->
+  <div class="section">
+    <div class="section-label">Find N</div>
+    <div class="n-input-row">
+      <input type="text" id="nInput" inputmode="numeric" placeholder="Your N" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="opt-btn" id="btnCheck">Check</button>
+    </div>
+    <div class="check-feedback" id="checkFeedback"></div>
+  </div>
+
+  <!-- Zoom -->
+  <div class="section">
+    <div class="section-label">Zoom</div>
+    <div class="zoom-line">
+      <button class="opt-btn" id="btnResetView">Reset</button>
+      <span class="zoom-axis-label">n</span>
+      <button class="opt-btn zoom-btn" id="zoomXIn">+</button>
+      <button class="opt-btn zoom-btn" id="zoomXOut">−</button>
+      <span class="zoom-axis-label">aₙ</span>
+      <button class="opt-btn zoom-btn" id="zoomYIn">+</button>
+      <button class="opt-btn zoom-btn" id="zoomYOut">−</button>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="section">
+    <div class="section-label">Options</div>
+    <div class="opt-grid-4">
+      <button class="opt-btn active" id="toggleDefinition">Definition</button>
+      <button class="opt-btn" id="btnHelp">Help</button>
+      <button class="opt-btn" id="btnOverview">Overview</button>
+      <button class="opt-btn" id="toggleInvert">Invert</button>
+    </div>
+  </div>
+
+  <!-- Working -->
+  <div class="section">
+    <div class="section-label">Working</div>
+    <div class="action-btn-row">
+      <button class="opt-btn" id="btnFindN">How to find N</button>
+      <button class="opt-btn" id="btnProof">Proof</button>
+    </div>
+  </div>
+
+  <!-- Colour scheme -->
+  <div class="section" id="colourSection">
+    <div class="section-label">Colour scheme</div>
+    <div class="opt-row">
+      <button class="opt-btn active" data-scheme="palette1">1</button>
+      <button class="opt-btn" data-scheme="palette2">2</button>
+      <button class="opt-btn" data-scheme="palette3">3</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== Main visualisation area ===== -->
+
+<div class="canvas-area" id="canvasArea">
+  <button class="sidebar-toggle hidden-when-open" id="openBtn" title="Open sidebar">&#9776;</button>
+
+  <!-- 2D canvas -->
+  <canvas id="canvas2d"></canvas>
+
+  <!-- Definition readout (top-left) -->
+  <div id="defBox"></div>
+
+  <!-- Function label -->
+  <div class="current-fn" id="currentFnLabel"></div>
+
+  <!-- Info box -->
+  <div class="info-box" id="infoBox" style="display:none;"></div>
+</div>
+
+
+<!-- ===== Help overlay ===== -->
+
+<div class="overlay" id="helpOverlay">
+  <button class="overlay-close" id="helpClose">✕</button>
+  <div class="overlay-content" id="helpContent">
+    <h1>Help</h1>
+    <p>
+    Pick a sequence from the dropdown. Sequences fall into two groups:
+    those that converge to a constant (limit 0), and those that diverge
+    to +∞.
+    </p>
+    <p>
+    In <b>User</b> mode, set ε (for convergent sequences) or B (for
+    divergent ones) yourself with the box or slider, then try to find
+    an N that works: click the point on the plot you think works, or
+    type a value into the "Your N" box directly. Points from N onward
+    turn green if they satisfy the condition and red if they don't
+    &mdash; watch the colours update live as you change N.
+    </p>
+    <p>
+    In <b>Challenge</b> mode, three fixed values are given (increasingly
+    strict). Find an N for each, then press "Check" to test your answer.
+    </p>
+    <p>
+    Use the Zoom n and Zoom aₙ controls to zoom either axis in or out by
+    a factor of two. The n-axis always starts at 0; the aₙ-axis is
+    always centred on 0. Press "Reset view" to return to the default
+    framing for the current sequence and ε/B. The number shown near the
+    top of the plot is the current vertical scale; the
+    number near the bottom right is the largest n currently visible.
+    </p>
+    <p>
+    "How to find N" shows a general written method for finding a
+    workable (not necessarily optimal) N. "Proof" shows the formal
+    argument that it works.
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Overview overlay ===== -->
+
+<div class="overlay" id="overviewOverlay">
+  <button class="overlay-close" id="overviewClose">✕</button>
+  <div class="overlay-content" id="overviewContent">
+    <h1>Overview</h1>
+    <p>
+    A sequence (aₙ) <b>converges</b> to a limit L if, for every ε &gt; 0,
+    there is some N such that n &gt; N guarantees |aₙ − L| &lt; ε.
+    No matter how small the value of ε it is always possible to find an 
+    N such that all later sequence elements lie in the 
+    ε-neighbourhood of L.
+    </p>
+    <p>
+    A sequence <b>diverges to +∞</b> if, for every B &gt; 0, there is
+    some N such that n &gt; N guarantees aₙ &gt; B. 
+    However large B is, it is possible to find an N such that all later terms
+    stay above B.
+    </p>
+    <p>
+    Proving either property means producing a working N for an
+    arbitrary ε or B, along with a chain of inequalities showing that N
+    actually does the job.
+    </p>
+  </div>
+</div>
+
+
+<!-- ===== Working overlay (How to find N / Proof / Why no N exists) ===== -->
+
+<div class="overlay" id="workingOverlay">
+  <button class="overlay-close" id="workingClose">✕</button>
+  <div class="overlay-content" id="workingContent">
+    <h1 id="workingTitle">How to find N</h1>
+    <div id="workingBody"></div>
+  </div>
+</div>
+
+
+<!-- ===== Scripts ===== -->
+<script src="../teaching-app-assets/teaching-app.js"></script>
+<script src="sequences.js"></script>
+<script>SequencesApp.init();</script>
+
+</body>
+</html>
