@@ -93,6 +93,11 @@ var SequencesApp = (function () {
       fn: function (n) { return 1 / n; }
     },
     {
+      id: 'altharmonic', label: 'a\u2099 = (\u22121)\u207F/\u221An', group: 'Converges to a constant',
+      category: 'conv', nStart: 1,
+      fn: function (n) { return Math.pow(-1, n) / Math.sqrt(n); }
+    },
+    {
       id: 'invln', label: 'a\u2099 = 1/(ln n)   (n\u22652)', group: 'Converges to a constant',
       category: 'conv', nStart: 2,
       fn: function (n) { return 1 / Math.log(n); }
@@ -101,6 +106,11 @@ var SequencesApp = (function () {
       id: 'linear', label: 'a\u2099 = n', group: 'Diverges to +\u221E',
       category: 'divInf', nStart: 1,
       fn: function (n) { return n; }
+    },
+    {
+      id: 'sqrtn', label: 'a\u2099 = \u221An', group: 'Diverges to +\u221E',
+      category: 'divInf', nStart: 1,
+      fn: function (n) { return Math.sqrt(n); }
     },
     {
       id: 'logn', label: 'a\u2099 = ln n', group: 'Diverges to +\u221E',
@@ -154,6 +164,15 @@ var SequencesApp = (function () {
       return { N: N, html: html };
     },
 
+    altharmonic: function (eps) {
+      var N = Math.ceil(1 / (eps * eps));
+      var html =
+        '<p>a\u2099 = (\u22121)\u207F/\u221An alternates in sign, but |a\u2099| = 1/\u221An is strictly decreasing, so solve for the n at which |a\u2099| first drops to \u03B5.</p>' +
+        '<p style="text-align:center">1/\u221AN = \u03B5 &nbsp;\u21D2&nbsp; \u221AN = 1/\u03B5 &nbsp;\u21D2&nbsp; N = 1/\u03B5\u00B2</p>' +
+        '<p>Take N = \u23081/\u03B5\u00B2\u2309.</p>';
+      return { N: N, html: html };
+    },
+
     linear: function (B) {
       var N = Math.ceil(B) + 1;
       var html =
@@ -171,6 +190,15 @@ var SequencesApp = (function () {
         '<p style="text-align:center">ln N = B &nbsp;\u21D2&nbsp; N = e<sup>B</sup></p>' +
         '<p>Take N = \u2308e<sup>B</sup>\u2309.</p>' +
         '<p>ln n grows more slowly than any positive power of n, which is why reaching even a modest B needs enormous values for n.</p>';
+      return { N: N, html: html };
+    },
+
+    sqrtn: function (B) {
+      var N = Math.ceil(B * B);
+      var html =
+        '<p>a\u2099 = \u221An is strictly increasing, so solve for the value of n that first reaches B&gt;0.</p>' +
+        '<p style="text-align:center">\u221AN = B &nbsp;\u21D2&nbsp; N = B\u00B2</p>' +
+        '<p>Take N = \u2308B\u00B2\u2309.</p>';
       return { N: N, html: html };
     }
   };
@@ -195,9 +223,11 @@ var SequencesApp = (function () {
         '<p>Then, for n &gt; N we have</p>' +
         '<p style="text-align:center">' +
           '|a\u2099 \u2212 L| = |2<sup>\u2212n</sup>|<br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 2<sup>\u2212n</sup><br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; 2<sup>\u2212N</sup><br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; \u03B5' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 2<sup>\u2212n</sup><br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; 2<sup>\u2212N</sup><br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 2<sup>\u2212\u2308\u2212log\u2082\u03B5\u2309</sup><br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\u2264 2<sup>log\u2082\u03B5</sup>&nbsp;&nbsp;(since \u2308\u2212log\u2082\u03B5\u2309 \u2265 \u2212log\u2082\u03B5)<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= \u03B5' +
         '</p>' +
         '<p>Thus a\u2099 \u2192 0.</p>' +
         '<p style="text-align:right">\u25A1</p>';
@@ -208,9 +238,11 @@ var SequencesApp = (function () {
         '<p>Then, for n &gt; N we have</p>' +
         '<p style="text-align:center">' +
           '|a\u2099 \u2212 L| = |1/n|<br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1/n<br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; 1/N<br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; \u03B5' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1/n<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; 1/N<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1/\u23081/\u03B5\u2309<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\u2264 1/(1/\u03B5)&nbsp;&nbsp;(since \u23081/\u03B5\u2309 \u2265 1/\u03B5)<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= \u03B5' +
         '</p>' +
         '<p>Thus a\u2099 \u2192 0.</p>' +
         '<p style="text-align:right">\u25A1</p>';
@@ -221,9 +253,11 @@ var SequencesApp = (function () {
         '<p>Then, for n &gt; N we have</p>' +
         '<p style="text-align:center">' +
           '|a\u2099 \u2212 L| = |1/(ln n)|<br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1/(ln n)<br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; 1/(ln N)<br>' +
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; \u03B5' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1/(ln n)<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; 1/(ln N)<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1/(ln(\u2308e<sup>1/\u03B5</sup>\u2309+1))<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; 1/(ln(e<sup>1/\u03B5</sup>))&nbsp;&nbsp;(since \u2308e<sup>1/\u03B5</sup>\u2309+1 &gt; e<sup>1/\u03B5</sup>)<br>' +
+          '&nbsp;&nbsp;&nbsp;= \u03B5' +
         '</p>' +
         '<p>Thus a\u2099 \u2192 0.</p>' +
         '<p style="text-align:right">\u25A1</p>';
@@ -235,7 +269,8 @@ var SequencesApp = (function () {
         '<p style="text-align:center">' +
           'a\u2099 = n<br>' +
           '&nbsp;&nbsp;&nbsp;&gt; N<br>' +
-          '&nbsp;&nbsp;&nbsp;&gt; B' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= \u2308B\u2309<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\u2265 B&nbsp;&nbsp;(since \u2308B\u2309 \u2265 B)' +
         '</p>' +
         '<p>Thus a\u2099 \u2192 \u221E.</p>' +
         '<p style="text-align:right">\u25A1</p>';
@@ -247,7 +282,38 @@ var SequencesApp = (function () {
         '<p style="text-align:center">' +
           'a\u2099 = ln n<br>' +
           '&nbsp;&nbsp;&nbsp;&gt; ln N<br>' +
-          '&nbsp;&nbsp;&nbsp;&gt; B' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= ln(\u2308e<sup>B</sup>\u2309+1)<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt; ln(e<sup>B</sup>)&nbsp;&nbsp;(since \u2308e<sup>B</sup>\u2309+1 &gt; e<sup>B</sup>)<br>' +
+          '&nbsp;&nbsp;&nbsp;= B' +
+        '</p>' +
+        '<p>Thus a\u2099 \u2192 \u221E.</p>' +
+        '<p style="text-align:right">\u25A1</p>';
+    },
+
+    altharmonic: function () {
+      return '<p>For a\u2099 = (\u22121)\u207F/\u221An, and given \u03B5 &gt; 0, set N = \u23081/\u03B5\u00B2\u2309 and L = 0.</p>' +
+        '<p>Then, for n &gt; N we have</p>' +
+        '<p style="text-align:center">' +
+          '|a\u2099 \u2212 L| = |(\u22121)\u207F/\u221An|<br>' +
+          '&nbsp;&nbsp;&nbsp;= 1/\u221An<br>' +
+          '&nbsp;&nbsp;&nbsp;&lt; 1/\u221AN<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1/\u221A\u23081/\u03B5\u00B2\u2309<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\u2264 1/\u221A(1/\u03B5\u00B2)&nbsp;&nbsp;(since \u23081/\u03B5\u00B2\u2309 \u2265 1/\u03B5\u00B2)<br>' +
+          '&nbsp;&nbsp;&nbsp;= \u03B5' +
+        '</p>' +
+        '<p>Thus a\u2099 \u2192 0.</p>' +
+        '<p style="text-align:right">\u25A1</p>';
+    },
+
+    sqrtn: function () {
+      return '<p>For a\u2099 = \u221An, and given B &gt; 0, set N = \u2308B\u00B2\u2309.</p>' +
+        '<p>Then, for n &gt; N we have</p>' +
+        '<p style="text-align:center">' +
+          'a\u2099 = \u221An<br>' +
+          '&nbsp;&nbsp;&nbsp;&gt; \u221AN<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= \u221A\u2308B\u00B2\u2309<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\u2265 \u221A(B\u00B2)&nbsp;&nbsp;(since \u2308B\u00B2\u2309 \u2265 B\u00B2)<br>' +
+          '&nbsp;&nbsp;&nbsp;= B' +
         '</p>' +
         '<p>Thus a\u2099 \u2192 \u221E.</p>' +
         '<p style="text-align:right">\u25A1</p>';
@@ -282,7 +348,6 @@ var SequencesApp = (function () {
     B: 10,
     showDefinition: true,
     candidateN: null,       // raw text
-    scheme: 'palette1',
     view: { xLo: null, xHi: null, yLo: null, yHi: null, nLo: null, nHi: null }
   };
 
@@ -435,13 +500,21 @@ var SequencesApp = (function () {
       for (var n = nLo; n <= nHi; n++) out.push(n);
       return out;
     }
-    var vals = {};
+    // Sample at a single fixed integer stride, rather than rounding each
+    // point's position independently. An even stride would only ever land
+    // on n-values of one parity, which produces visual gaps for sequences
+    // whose value depends on the parity of n (e.g. an alternating sequence
+    // like (-1)^n/sqrt(n) would appear to show long runs of only positive
+    // or only negative points, even though both are equally present).
+    // Forcing the stride to be odd guarantees consecutive sampled points
+    // always alternate parity, keeping both subsequences interlaced at
+    // every zoom level.
+    var rawStep = span / (MAX_PLOT_POINTS - 1);
+    var step = Math.max(1, Math.round(rawStep));
+    if (step % 2 === 0) step += 1;
     var result = [];
-    for (var j = 0; j < MAX_PLOT_POINTS; j++) {
-      var v2 = Math.round(nLo + (j / (MAX_PLOT_POINTS - 1)) * span);
-      if (!vals[v2]) { vals[v2] = true; result.push(v2); }
-    }
-    result.sort(function (a, b) { return a - b; });
+    for (var n = nLo; n < nHi; n += step) result.push(n);
+    result.push(nHi);
     return result;
   }
 
@@ -479,8 +552,12 @@ var SequencesApp = (function () {
     draw(); // draw() itself calls TA.resizeCanvas first
   }
 
+  // Colour scheme selection was removed for this app - always use the
+  // suite's default palette.
+  var DEFAULT_SCHEME = 'palette1';
+
   function baseColour() {
-    var rgb = TA.sampleColourMap(state.scheme, 0.55);
+    var rgb = TA.sampleColourMap(DEFAULT_SCHEME, 0.55);
     return TA.colourToCSS(rgb);
   }
 
@@ -494,7 +571,7 @@ var SequencesApp = (function () {
     // pad.t clears the floating current-fn/definition labels (top:12px,
     // ~40px tall); pad.r/pad.b clear the fixed teaching-pointer toggle
     // button (bottom:30px, right:30px, ~44px diameter).
-    var pad = { l: 60, r: 30, t: 74, b: 90 };
+    var pad = { l: 80, r: 30, t: 74, b: 90 };
     var plotW = dims.width - pad.l - pad.r;
     var plotH = dims.height - pad.t - pad.b;
     if (plotW < 50 || plotH < 50) return;
@@ -526,7 +603,7 @@ var SequencesApp = (function () {
 
     // axes background
     ctx.strokeStyle = '#2a2d3a';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.strokeRect(pad.l, pad.t, plotW, plotH);
 
     // y=0 axis
@@ -540,7 +617,7 @@ var SequencesApp = (function () {
 
     // reference dashed lines
     ctx.setLineDash([6, 5]);
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 3;
     ctx.strokeStyle = '#e5b84b';
     drawHLineClipped(ctx, toPY(target), pad.l, plotW, inPlotY);
     if (preset.category !== 'divInf') {
@@ -555,7 +632,7 @@ var SequencesApp = (function () {
       if (xN >= xLo && xN <= xHi) {
         ctx.setLineDash([4, 4]);
         ctx.strokeStyle = '#8b8fa3';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(toPX(xN), pad.t);
         ctx.lineTo(toPX(xN), pad.t + plotH);
@@ -592,13 +669,13 @@ var SequencesApp = (function () {
         else colour = base;
       }
 
-      var radius = (r.n === candN) ? 5 : 3;
+      var radius = (r.n === candN) ? 10 : 6;
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, 2 * Math.PI);
       ctx.fillStyle = colour;
       ctx.fill();
       if (r.n === candN) {
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 3;
         ctx.strokeStyle = '#ffffff';
         ctx.stroke();
       }
@@ -609,37 +686,38 @@ var SequencesApp = (function () {
 
     // axis titles
     ctx.fillStyle = '#8b8fa3';
-    ctx.font = '11px ui-monospace, monospace';
+    ctx.font = '17px ui-monospace, monospace';
     ctx.textAlign = 'center';
     ctx.fillText('n', pad.l + plotW / 2, pad.t + plotH + 22);
-    ctx.save();
-    ctx.translate(16, pad.t + plotH / 2);
-    ctx.rotate(-Math.PI / 2);
+    // a_n label: 3x the original 11px size, drawn upright (not rotated)
+    // rather than sideways, centred in the widened left margin.
+    ctx.font = '33px ui-monospace, monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('a\u2099', 0, 0);
-    ctx.restore();
+    ctx.textBaseline = 'middle';
+    ctx.fillText('a\u2099', pad.l / 2, pad.t + plotH / 2);
+    ctx.textBaseline = 'alphabetic';
 
     // Scale indicators: current y-axis extent near the top, current
     // n-axis extent near the right, in a larger font for quick reading.
-    var accentColour = TA.colourToCSS(TA.sampleColourMap(state.scheme, 0.75));
-    ctx.font = '600 15px ui-monospace, monospace';
+    var accentColour = TA.colourToCSS(TA.sampleColourMap(DEFAULT_SCHEME, 0.75));
+    ctx.font = '600 23px ui-monospace, monospace';
 
     var yLabel = '\u00B1' + fmtNumPlain(yMax);
     ctx.textAlign = 'right';
     var yLabelW = ctx.measureText(yLabel).width + 12;
     ctx.fillStyle = 'rgba(15,17,23,0.75)';
-    ctx.fillRect(pad.l + plotW - yLabelW - 4, pad.t + 6, yLabelW, 22);
+    ctx.fillRect(pad.l + plotW - yLabelW - 4, pad.t + 6, yLabelW, 32);
     ctx.fillStyle = accentColour;
     ctx.textBaseline = 'top';
-    ctx.fillText(yLabel, pad.l + plotW - 10, pad.t + 12);
+    ctx.fillText(yLabel, pad.l + plotW - 10, pad.t + 15);
 
     var nLabel = fmtNumPlain(nHiVisible);
     var nLabelW = ctx.measureText(nLabel).width + 12;
     ctx.fillStyle = 'rgba(15,17,23,0.75)';
-    ctx.fillRect(pad.l + plotW - nLabelW - 4, pad.t + plotH - 28, nLabelW, 22);
+    ctx.fillRect(pad.l + plotW - nLabelW - 4, pad.t + plotH - 38, nLabelW, 32);
     ctx.fillStyle = accentColour;
     ctx.textBaseline = 'top';
-    ctx.fillText(nLabel, pad.l + plotW - 10, pad.t + plotH - 22);
+    ctx.fillText(nLabel, pad.l + plotW - 10, pad.t + plotH - 29);
 
     // function label
     dom.currentFnLabel.innerHTML = preset.label;
@@ -857,15 +935,6 @@ var SequencesApp = (function () {
     dom.toggleInvert.addEventListener('click', function () {
       document.documentElement.classList.toggle('inverted');
       dom.toggleInvert.classList.toggle('active');
-    });
-
-    document.querySelectorAll('[data-scheme]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        document.querySelectorAll('[data-scheme]').forEach(function (b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        state.scheme = btn.getAttribute('data-scheme');
-        draw();
-      });
     });
 
     window.addEventListener('resize', resize);

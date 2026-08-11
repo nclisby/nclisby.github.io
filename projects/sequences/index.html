@@ -15,7 +15,7 @@
     top: 12px;
     left: 12px;
     font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size: 14px;
+    font-size: 21px;
     color: var(--text);
     background: rgba(15,17,23,0.88);
     padding: 8px 14px;
@@ -25,7 +25,13 @@
     max-width: 60%;
     line-height: 1.5;
   }
-  #defBox .def-current { color: var(--accent); font-size: 12px; }
+  #defBox .def-current { color: var(--accent); font-size: 18px; }
+
+  /* Display-area font sizes increased by 50% over the shared framework
+     defaults - scoped to this app via ID selectors so teaching-app.css
+     itself is untouched. */
+  #currentFnLabel { font-size: 30px; }
+  #infoBox { font-size: 22px; }
 
   .n-input-row {
     display: flex;
@@ -76,10 +82,11 @@
     flex: 0 0 auto;
   }
   .zoom-btn {
-    flex: 0 0 30px;
-    width: 30px;
+    flex: 0 0 44px;
+    width: 44px;
     padding: 6px 0;
     text-align: center;
+    font-size: 30px;
   }
   #btnResetView {
     flex: 1 1 auto;
@@ -178,7 +185,8 @@
     </div>
   </div>
 
-  <!-- Options -->
+  <!-- Options (includes Definition/Help/Overview/Invert, plus the
+       working/proof triggers folded in below) -->
   <div class="section">
     <div class="section-label">Options</div>
     <div class="opt-grid-4">
@@ -187,24 +195,9 @@
       <button class="opt-btn" id="btnOverview">Overview</button>
       <button class="opt-btn" id="toggleInvert">Invert</button>
     </div>
-  </div>
-
-  <!-- Working -->
-  <div class="section">
-    <div class="section-label">Working</div>
     <div class="action-btn-row">
       <button class="opt-btn" id="btnFindN">How to find N</button>
       <button class="opt-btn" id="btnProof">Proof</button>
-    </div>
-  </div>
-
-  <!-- Colour scheme -->
-  <div class="section" id="colourSection">
-    <div class="section-label">Colour scheme</div>
-    <div class="opt-row">
-      <button class="opt-btn active" data-scheme="palette1">1</button>
-      <button class="opt-btn" data-scheme="palette2">2</button>
-      <button class="opt-btn" data-scheme="palette3">3</button>
     </div>
   </div>
 </div>
