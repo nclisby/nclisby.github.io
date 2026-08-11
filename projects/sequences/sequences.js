@@ -103,6 +103,11 @@ var SequencesApp = (function () {
       fn: function (n) { return 1 / Math.log(n); }
     },
     {
+      id: 'exp2', label: 'a\u2099 = 2\u207F', group: 'Diverges to +\u221E',
+      category: 'divInf', nStart: 1,
+      fn: function (n) { return Math.pow(2, n); }
+    },
+    {
       id: 'linear', label: 'a\u2099 = n', group: 'Diverges to +\u221E',
       category: 'divInf', nStart: 1,
       fn: function (n) { return n; }
@@ -170,6 +175,16 @@ var SequencesApp = (function () {
         '<p>a\u2099 = (\u22121)\u207F/\u221An alternates in sign, but |a\u2099| = 1/\u221An is strictly decreasing, so solve for the n at which |a\u2099| first drops to \u03B5.</p>' +
         '<p style="text-align:center">1/\u221AN = \u03B5 &nbsp;\u21D2&nbsp; \u221AN = 1/\u03B5 &nbsp;\u21D2&nbsp; N = 1/\u03B5\u00B2</p>' +
         '<p>Take N = \u23081/\u03B5\u00B2\u2309.</p>';
+      return { N: N, html: html };
+    },
+
+    exp2: function (B) {
+      var raw = Math.log2(B);
+      var N = Math.max(1, Math.ceil(raw));
+      var html =
+        '<p>a\u2099 = 2\u207F is strictly increasing, so solve for the value of n that first reaches B&gt;0.</p>' +
+        '<p style="text-align:center">2<sup>N</sup> = B &nbsp;\u21D2&nbsp; N = log\u2082 B</p>' +
+        '<p>Take N = max(1, \u2308log\u2082 B\u2309).</p>';
       return { N: N, html: html };
     },
 
@@ -260,6 +275,20 @@ var SequencesApp = (function () {
           '&nbsp;&nbsp;&nbsp;= \u03B5' +
         '</p>' +
         '<p>Thus a\u2099 \u2192 0.</p>' +
+        '<p style="text-align:right">\u25A1</p>';
+    },
+
+    exp2: function () {
+      return '<p>For a\u2099 = 2\u207F, and given B &gt; 0, set N = max(1, \u2308log\u2082 B\u2309).</p>' +
+        '<p>Then, for n &gt; N we have</p>' +
+        '<p style="text-align:center">' +
+          'a\u2099 = 2<sup>n</sup><br>' +
+          '&nbsp;&nbsp;&nbsp;&gt; N<br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 2<sup>max(1,\u2308log\u2082B\u2309)</sup><br>' +
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\u2265 2<sup>log\u2082B</sup>&nbsp;&nbsp;(since max(1,\u2308log\u2082B\u2309) \u2265 log\u2082B)<br>' +
+          '&nbsp;&nbsp;&nbsp;= B' +
+        '</p>' +
+        '<p>Thus a\u2099 \u2192 \u221E.</p>' +
         '<p style="text-align:right">\u25A1</p>';
     },
 
